@@ -3154,7 +3154,19 @@
 
             // ── EMA helper (prices array = newest first) ──────────────
             // Wilder/standard EMA: k = 2/(n+1), seed = SMA of last n points
-            // calcEMA defined globally below
+            function calcEMA(prices, n) {
+                if (prices.length < n) return null;
+                const k = 2 / (n + 1);
+                // Seed on oldest n prices (index n-1 down to 0)
+                const seed = prices.slice(0, n);
+                let ema = seed.reduce((s, v) => s + v, 0) / n;
+                // Walk forward from bar n-1 toward bar 0 (newest)
+                // prices are newest-first, so we walk from index n-1 toward 0
+                for (let i = n - 2; i >= 0; i--) {
+                    ema = prices[i] * k + ema * (1 - k);
+                }
+                return ema;
+            }
 
             // Compute EMA10, EMA20, 52W High distance, crossover signal, and σ20
             allData.forEach(d => {
@@ -3538,12 +3550,6 @@
                 renderGroups();
             else if (priceSubTab === 'voladj')
                 renderVolAdj();
-            else if (priceSubTab === 'ma')
-                renderMa();
-            else if (priceSubTab === 'bounce')
-                renderBounce();
-            else if (priceSubTab === 'sectors')
-                renderSectors();
 
             else if (priceSubTab === '52w')
                 render52w();
@@ -3753,127 +3759,67 @@
         });
     }
 
-    // ── BOUNCES OFF MA ───────────────────────────────────────────
-    let bounceMaN    = 50;   // active MA period
-    let bounceSortCol = 'bounce_day', bounceSortDir = 'asc'; // most recent touch first
+    // ── BOUNCES MA ──────────────────────────────────────────────
+    let bounceMaN = 50;
+    let bounceSortCol = 'bounce_dist_s', bounceSortDir = 'asc';
 
     function setBounceMA(n) {
         bounceMaN = n;
         [50, 100, 200].forEach(v => {
             const btn = document.getElementById('bounceBtn' + v);
             if (!btn) return;
-            const active = v === n;
-            btn.style.background = active ? 'var(--accent2)' : 'transparent';
-            btn.style.color      = active ? '#fff' : 'var(--muted)';
+            btn.style.background = v === n ? 'var(--accent2)' : 'transparent';
+            btn.style.color      = v === n ? '#fff' : 'var(--muted)';
         });
+        const critN = document.getElementById('bounceCritN');
+        if (critN) critN.textContent = n;
         renderBounce();
     }
 
     function bounceSort(col) {
         if (bounceSortCol === col) bounceSortDir = bounceSortDir === 'desc' ? 'asc' : 'desc';
-        else {
-            bounceSortCol = col;
-            bounceSortDir = ['ticker','name','sector','group','bounce_day'].includes(col) ? 'asc' : 'desc';
-        }
+        else { bounceSortCol = col; bounceSortDir = ['ticker','name','sector','group','bounce_dist_s','bounce_dist_pct'].includes(col) ? 'asc' : 'desc'; }
         renderBounce();
     }
 
-    function sma(prices, start, n) {
-        if (!prices || prices.length < start + n) return null;
-        return prices.slice(start, start + n).reduce((s, v) => s + v, 0) / n;
-    }
-
-    function detectBounce(prices, maN, windowDays, tolPct, maxBelow) {
-        // Returns null (no bounce) or { day, below, dist, recover }
-        if (!prices || prices.length < maN + windowDays + 1) return null;
-        const tol = 1 + tolPct / 100;
-        const curSma = sma(prices, 0, maN);
-        if (!curSma) return null;
-        // Current close must be above the MA
-        if (prices[0] <= curSma) return null;
-
-        for (let i = 1; i <= windowDays; i++) {
-            const sma_i = sma(prices, i, maN);
-            if (!sma_i) continue;
-            if (prices[i] <= sma_i * tol) {
-                // Found a touch at day i — count consecutive closes below
-                let below = 0;
-                for (let j = i; j <= i + maxBelow + 1; j++) {
-                    const sma_j = sma(prices, j, maN);
-                    if (!sma_j) break;
-                    if (prices[j] <= sma_j * tol) below++;
-                    else break;
-                }
-                if (below > maxBelow) continue; // too many closes below — skip
-                // Valid bounce — compute metrics
-                const touchPrice = prices[i];
-                const recoverPct = touchPrice > 0
-                    ? Math.round((prices[0] / touchPrice - 1) * 1000) / 10 : null;
-                const distPct = curSma > 0
-                    ? Math.round((prices[0] / curSma - 1) * 1000) / 10 : null;
-                return { day: i, below, dist: distPct, recover: recoverPct };
-            }
-        }
-        return null;
-    }
-
     function renderBounce() {
-        if (!allData.length || !Object.keys(rawPrices).length) return;
-
-        // Populate sector filter
-        const sEl = document.getElementById('bounceSectorFilter');
-        if (sEl && sEl.options.length <= 1) {
-            const sectors = [...new Set(allData.map(d => d.sector).filter(Boolean))].sort();
-            sectors.forEach(s => {
-                const o = document.createElement('option');
-                o.value = s; o.textContent = s; sEl.appendChild(o);
-            });
+        if (!allData.length || !Object.keys(rawPrices).length) {
+            document.getElementById('bounceCount').textContent = 'Waiting for data...';
+            return;
         }
 
-        const windowDays = parseInt(document.getElementById('bounceWindow')?.value) || 10;
-        const tolPct     = parseFloat(document.getElementById('bounceTol')?.value) ?? 2;
-        const maxBelow   = parseInt(document.getElementById('bounceMaxBelow')?.value) ?? 2;
-        const rsMin      = parseFloat(document.getElementById('bounceRsMin')?.value) || 0;
-        const sectorF    = document.getElementById('bounceSectorFilter')?.value || 'all';
-        const filterDrop = document.getElementById('bounceFilterDrop')?.checked || false;
-        const dropMult   = parseFloat(document.getElementById('bounceDropMult')?.value) || 2;
+        const sigmaT = parseFloat(document.getElementById('bounceSigma')?.value) ?? 0.5;
+        const critS  = document.getElementById('bounceCritSigma'); if (critS) critS.textContent = sigmaT;
+        const critN  = document.getElementById('bounceCritN');     if (critN) critN.textContent = bounceMaN;
 
-        const results = [];
+        const rows = [];
 
         allData.forEach(d => {
-            if (sectorF !== 'all' && d.sector !== sectorF) return;
-            if (rsMin > 0 && (d.rs_ibd ?? -1) < rsMin) return;
-
             const p = rawPrices[d.ticker];
-            const bounce = detectBounce(p, bounceMaN, windowDays, tolPct, maxBelow);
-            if (!bounce) return;
+            if (!p || p.length < bounceMaN + 1) return;
 
-            // Max drop filter
-            if (filterDrop) {
-                const sigma = d.sigma20_pct;
-                if (!sigma || sigma <= 0) return;
-                const threshold = dropMult * sigma;
-                if (p && p.length >= 21) {
-                    for (let i = 0; i < 20; i++) {
-                        if (p[i] > 0 && p[i + 1] > 0) {
-                            const drop = (p[i + 1] - p[i]) / p[i + 1] * 100;
-                            if (drop > threshold) return;
-                        }
-                    }
-                }
-            }
+            // SMA
+            const smaN = p.slice(0, bounceMaN).reduce((s, v) => s + v, 0) / bounceMaN;
+            if (!smaN || smaN <= 0) return;
 
-            results.push({
+            // σ20j
+            const sigma = d.sigma20_pct;
+            if (!sigma || sigma <= 0) return;
+
+            const price    = p[0];
+            const distPct  = (price / smaN - 1) * 100;
+            const distS    = Math.abs(distPct) / sigma;
+
+            if (distS > sigmaT) return;
+
+            rows.push({
                 ...d,
-                bounce_day:     bounce.day,
-                bounce_below:   bounce.below,
-                bounce_dist:    bounce.dist,
-                bounce_recover: bounce.recover,
+                bounce_dist_pct: Math.round(distPct * 10) / 10,
+                bounce_dist_s:   Math.round(distS * 100) / 100,
             });
         });
 
-        // Sort
-        results.sort((a, b) => {
+        rows.sort((a, b) => {
             let av = a[bounceSortCol], bv = b[bounceSortCol];
             if (av == null) return bounceSortDir === 'desc' ? 1 : -1;
             if (bv == null) return bounceSortDir === 'desc' ? -1 : 1;
@@ -3881,49 +3827,25 @@
             return bounceSortDir === 'desc' ? bv - av : av - bv;
         });
 
-        // Stats
-        const n = results.length;
-        const avgRs   = n ? Math.round(results.reduce((s, d) => s + (d.rs_ibd ?? 0), 0) / n) : null;
-        const avgDist = n ? (results.reduce((s, d) => s + (d.bounce_dist ?? 0), 0) / n).toFixed(1) : null;
-        const undercut = results.filter(d => d.bounce_below > 0).length;
-        const recent1  = results.filter(d => d.bounce_day === 1).length;
+        document.getElementById('bounceCount').textContent = `${rows.length} / ${allData.length} tickers`;
 
-        document.getElementById('bounceStatCount').textContent  = n + ' titres';
-        document.getElementById('bounceStatRs').textContent     = avgRs ?? '—';
-        document.getElementById('bounceStatDist').innerHTML     = avgDist != null ? `<span style="color:var(--up)">+${avgDist}%</span>` : '—';
-        document.getElementById('bounceStatUnder').textContent  = undercut + ' (' + (n ? Math.round(undercut/n*100) : 0) + '%)';
-        document.getElementById('bounceStatRecent').textContent = recent1 + ' (hier)';
-        document.getElementById('bounceCount').textContent      = `${n} / ${allData.length}`;
-
-        // Cell helpers
-        const distC = v => {
-            if (v == null) return '<span style="color:var(--muted)">—</span>';
-            const c = v > 5 ? 'var(--up)' : v > 0 ? '#16a34a' : v > -3 ? '#f59e0b' : 'var(--down)';
-            return `<span style="color:${c};font-weight:700">${v >= 0 ? '+' : ''}${v.toFixed(1)}%</span>`;
+        const distCell = (v, sigma) => {
+            if (v == null) return '—';
+            const c = Math.abs(v) <= 0.25 ? '#7c3aed' : Math.abs(v) <= 0.5 ? 'var(--up)' : '#f59e0b';
+            return `<span style="color:${c};font-weight:700">${v >= 0 ? '+' : ''}${v.toFixed(2)}σ</span>`;
         };
-        const recC = v => {
+        const pctCell2 = v => {
             if (v == null) return '—';
             const c = v >= 0 ? 'var(--up)' : 'var(--down)';
-            return `<span style="color:${c};font-weight:700">${v >= 0 ? '+' : ''}${v.toFixed(1)}%</span>`;
+            return `<span style="color:${c};font-weight:normal">${v >= 0 ? '+' : ''}${v.toFixed(1)}%</span>`;
         };
-        const dayC = v => {
-            if (v == null) return '—';
-            const c = v === 1 ? 'var(--accent2)' : v <= 3 ? 'var(--up)' : 'var(--muted)';
-            const label = v === 1 ? 'hier' : `J-${v}`;
-            return `<span style="color:${c};font-weight:${v<=2?'700':'500'}">${label}</span>`;
-        };
-        const belowC = v => {
-            if (v == null || v === 0) return '<span style="color:var(--muted)">—</span>';
-            const c = v === 1 ? '#f59e0b' : 'var(--down)';
-            return `<span style="color:${c};font-weight:700">${v}j</span>`;
-        };
-        const sigC = v => v != null ? `<span style="color:var(--muted);font-size:10px">${v.toFixed(1)}%</span>` : '—';
+        const sigCell = v => v != null ? `<span style="color:var(--muted);font-size:10px">${v.toFixed(1)}%</span>` : '—';
 
         const tbody = document.getElementById('bounceBody');
         tbody.innerHTML = '';
-        results.forEach(d => {
+        rows.forEach(d => {
             const inW = watchlist.includes(d.ticker);
-            const tr = document.createElement('tr');
+            const tr  = document.createElement('tr');
             tr.innerHTML =
                 `<td class="sticky-0 watch-toggle" style="text-align:center;cursor:pointer;font-size:11px;width:22px;padding:4px 3px;color:${inW?'#06b6d4':'#475569'}" data-ticker="${d.ticker}">${inW?'★':'☆'}</td>
                  <td class="sticky-1" style="text-align:center;width:22px;padding:4px 3px;"><a href="https://www.tradingview.com/chart/?symbol=${d.ticker}" target="_blank" style="color:#475569;font-size:8px;text-decoration:none;font-weight:600;" onmouseover="this.style.color='#06b6d4'" onmouseout="this.style.color='#475569'">TV</a></td>
@@ -3935,16 +3857,14 @@
                  <td class="td-pct" style="border-left:2px solid var(--border2)">${pctCell(d.rs_ibd)}</td>
                  <td class="td-pct">${pctCell(d.pct_6m)}</td>
                  <td class="td-pct">${pctCell(d.pct_12m)}</td>
-                 <td class="td-pct">${sigC(d.sigma20_pct)}</td>
-                 <td class="td-pct" style="border-left:2px solid var(--border2)">${distC(d.bounce_dist)}</td>
-                 <td class="td-pct">${dayC(d.bounce_day)}</td>
-                 <td class="td-pct">${belowC(d.bounce_below)}</td>
-                 <td class="td-pct">${recC(d.bounce_recover)}</td>`;
+                 <td class="td-pct" style="border-left:2px solid var(--border2)">${distCell(d.bounce_dist_s)}</td>
+                 <td class="td-pct">${pctCell2(d.bounce_dist_pct)}</td>
+                 <td class="td-pct">${sigCell(d.sigma20_pct)}</td>`;
             tbody.appendChild(tr);
         });
 
-        document.getElementById('bounceTable').style.display = n ? 'table' : 'none';
-        document.getElementById('emptyBounce').style.display = n ? 'none' : '';
+        document.getElementById('bounceTable').style.display = rows.length ? 'table' : 'none';
+        document.getElementById('emptyBounce').style.display  = rows.length ? 'none' : '';
     }
 
     // ── VOL-ADJUSTED RELATIVE STRENGTH ───────────────────────────
@@ -8024,10 +7944,7 @@ Write a thorough 7-section market analysis.`;
     }
 
     function renderMa() {
-        if (!allData.length || !Object.keys(rawPrices).length) {
-            document.getElementById('pbCount').textContent = 'Waiting for price data...';
-            return;
-        }
+        if (!allData.length || !Object.keys(rawPrices).length) return;
 
         const pctMin  = parseFloat(document.getElementById('pbPctMin')?.value) ?? 60;
         const sigmaT  = parseFloat(document.getElementById('pbSigma')?.value) ?? 0.5;
@@ -8039,11 +7956,10 @@ Write a thorough 7-section market analysis.`;
         const sigEl = document.getElementById('pbCritSigma'); if (sigEl) sigEl.textContent = sigmaT;
 
         const rows = [];
-        let skipped_nodata = 0, skipped_uptrend = 0, skipped_pullback = 0;
 
         allData.forEach(d => {
             const p = rawPrices[d.ticker];
-            if (!p || p.length < 201) { skipped_nodata++; return; } // need 200 days for SMA200
+            if (!p || p.length < 201) return; // need 200 days for SMA200
 
             // ── UPTREND CRITERIA ──────────────────────────────
             if ((d.pct_4w  ?? -1) < pctMin) return;
@@ -8089,7 +8005,7 @@ Write a thorough 7-section market analysis.`;
             return maSortDir === 'desc' ? bv - av : av - bv;
         });
 
-        document.getElementById('pbCount').textContent = `${rows.length} matches / ${allData.length} total (${skipped_nodata} no data, ${skipped_uptrend+skipped_pullback} filtered)`;
+        document.getElementById('pbCount').textContent = `${rows.length} / ${allData.length} tickers`;
 
         // σ distance cell
         const sigCell = (v, abs) => {
@@ -9166,4 +9082,51 @@ Write a thorough 7-section market analysis.`;
 
 
 </body>
-</html>
+</html>            <!-- BOUNCES OFF MA panel -->
+            <div id="priceBouncePanel" style="display:none">
+                <!-- Controls -->
+                <div style="display:flex;gap:10px;align-items:center;padding:10px 16px;background:var(--bg2);border:1px solid var(--border);margin-bottom:10px;">
+                    <div style="display:flex;gap:0;border:1px solid var(--border2);overflow:hidden;">
+                        <button id="bounceBtn50"  onclick="setBounceMA(50)"  style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 14px;background:var(--accent2);color:#fff;border:none;cursor:pointer;">SMA 50</button>
+                        <button id="bounceBtn100" onclick="setBounceMA(100)" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 14px;background:transparent;color:var(--muted);border:none;cursor:pointer;">SMA 100</button>
+                        <button id="bounceBtn200" onclick="setBounceMA(200)" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 14px;background:transparent;color:var(--muted);border:none;cursor:pointer;">SMA 200</button>
+                    </div>
+                    <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
+                    <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">|DIST| ≤</span>
+                    <input id="bounceSigma" class="filter-input" type="number" value="0.5" min="0.1" max="3" step="0.1" style="width:52px;" oninput="renderBounce()" title="abs(Price/SMA − 1) / σ20j ≤ seuil">
+                    <span style="font-size:9px;color:var(--muted);">σ</span>
+                    <span id="bounceCount" style="font-size:10px;color:var(--muted);margin-left:auto;"></span>
+                </div>
+                <div style="padding:6px 16px;margin-bottom:10px;font-size:11px;color:var(--muted);">
+                    <span style="background:var(--bg2);border:1px solid var(--border);padding:3px 10px;">abs(Price / SMA<span id="bounceCritN">50</span> − 1) / σ20j ≤ <span id="bounceCritSigma">0.5</span>σ</span>
+                </div>
+                <!-- Table -->
+                <div class="table-wrap">
+                    <div class="empty" id="emptyBounce" style="display:none">
+                        <div class="empty-icon">↗</div>
+                        <div class="empty-title">No Bounces Found</div>
+                    </div>
+                    <table id="bounceTable" style="display:none;table-layout:fixed;width:100%">
+                        <thead>
+                            <tr>
+                                <th class="sticky-0" style="width:22px;padding:4px 3px">★</th>
+                                <th class="sticky-1" style="width:22px;padding:4px 3px">TV</th>
+                                <th class="sticky-2" style="cursor:pointer;width:65px" onclick="bounceSort('ticker')">TICKER</th>
+                                <th class="sticky-3" style="cursor:pointer;min-width:100px" onclick="bounceSort('name')">NAME</th>
+                                <th style="cursor:pointer;width:110px" onclick="bounceSort('sector')">SECTOR</th>
+                                <th style="cursor:pointer;width:120px" onclick="bounceSort('group')">GROUP</th>
+                                <th style="cursor:pointer;width:58px;text-align:center" class="th-pct" onclick="bounceSort('mktcap')">CAP</th>
+                                <th style="cursor:pointer;width:62px;text-align:center;border-left:2px solid var(--border2);color:#6d28d9" class="th-pct" onclick="bounceSort('rs_ibd')">RS IBD</th>
+                                <th style="cursor:pointer;width:62px;text-align:center" class="th-pct" onclick="bounceSort('pct_6m')">PCT 6M</th>
+                                <th style="cursor:pointer;width:62px;text-align:center" class="th-pct" onclick="bounceSort('pct_12m')">PCT 12M</th>
+                                <th style="cursor:pointer;width:72px;text-align:center;border-left:2px solid var(--border2);color:#f59e0b" class="th-pct" onclick="bounceSort('bounce_dist_s')">DIST (σ)</th>
+                                <th style="cursor:pointer;width:72px;text-align:center;color:#f59e0b" class="th-pct" onclick="bounceSort('bounce_dist_pct')">DIST (%)</th>
+                                <th style="cursor:pointer;width:60px;text-align:center;color:#94a3b8;font-size:9px" class="th-pct" onclick="bounceSort('sigma20_pct')">σ20</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bounceBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            
