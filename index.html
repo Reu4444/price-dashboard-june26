@@ -3154,19 +3154,7 @@
 
             // ── EMA helper (prices array = newest first) ──────────────
             // Wilder/standard EMA: k = 2/(n+1), seed = SMA of last n points
-            function calcEMA(prices, n) {
-                if (prices.length < n) return null;
-                const k = 2 / (n + 1);
-                // Seed on oldest n prices (index n-1 down to 0)
-                const seed = prices.slice(0, n);
-                let ema = seed.reduce((s, v) => s + v, 0) / n;
-                // Walk forward from bar n-1 toward bar 0 (newest)
-                // prices are newest-first, so we walk from index n-1 toward 0
-                for (let i = n - 2; i >= 0; i--) {
-                    ema = prices[i] * k + ema * (1 - k);
-                }
-                return ema;
-            }
+            // calcEMA defined globally below
 
             // Compute EMA10, EMA20, 52W High distance, crossover signal, and σ20
             allData.forEach(d => {
@@ -8014,7 +8002,19 @@ Write a thorough 7-section market analysis.`;
         document.getElementById('emptyRoW').style.display = rows.length ? 'none' : '';
     }
 
-    // ── PULLBACKS MA ─────────────────────────────────────────────
+    // ── GLOBAL HELPERS ───────────────────────────────────────────
+    function calcEMA(prices, n) {
+        if (!prices || prices.length < n) return null;
+        const k = 2 / (n + 1);
+        const seed = prices.slice(0, n);
+        let ema = seed.reduce((s, v) => s + v, 0) / n;
+        for (let i = n - 2; i >= 0; i--) {
+            ema = prices[i] * k + ema * (1 - k);
+        }
+        return ema;
+    }
+
+        // ── PULLBACKS MA ─────────────────────────────────────────────
     let maSortCol = 'pb_min_s', maSortDir = 'asc'; // closest to MA first
 
     function maSort(col) {
