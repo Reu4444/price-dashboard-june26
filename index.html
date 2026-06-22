@@ -8018,7 +8018,10 @@ Write a thorough 7-section market analysis.`;
     }
 
     function renderMa() {
-        if (!allData.length || !Object.keys(rawPrices).length) return;
+        if (!allData.length || !Object.keys(rawPrices).length) {
+            document.getElementById('pbCount').textContent = 'Waiting for price data...';
+            return;
+        }
 
         const pctMin  = parseFloat(document.getElementById('pbPctMin')?.value) ?? 60;
         const sigmaT  = parseFloat(document.getElementById('pbSigma')?.value) ?? 0.5;
@@ -8030,10 +8033,11 @@ Write a thorough 7-section market analysis.`;
         const sigEl = document.getElementById('pbCritSigma'); if (sigEl) sigEl.textContent = sigmaT;
 
         const rows = [];
+        let skipped_nodata = 0, skipped_uptrend = 0, skipped_pullback = 0;
 
         allData.forEach(d => {
             const p = rawPrices[d.ticker];
-            if (!p || p.length < 201) return; // need 200 days for SMA200
+            if (!p || p.length < 201) { skipped_nodata++; return; } // need 200 days for SMA200
 
             // ── UPTREND CRITERIA ──────────────────────────────
             if ((d.pct_4w  ?? -1) < pctMin) return;
@@ -8079,7 +8083,7 @@ Write a thorough 7-section market analysis.`;
             return maSortDir === 'desc' ? bv - av : av - bv;
         });
 
-        document.getElementById('pbCount').textContent = `${rows.length} / ${allData.length} tickers`;
+        document.getElementById('pbCount').textContent = `${rows.length} matches / ${allData.length} total (${skipped_nodata} no data, ${skipped_uptrend+skipped_pullback} filtered)`;
 
         // σ distance cell
         const sigCell = (v, abs) => {
