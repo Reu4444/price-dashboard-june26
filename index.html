@@ -2236,123 +2236,59 @@
     <!-- TAB: METHOD -->
     <div class="tab-content" id="tab-method">
         <div style="padding:24px 32px;">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.15em;color:var(--accent2);margin-bottom:6px;">METHODOLOGY</div>
-            <div style="font-size:13px;color:var(--muted);margin-bottom:22px;">How each score and indicator is calculated in this dashboard</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.15em;color:var(--accent2);margin-bottom:4px;">METHODOLOGY</div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:22px;">Our approach is grounded in William O'Neil's CANSLIM methodology — a system built from studying every major stock market winner over 100 years of US market history.</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
-            <div style="margin-bottom:18px;background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--accent2);padding:14px 18px;">
-                <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.12em;color:var(--accent2);margin-bottom:10px;">RS IBD PERCENTILES</div>
-                <div style="font-size:13px;line-height:1.8;color:var(--text);">
-                    <div style="margin-bottom:1px;">Core framework — identical to IBD/O'Neil relative strength methodology.</div>
-                    <div style="height:5px;"></div>
-                    <div style="margin-bottom:1px;">Data: Daily closing prices from Firestore (up to 252 sessions, ~1,150 US tickers).</div>
-                    <div style="height:5px;"></div>
-                    <div style="margin-bottom:1px;">Segments:</div>
-                    <div style="margin-bottom:1px;">  Weekly  →  w1=ret(0,5)  w2=ret(5,10)  w3=ret(10,15)  w4=ret(15,20)</div>
-                    <div style="margin-bottom:1px;">  Monthly →  m1=ret(0,21)  m2=ret(21,42)  …  m12=ret(231,252)</div>
-                    <div style="height:5px;"></div>
-                    <div style="margin-bottom:1px;">Ranking: rank(x) = (# tickers below) / (n−1) × 100  →  percentile 1–99</div>
-                    <div style="height:5px;"></div>
-                    <div style="margin-bottom:1px;">Composite scores:</div>
-                    <div style="margin-bottom:1px;">  PCT 1W  = rank(w1)</div>
-                    <div style="margin-bottom:1px;">  PCT 4W  = avg(rank_w1, rank_w2, rank_w3, rank_w4)</div>
-                    <div style="margin-bottom:1px;">  PCT 6M  = avg(rank_m1 … rank_m6)</div>
-                    <div style="margin-bottom:1px;">  PCT 12M = EWM-weighted avg(rank_m1 … rank_m12, factor=0.90)</div>
-                    <div style="height:5px;"></div>
-                    <div style="margin-bottom:1px;">RS IBD = percentile of  (0.4×rank_3m + 0.2×rank_6m + 0.2×rank_9m + 0.4×rank_12m)</div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-top:3px solid var(--accent2);padding:18px 22px;">
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.12em;color:var(--accent2);margin-bottom:14px;">RELATIVE STRENGTH — THE CORE PRINCIPLE</div>
+                <div style="font-size:13px;line-height:1.9;color:var(--text);"><p style="margin:0 0 10px">William O'Neil's most fundamental insight: <em>"The stocks that go up the most are those that were already performing the best before they ran."</em> Rather than looking for cheap or beaten-down stocks, the CANSLIM method demands you buy strength — stocks that are already outperforming the broad market and their peers.</p>
+<p style="margin:0 0 10px">Our RS IBD score ranks every stock in our universe from 1 to 99 based on relative price performance. A score of 99 means the stock has outperformed 99% of all other stocks. O'Neil found that the greatest winners typically had RS ratings above 80–85 <em>before</em> their major price advances began. As he wrote: <em>"The average RS Rating of the best-performing stocks before their major moves was 87."</em></p>
+<p style="margin:0 0 10px">We decompose the RS score across multiple time windows — weekly and monthly segments — to capture both short-term momentum and long-term relative strength. The composite is weighted like IBD: recent performance counts more, but sustained strength over 3–12 months is the real signal. A stock with consistent percentile rankings across all timeframes is more reliable than one that simply spiked in the last week.</p>
+<p style="margin:0">O'Neil was clear: <em>"Never buy a stock with an RS Rating below 70. You want leaders, not laggards."</em> Our PCT 4W, PCT 6M and PCT 12M columns let you see whether strength is broad-based across time, or just a recent flash.</p>
                 </div>
             </div>
-            <div style="margin-bottom:18px;background:var(--bg2);border:1px solid var(--border);border-top:2px solid #0ea5e9;padding:14px 18px;">
-                <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.12em;color:#0ea5e9;margin-bottom:10px;">VOL-ADJUSTED RS (VA-RS)</div>
-                <div style="font-size:13px;line-height:1.8;color:var(--text);">
-                    <div style="margin-bottom:1px;">Concept: Sortino-like ratio — return per unit of DOWNSIDE volatility only.</div>
-                    <div style="margin-bottom:1px;">Upside moves do not penalise a stock. Only drawdown days count in the denominator.</div>
-                    <div style="height:5px;"></div>
-                    <div style="margin-bottom:1px;">Downside semi-deviation per segment:</div>
-                    <div style="margin-bottom:1px;">  Collect daily log-returns where price fell. Compute their std dev.</div>
-                    <div style="margin-bottom:1px;">  Window = segment × 3 (min 20 days). Capped at available data for m11/m12.</div>
-                    <div style="height:5px;"></div>
-                    <div style="margin-bottom:1px;">Vol-adjusted ratio:  va_w1 = ret(w1) / semi_dev(days 0–20)</div>
-                    <div style="margin-bottom:1px;">                     va_m1 = ret(m1) / semi_dev(days 0–63)  …  etc.</div>
-                    <div style="height:5px;"></div>
-                    <div style="margin-bottom:1px;">Composite:</div>
-                    <div style="margin-bottom:1px;">  VA 1W  = rank(va_w1)</div>
-                    <div style="margin-bottom:1px;">  VA 4W  = avg(rank_va_w1 … rank_va_w4)</div>
-                    <div style="margin-bottom:1px;">  VA 6M  = avg(rank_va_m1 … rank_va_m6)</div>
-                    <div style="margin-bottom:1px;">  VA 12M = EWM-weighted avg(rank_va_m1 … rank_va_m12, factor=0.90)</div>
-                    <div style="margin-bottom:1px;">  VA-RS  = percentile(0.4×VA_4W + 0.2×VA_6M + 0.4×VA_12M)</div>
-                    <div style="height:5px;"></div>
-                    <div style="margin-bottom:1px;">Δ = VA-RS − RS IBD</div>
-                    <div style="margin-bottom:1px;">  Δ > 0 → outperforms on risk-adjusted basis (underestimated by raw RS)</div>
-                    <div style="margin-bottom:1px;">  Δ < 0 → RS inflated by high volatility</div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-top:3px solid #0ea5e9;padding:18px 22px;">
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.12em;color:#0ea5e9;margin-bottom:14px;">VOL-ADJUSTED RS — QUALITY OF MOMENTUM</div>
+                <div style="font-size:13px;line-height:1.9;color:var(--text);"><p style="margin:0 0 10px">A stock can generate strong raw returns while experiencing violent swings — gaps down, distribution days, sharp intraday reversals. These erratic patterns are warning signs. The Vol-Adjusted RS (VA-RS) is designed to distinguish <em>quality</em> momentum from noisy momentum.</p>
+<p style="margin:0 0 10px">For each time segment, we divide the return by the stock's <strong>downside semi-deviation</strong> — measuring volatility using only the days when the price fell. This is a Sortino-like ratio: upside moves are not penalised. A stock that climbs steadily with shallow pullbacks will rank higher than one that posts the same cumulative return through violent swings.</p>
+<p style="margin:0 0 10px">This aligns with O'Neil's emphasis on <em>"tight price action"</em> — stocks that consolidate in a narrow range, with weeks that close near their highs and small spreads between weekly highs and lows. Wide, loose, erratic price structures, he found, almost always fail when they attempt to break out. The VA-RS captures this quality dimension quantitatively.</p>
+<p style="margin:0">The Δ column (VA-RS minus RS IBD) identifies stocks whose risk-adjusted performance is being underestimated by raw RS. A large positive Δ suggests a stock that is quietly accumulating strength with minimal drawdown — often the setup before a significant move.</p>
                 </div>
             </div>
-            <div style="margin-bottom:18px;background:var(--bg2);border:1px solid var(--border);border-top:2px solid #10b981;padding:14px 18px;">
-                <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.12em;color:#10b981;margin-bottom:10px;">EMA 10 / 20 — PULLBACKS MA</div>
-                <div style="font-size:13px;line-height:1.8;color:var(--text);">
-                    <div style="margin-bottom:1px;">Formula: Standard EMA, k=2/(n+1), seeded on SMA of last n bars.</div>
-                    <div style="height:5px;"></div>
-                    <div style="margin-bottom:1px;">vs MA20 coloring: Red if > +25% (extended). Neutral otherwise.</div>
-                    <div style="margin-bottom:1px;">vs 52W High:      Red if < −25% (too far from highs). Neutral otherwise.</div>
-                    <div style="height:5px;"></div>
-                    <div style="margin-bottom:1px;">EMA10 > EMA20 filter: bullish structure.</div>
-                    <div style="margin-bottom:1px;">  Spread = (EMA10/EMA20 − 1) × 100% — cap to avoid overextended setups.</div>
-                    <div style="height:5px;"></div>
-                    <div style="margin-bottom:1px;">↗ REBOND MA50 (SMA): within last N sessions,</div>
-                    <div style="margin-bottom:1px;">  close ≤ SMA50 × (1+tol%) — touched or broke support</div>
-                    <div style="margin-bottom:1px;">  max 2 consecutive closes below SMA50 (O'Neil undercut-and-recover)</div>
-                    <div style="margin-bottom:1px;">  current close above SMA50 — confirmed bounce</div>
-                    <div style="height:5px;"></div>
-                    <div style="margin-bottom:1px;">MAX DROP filter: largest 1-day decline in last 20 sessions ≤ N × σ20.</div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-top:3px solid #10b981;padding:18px 22px;">
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.12em;color:#10b981;margin-bottom:14px;">UPTREND STRUCTURE — EMA &amp; PULLBACKS</div>
+                <div style="font-size:13px;line-height:1.9;color:var(--text);"><p style="margin:0 0 10px">O'Neil insisted that you only buy stocks in a healthy uptrend. His benchmark: the stock must be above its 10-week (50-day) and 40-week (200-day) moving averages, with the shorter average above the longer. This structure confirms that institutions are in accumulation mode and the primary trend is intact.</p>
+<p style="margin:0 0 10px">Our PULLBACKS MA screen applies this logic rigorously. For a stock to qualify, it must satisfy all of these simultaneously: PCT 4W, 6M and 12M all above 60 (confirming broad-based relative strength), EMA20 above SMA50 above SMA200 (confirming the bullish MA cascade), and EMA10 above EMA20 (confirming the short-term structure is intact).</p>
+<p style="margin:0 0 10px">The key insight is the pullback criterion: <em>how close is the stock to its EMA10 or EMA20?</em> We normalise this distance by the stock's own daily volatility (σ20). A distance below 0.5σ means the stock is within half a normal daily move of its moving average — this is the optimal entry zone. It has pulled back enough to reduce risk, but not so far that the trend is broken.</p>
+<p style="margin:0">O'Neil described this as buying during <em>"the natural, normal pullback in price that occurs as the stock pauses or digests its prior advance."</em> The 10-week line in particular was his favourite support level for adding to existing positions during a confirmed uptrend.</p>
                 </div>
             </div>
-            <div style="margin-bottom:18px;background:var(--bg2);border:1px solid var(--border);border-top:2px solid #f59e0b;padding:14px 18px;">
-                <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.12em;color:#f59e0b;margin-bottom:10px;">BOUNCES MA (SMA 50 / 100 / 200)</div>
-                <div style="font-size:13px;line-height:1.8;color:var(--text);">
-                    <div style="margin-bottom:1px;">Within last N sessions (default 10):</div>
-                    <div style="margin-bottom:1px;">  1. Price touched or broke SMA (close ≤ SMA × (1+tol%))</div>
-                    <div style="margin-bottom:1px;">  2. Max consecutive closes below SMA ≤ max_below (default 2)</div>
-                    <div style="margin-bottom:1px;">  3. Current close above SMA — confirmed recovery</div>
-                    <div style="height:5px;"></div>
-                    <div style="margin-bottom:1px;">SMA = Simple moving average (50, 100, or 200 days — toggle in UI).</div>
-                    <div style="height:5px;"></div>
-                    <div style="margin-bottom:1px;">Columns:  vs MA = current distance from SMA</div>
-                    <div style="margin-bottom:1px;">          TOUCH = sessions ago (1 = yesterday)</div>
-                    <div style="margin-bottom:1px;">          SOUS MA = consecutive closes below SMA before recovery</div>
-                    <div style="margin-bottom:1px;">          RÉCUP % = return from touch price to today</div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-top:3px solid #f59e0b;padding:18px 22px;">
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.12em;color:#f59e0b;margin-bottom:14px;">BOUNCES OFF KEY MOVING AVERAGES</div>
+                <div style="font-size:13px;line-height:1.9;color:var(--text);"><p style="margin:0 0 10px">The SMA 50, 100 and 200 are widely watched by institutional investors. When a strong stock pulls back to one of these levels, it often represents an area of natural support — professional buyers who missed the initial breakout use these levels to accumulate.</p>
+<p style="margin:0 0 10px">O'Neil documented how the greatest winners would repeatedly find support at their 10-week moving average during their major advances, offering successive low-risk buying opportunities throughout the run. The same principle applies to the 50-day and 200-day: a clean touch with light volume and a quick recovery is a sign of institutional demand absorbing the supply.</p>
+<p style="margin:0 0 10px">Our BOUNCES MA screen identifies stocks within 0.5σ of a key moving average (adjustable). The normalisation by volatility is critical — a $500 stock touching its 50-day at -3% is very different from a $10 stock at the same distance. Only by expressing the distance in units of the stock's own daily volatility can we compare setups across the universe fairly.</p>
+<p style="margin:0">The screen intentionally has no uptrend filter — sometimes the best bounce setups are in stocks rebuilding their trend. Use the RS IBD and PCT columns in the table to judge whether the stock is a potential leader or a laggard.</p>
                 </div>
             </div>
-            <div style="margin-bottom:18px;background:var(--bg2);border:1px solid var(--border);border-top:2px solid #6d28d9;padding:14px 18px;">
-                <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.12em;color:#6d28d9;margin-bottom:10px;">SECTORS — COMPOSITE SCORE</div>
-                <div style="font-size:13px;line-height:1.8;color:var(--text);">
-                    <div style="margin-bottom:1px;">Eligibility: all 4 percentiles (PCT 1W/4W/6M/12M) ≥ RS MIN (default 50).</div>
-                    <div style="height:5px;"></div>
-                    <div style="margin-bottom:1px;">Stock score  = avg(PCT 1W, PCT 4W, PCT 6M, PCT 12M)</div>
-                    <div style="margin-bottom:1px;">Sector RS    = avg score of top N stocks</div>
-                    <div style="margin-bottom:1px;">Sector VA    = same using VA 1W/4W/6M/12M percentiles</div>
-                    <div style="margin-bottom:1px;">Sector order = (RS + VA) / 2</div>
-                    <div style="height:5px;"></div>
-                    <div style="margin-bottom:1px;">Badge RS / VA: computed on ALL sector members — universe breadth signal.</div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-top:3px solid #6d28d9;padding:18px 22px;">
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.12em;color:#6d28d9;margin-bottom:14px;">SECTOR &amp; GROUP ROTATION</div>
+                <div style="font-size:13px;line-height:1.9;color:var(--text);"><p style="margin:0 0 10px">O'Neil's research showed that <em>"37% of a stock's price movement is directly tied to the performance of the industry group the stock is in."</em> Picking the right sector and group is almost as important as picking the right stock. In fact, he found that the top 1 or 2 stocks in the leading group of the leading sector in any given market cycle could deliver multiples of the average market return.</p>
+<p style="margin:0 0 10px">Our SECTORS mosaic ranks all 11 GICS sectors by a composite score — the average RS and VA-RS percentile of their members. The top sectors in the mosaic represent where institutional money is flowing right now. Rotation happens when money moves from one leadership sector to another: watching PCT 1W vs PCT 6M divergences in the GROUPS tab reveals which groups are accelerating short-term versus which are established leaders.</p>
+<p style="margin:0">The GROUP MOMENTUM screen shows AVG PCT (average of all 5 RS percentiles) and AVG VA (average of 4 vol-adjusted percentiles) for each industry group. The strongest setups combine a group in the top quartile on both measures, with individual stocks showing PCT 6M and 12M above 70 alongside the uptrend MA criteria.</p>
                 </div>
             </div>
-            <div style="margin-bottom:18px;background:var(--bg2);border:1px solid var(--border);border-top:2px solid #15803d;padding:14px 18px;">
-                <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.12em;color:#15803d;margin-bottom:10px;">SALES ACCELERATION</div>
-                <div style="font-size:13px;line-height:1.8;color:var(--text);">
-                    <div style="margin-bottom:1px;">Source: Google Sheets (Apps Script), consensus estimates.</div>
-                    <div style="height:5px;"></div>
-                    <div style="margin-bottom:1px;">Columns: LAST QTR % | CUR QTR % | NXT QTR % | SALES 2027</div>
-                    <div style="height:5px;"></div>
-                    <div style="margin-bottom:1px;">Δ CQ-LQ = CUR QTR % − LAST QTR %   ← acceleration vs prior quarter</div>
-                    <div style="margin-bottom:1px;">Δ NQ-CQ = NXT QTR % − CUR QTR %   ← expected further acceleration</div>
-                    <div style="margin-bottom:1px;">ACC      = count of positive deltas (0 / 1 / 2)</div>
-                    <div style="height:5px;"></div>
-                    <div style="margin-bottom:1px;">Color: Green ≥ +25%  |  Red < 0%  |  Neutral otherwise</div>
-                    <div style="margin-bottom:1px;">Filter (SALES % ≥ X): requires LAST QTR, CUR QTR and NXT QTR all ≥ X simultaneously.</div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-top:3px solid #15803d;padding:18px 22px;">
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.12em;color:#15803d;margin-bottom:14px;">FUNDAMENTAL MOMENTUM — SALES ACCELERATION</div>
+                <div style="font-size:13px;line-height:1.9;color:var(--text);"><p style="margin:0 0 10px">O'Neil's C in CANSLIM stands for Current quarterly earnings — and he demanded acceleration, not just growth. <em>"In almost every case, earnings growth accelerated sometime in the 10 quarters before a towering price move began."</em> A company reporting 40–50% growth after quarters of 15% growth is a fundamentally different animal.</p>
+<p style="margin:0 0 10px">We track sales growth rather than just EPS, because sales are harder to manipulate and more forward-looking. The three columns — LAST QTR %, CUR QTR %, NXT QTR % — let you see at a glance whether growth is accelerating (positive Δ), stable, or decelerating. The ACC score (0, 1 or 2) counts how many of the two Δs are positive: a score of 2/2 means double acceleration — the setup O'Neil described as most likely to precede a major price advance.</p>
+<p style="margin:0 0 10px">O'Neil was equally emphatic about deceleration: <em>"Two consecutive quarters of material slowdown — a decline of two-thirds or greater from the previous rate — should be a red flag."</em> A stock with ACC = 0 and declining sales is showing exactly this warning sign, regardless of how strong its technical RS may be.</p>
+<p style="margin:0">The combination of RS ≥ 80 + ACC = 2/2 appears in our NARRATIVE tab as "High Conviction" — names where both the market's price action and the company's fundamental momentum are simultaneously accelerating. Historically, these are the setups that produce the largest moves.</p>
                 </div>
             </div>
             </div><!-- end grid -->
         </div>
     </div>
-
     <!-- TAB: JOURNAL -->
     <div class="tab-content" id="tab-journal">
 
