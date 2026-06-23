@@ -3147,10 +3147,7 @@
             fundSubTab = tab;
             tab = 'fund';
         }
-        if (tab === 'daily') {
-            tab = 'price';
-            priceSubTab = 'daily';
-        }
+
         if (tab === 'groups') {
             tab = 'price';
             priceSubTab = 'groups';
@@ -3180,7 +3177,7 @@
             const el = document.getElementById('narrativeApiKey');
             if (saved && el && !el.value) el.value = saved;
         }
-        if (tab === 'daily') { initDailyDate(); renderDaily(); }
+        if (tab === 'daily') { initDailyDate(); setTimeout(renderDaily, 50); }
         renderActive();
     }
 
