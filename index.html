@@ -4980,14 +4980,14 @@ Write a thorough 7-section market analysis.`;
                 // Show ALL tickers in group, sorted by dist_high desc
                 const highS = [...filtered].sort((a,b) => b.dist_high - a.dist_high);
                 const lowS  = [...filtered].sort((a,b) => a.dist_low - b.dist_low);
-                document.getElementById('52wHighContent').innerHTML = makeTable52w(highS, 'high');
-                document.getElementById('52wLowContent').innerHTML  = makeTable52w(lowS, 'low');
+                document.getElementById('52wHighContent').innerHTML = makeTable52w(highS, 'high', 2);
+                document.getElementById('52wLowContent').innerHTML  = makeTable52w(lowS, 'low', 5);
             } else {
                 if (drill) drill.style.display = 'none';
                 const highS = [..._52wRows].filter(d => d.dist_high >= -2).sort((a,b) => b.dist_high - a.dist_high);
                 const lowS  = [..._52wRows].filter(d => d.dist_low <= 5).sort((a,b) => a.dist_low - b.dist_low);
-                document.getElementById('52wHighContent').innerHTML = makeTable52w(highS, 'high');
-                document.getElementById('52wLowContent').innerHTML  = makeTable52w(lowS, 'low');
+                document.getElementById('52wHighContent').innerHTML = makeTable52w(highS, 'high', 2);
+                document.getElementById('52wLowContent').innerHTML  = makeTable52w(lowS, 'low', 5);
             }
         }
     }
@@ -5029,14 +5029,17 @@ Write a thorough 7-section market analysis.`;
             sorted.forEach(g => {
                 const pct = field === 'high' ? g.pctHigh : g.pctLow;
                 const n   = field === 'high' ? g.highs   : g.lows;
-                const c   = pct >= 70 ? 'var(--up)' : pct >= 40 ? 'var(--text)' : 'var(--muted)';
+                // For highs: green if >=70, else default. For lows: red if >=70, else default.
+                const c = field === 'high'
+                    ? (pct >= 70 ? 'var(--up)' : 'var(--text)')
+                    : (pct >= 70 ? 'var(--down)' : 'var(--text)');
                 html += `<tr style="cursor:pointer;border-bottom:1px solid var(--faint);"
                     onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''"
                     onclick="set52wView('stocks','${g.group.replace(/'/g,"\'")}')">
                     <td style="padding:5px 8px;font-size:12px;color:var(--accent2);font-weight:600">${g.group}</td>
                     <td style="padding:5px 8px;font-size:11px;color:var(--muted);text-align:center">${g.sector}</td>
                     <td style="padding:5px 8px;font-size:12px;text-align:center;color:var(--muted)">${g.total}</td>
-                    <td style="padding:5px 8px;font-size:13px;font-weight:700;text-align:center;color:${c}">${pct}%</td>
+                    <td style="padding:5px 8px;font-size:13px;text-align:center;color:${c}">${pct}%</td>
                     <td style="padding:5px 8px;font-size:12px;text-align:center;color:${c}">${n}</td>
                 </tr>`;
             });
@@ -5052,25 +5055,32 @@ Write a thorough 7-section market analysis.`;
     }
 
     // Alias for makeTable used in drill-down
-    function makeTable52w(sorted, mode) {
+    function makeTable52w(sorted, mode, threshold) {
         const thS = 'font-size:9px;letter-spacing:.1em;color:var(--muted);padding:6px 10px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg3);white-space:nowrap;';
         const thN = 'font-size:9px;letter-spacing:.1em;color:var(--muted);padding:6px 10px;text-align:center;border-bottom:1px solid var(--border);background:var(--bg3);white-space:nowrap;';
         if (!sorted.length) return '<div style="padding:20px;color:var(--muted);font-size:12px;">—</div>';
+        const thr = threshold ?? 0; // show Yes if within threshold
         let html = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;">
       <thead><tr>
         <th style="${thS}width:60px">TICKER</th>
-        <th style="${thS}">NAME</th>
+        <th style="${thS}width:160px">NAME</th>
+        <th style="${thS}width:90px">SECTOR</th>
+        <th style="${thS}width:110px">GROUP</th>
         <th style="${thN}width:65px">${mode === 'high' ? 'TO HIGH' : 'TO LOW'}</th>
-        <th style="${thN}width:60px">MKT CAP</th>
+        <th style="${thN}width:55px">CAP</th>
       </tr></thead><tbody>`;
-        sorted.slice(0, 100).forEach(d => {
+        sorted.slice(0, 150).forEach(d => {
             const val = mode === 'high' ? d.dist_high : d.dist_low;
             const c   = mode === 'high' ? 'var(--up)' : 'var(--down)';
-            const label = val === 0 ? '<span style="color:var(--up);font-weight:700;font-size:11px;">✓ Yes</span>'
-                        : `<span style="color:${c};font-weight:700;">${val >= 0 ? '+' : ''}${val}%</span>`;
+            const near = mode === 'high' ? val >= -thr : val <= thr;
+            const label = near
+                ? '<span style="color:var(--up);font-weight:700;font-size:11px;">✓ Yes</span>'
+                : `<span style="color:${c};font-weight:700;">${val >= 0 ? '+' : ''}${val}%</span>`;
             html += `<tr style="border-bottom:1px solid var(--faint)">
         <td style="padding:5px 10px;font-size:12px;font-weight:700;color:var(--accent2);cursor:pointer" onclick="openNews('${d.ticker}')">${d.ticker}</td>
         <td style="padding:5px 10px;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.name||''}</td>
+        <td style="padding:5px 10px;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.sector||''}</td>
+        <td style="padding:5px 10px;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.group||''}</td>
         <td style="padding:5px 10px;font-size:12px;text-align:center">${label}</td>
         <td style="padding:5px 10px;font-size:12px;text-align:center;color:var(--muted)">${d.mktcap ? Math.round(d.mktcap)+'B' : '—'}</td>
       </tr>`;
