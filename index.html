@@ -1331,12 +1331,12 @@
                                 <th style="cursor:pointer;width:110px" onclick="maSort('sector')">SECTOR</th>
                                 <th style="cursor:pointer;width:120px" onclick="maSort('group')">GROUP</th>
                                 <th style="cursor:pointer;width:58px;text-align:center" class="th-pct" onclick="maSort('mktcap')">CAP</th>
-                                <th style="cursor:pointer;width:62px;text-align:center;border-left:2px solid var(--border2);color:#6d28d9" class="th-pct" onclick="maSort('rs_ibd')">RS IBD</th>
-                                <th style="cursor:pointer;width:60px;text-align:center" class="th-pct" onclick="maSort('pct_4w')">PCT 4W</th>
+                                <th style="cursor:pointer;width:60px;text-align:center;border-left:2px solid var(--border2)" class="th-pct" onclick="maSort('pct_4w')">PCT 4W</th>
                                 <th style="cursor:pointer;width:60px;text-align:center" class="th-pct" onclick="maSort('pct_6m')">PCT 6M</th>
                                 <th style="cursor:pointer;width:60px;text-align:center" class="th-pct" onclick="maSort('pct_12m')">PCT 12M</th>
+                                <th style="cursor:pointer;width:62px;text-align:center;border-left:2px solid var(--border2);color:#6d28d9" class="th-pct" onclick="maSort('rs_ibd')">RS IBD</th>
                                 <th style="cursor:pointer;width:72px;text-align:center;border-left:2px solid var(--border2);color:#0ea5e9" class="th-pct" onclick="maSort('pb_dist10_s')">EMA10 (σ)</th>
-                                <th style="cursor:pointer;width:72px;text-align:center;color:#f59e0b;border-left:2px solid var(--border2)" class="th-pct" onclick="maSort('pb_min_s')">MIN σ</th>
+                                <th style="cursor:pointer;width:72px;text-align:center;color:#10b981" class="th-pct" onclick="maSort('pb_dist20_s')">EMA20 (σ)</th>
                             </tr>
                         </thead>
                         <tbody id="maBody"></tbody>
@@ -5721,7 +5721,7 @@ Write a thorough 7-section market analysis.`;
             color = '#94a3b8';
         else
             color = '#b91c1c';
-        return '<span style="color:' + color + ';font-size:12px;font-weight:700;display:block;text-align:center;">' + v + '</span>';
+        return '<span style="color:' + color + ';font-size:12px;font-weight:700;">' + v + '</span>';
     }
 
     function updateStats(mode) {
@@ -8010,12 +8010,12 @@ Write a thorough 7-section market analysis.`;
                  <td class="td-name" style="font-size:12px;">${d.sector||''}</td>
                  <td class="td-name" style="font-size:12px;">${d.group||''}</td>
                  <td class="td-pct">${fmktcap(d.mktcap)}</td>
-                 <td class="td-pct" style="border-left:2px solid var(--border2)">${pctCell(d.rs_ibd)}</td>
-                 <td class="td-pct">${pctCell(d.pct_4w)}</td>
+                 <td class="td-pct" style="border-left:2px solid var(--border2)">${pctCell(d.pct_4w)}</td>
                  <td class="td-pct">${pctCell(d.pct_6m)}</td>
                  <td class="td-pct">${pctCell(d.pct_12m)}</td>
+                 <td class="td-pct" style="border-left:2px solid var(--border2)">${pctCell(d.rs_ibd)}</td>
                  <td class="td-pct" style="border-left:2px solid var(--border2)">${sigCell(d.pb_dist10_s)}</td>
-                 <td class="td-pct" style="border-left:2px solid var(--border2)">${minCell(d.pb_min_s)}</td>`;
+                 <td class="td-pct">${sigCell(d.pb_dist20_s)}</td>`;
             tbody.appendChild(tr);
         });
 
