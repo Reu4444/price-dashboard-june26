@@ -2096,7 +2096,7 @@
                 </div>
 
                 <div>
-                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">4 — % LEADERS ABOVE EMA20 (SMA5)</div>
+                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">4 — % LEADERS ABOVE SMA20 (SMA5)</div>
                     <div style="position:relative;width:100%;height:200px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
                         <canvas id="brChart4"></canvas>
                     </div>
@@ -4470,11 +4470,11 @@
                     if (c0 >= Math.max(...window3m)) nh3mL++;
                 }
 
-                // % above EMA20
-                const ema20 = calcEMA(p.slice(i, i + 25), 20);
-                if (ema20 != null) {
+                // % above SMA20
+                if (p.length > i + 20) {
+                    const sma20 = p.slice(i, i + 20).reduce((s,v) => s + (v||0), 0) / 20;
                     totEma20++;
-                    if (c0 > ema20) aboveEma20L++;
+                    if (c0 > sma20) aboveEma20L++;
                 }
             });
 
@@ -4530,7 +4530,7 @@
 
         // Chart 4 — % above EMA20
         makeChart('brChart4', [
-            ds(`% Leaders above EMA20 (SMA5)`, '#6d28d9', sma(raw.map(d => d.pctEma20))),
+            ds(`% Leaders above SMA20 (SMA5)`, '#6d28d9', sma(raw.map(d => d.pctEma20))),
             { ...ds('50%', 'rgba(148,163,184,0.3)', raw.map(() => 50), [4,4]), borderWidth: 1 },
         ], { labels, yMin: 0, yMax: 100, yFmt: v => v+'%', tooltipFn: ctx => `${ctx.dataset.label}: ${pctFmt(ctx.raw)}` });
 
