@@ -781,13 +781,12 @@
         <!-- TABS -->
         <div class="tabs">
             <button class="tab active" onclick="switchTab('price')">REL. STRENGTH</button>
+            <button class="tab" onclick="switchTab('daily')">DAILY MOVES</button>
+            <button class="tab" onclick="switchTab('rrg')">ROTATION</button>
+            <button class="tab" onclick="switchTab('returns')">% RETURNS</button>
             <button class="tab" onclick="switchTab('fund')">FUNDAMENTALS</button>
             <button class="tab" onclick="switchTab('best')">SCREENING</button>
-            <button class="tab" onclick="switchTab('returns')">% RETURNS</button>
-            <button class="tab" onclick="switchTab('rrg')">ROTATION</button>
             <button class="tab" onclick="switchTab('compare')">COMPARE</button>
-            
-            <button class="tab" onclick="switchTab('daily')">DAILY MOVES</button>
             <button class="tab" onclick="switchTab('narrative')">NARRATIVE</button>
             <button class="tab" onclick="switchTab('method')">METHOD</button>
         </div>
@@ -2144,7 +2143,9 @@
             <!-- BREADTH VIEW -->
             <div id="dailyBreadthView" style="display:none;">
                 <div style="margin-bottom:8px;font-size:11px;color:var(--muted);">% Advancing stocks vs SPY — computed from Firestore price history (252 sessions)</div>
-                <canvas id="dailyBreadthChart" style="width:100%;height:320px;"></canvas>
+                <div style="position:relative;width:100%;height:360px;">
+                    <canvas id="dailyBreadthChart"></canvas>
+                </div>
             </div>
 
         </div>
@@ -4076,15 +4077,15 @@
 
         const makeGroupTable = (sorted, colorVar) => {
             if (!sorted.length) return '<div style="padding:20px;color:var(--muted);font-size:12px;">—</div>';
-            const thS = 'font-size:9px;letter-spacing:.1em;color:var(--muted);padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg3);';
-            const thN = 'font-size:9px;letter-spacing:.1em;color:var(--muted);padding:6px 8px;text-align:center;border-bottom:1px solid var(--border);background:var(--bg3);';
-            let html = `<table style="width:100%;border-collapse:collapse;">
+            const thS = 'font-size:10px;letter-spacing:.08em;color:var(--muted);padding:7px 12px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg3);';
+            const thN = 'font-size:10px;letter-spacing:.08em;color:var(--muted);padding:7px 12px;text-align:center;border-bottom:1px solid var(--border);background:var(--bg3);';
+            let html = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;">
               <thead><tr>
                 <th style="${thS}width:auto">GROUP</th>
-                <th style="${thN}width:70px">SECTOR</th>
+                <th style="${thN}width:90px">SECTOR</th>
                 <th style="${thN}width:44px">#</th>
-                <th style="${thN}width:60px">AVG MOVE</th>
-                <th style="${thN}width:52px">ADV%</th>
+                <th style="${thN}width:80px">AVG MOVE</th>
+                <th style="${thN}width:60px">ADV%</th>
               </tr></thead><tbody>`;
             sorted.slice(0, 80).forEach(g => {
                 const c = g.avgMove >= 0 ? 'var(--up)' : 'var(--down)';
@@ -4092,11 +4093,11 @@
                 html += `<tr style="border-bottom:1px solid var(--faint);cursor:pointer;"
                     onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''"
                     onclick="dailyDrillGroup('${g.group.replace(/'/g,"\'")}')">
-                  <td style="padding:5px 8px;font-size:12px;color:var(--accent2);font-weight:600">${g.group}</td>
-                  <td style="padding:5px 8px;font-size:10px;color:var(--muted);text-align:center">${g.sector||''}</td>
-                  <td style="padding:5px 8px;font-size:12px;text-align:center;color:var(--muted)">${g.count}</td>
-                  <td style="padding:5px 8px;font-size:13px;font-weight:700;color:${c};text-align:center">${g.avgMove >= 0 ? '+' : ''}${g.avgMove}%</td>
-                  <td style="padding:5px 8px;font-size:12px;text-align:center;color:${advC}">${g.advPct}%</td>
+                  <td style="padding:7px 12px;font-size:13px;color:var(--accent2);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.group}</td>
+                  <td style="padding:7px 12px;font-size:12px;color:var(--muted);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.sector||''}</td>
+                  <td style="padding:7px 12px;font-size:13px;text-align:center;color:var(--muted)">${g.count}</td>
+                  <td style="padding:7px 12px;font-size:14px;font-weight:700;color:${c};text-align:center">${g.avgMove >= 0 ? '+' : ''}${g.avgMove}%</td>
+                  <td style="padding:7px 12px;font-size:13px;text-align:center;color:${advC}">${g.advPct}%</td>
                 </tr>`;
             });
             html += '</tbody></table>';
@@ -4125,6 +4126,10 @@
 
     function renderBreadthChart() {
         if (!allData.length || !Object.keys(rawPrices).length || !priceDates.length) return;
+        if (typeof Chart === 'undefined') {
+            document.getElementById('dailyBreadthView').innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">Loading Chart.js... please try again in a moment.</div>';
+            return;
+        }
 
         const spyPrices = rawPrices['SPY'];
         if (!spyPrices) { console.warn('SPY not in rawPrices'); return; }
