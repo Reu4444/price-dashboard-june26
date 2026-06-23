@@ -476,6 +476,7 @@
     .td-ticker {
         font-weight: 600;
         font-size: 13px;
+        text-align: center;
     }
 
     .td-name {
@@ -525,6 +526,11 @@
         text-align: center;
         min-width: 44px;
         font-size: 12px;
+        vertical-align: middle;
+    }
+
+    td {
+        vertical-align: middle;
     }
 
     .empty {
@@ -932,8 +938,7 @@
                             <th style="cursor:pointer;width:62px;text-align:center" class="th-pct" onclick="bounceSort('pct_6m')">PCT 6M</th>
                             <th style="cursor:pointer;width:62px;text-align:center" class="th-pct" onclick="bounceSort('pct_12m')">PCT 12M</th>
                             <th style="cursor:pointer;width:72px;text-align:center;border-left:2px solid var(--border2);color:#f59e0b" class="th-pct" onclick="bounceSort('bounce_dist_s')">DIST (σ)</th>
-                            <th style="cursor:pointer;width:72px;text-align:center;color:#f59e0b" class="th-pct" onclick="bounceSort('bounce_dist_pct')">DIST (%)</th>
-                            <th style="cursor:pointer;width:60px;text-align:center;color:#94a3b8;font-size:9px" class="th-pct" onclick="bounceSort('sigma20_pct')">σ20</th>
+
                         </tr></thead>
                         <tbody id="bounceBody"></tbody>
                     </table>
@@ -1331,9 +1336,7 @@
                                 <th style="cursor:pointer;width:60px;text-align:center" class="th-pct" onclick="maSort('pct_6m')">PCT 6M</th>
                                 <th style="cursor:pointer;width:60px;text-align:center" class="th-pct" onclick="maSort('pct_12m')">PCT 12M</th>
                                 <th style="cursor:pointer;width:72px;text-align:center;border-left:2px solid var(--border2);color:#0ea5e9" class="th-pct" onclick="maSort('pb_dist10_s')">EMA10 (σ)</th>
-                                <th style="cursor:pointer;width:72px;text-align:center;color:#10b981" class="th-pct" onclick="maSort('pb_dist20_s')">EMA20 (σ)</th>
                                 <th style="cursor:pointer;width:72px;text-align:center;color:#f59e0b;border-left:2px solid var(--border2)" class="th-pct" onclick="maSort('pb_min_s')">MIN σ</th>
-                                <th style="cursor:pointer;width:60px;text-align:center;color:#94a3b8;font-size:9px" class="th-pct" onclick="maSort('sigma20_pct')">σ20</th>
                             </tr>
                         </thead>
                         <tbody id="maBody"></tbody>
@@ -3804,8 +3807,7 @@
                  <td class="td-pct">${pctCell(d.pct_6m)}</td>
                  <td class="td-pct">${pctCell(d.pct_12m)}</td>
                  <td class="td-pct" style="border-left:2px solid var(--border2)">${distCell(d.bounce_dist_s)}</td>
-                 <td class="td-pct">${pctCell2(d.bounce_dist_pct)}</td>
-                 <td class="td-pct">${sigCell(d.sigma20_pct)}</td>`;
+`;
             tbody.appendChild(tr);
         });
         const bt = document.getElementById('bounceTable');
@@ -8013,9 +8015,7 @@ Write a thorough 7-section market analysis.`;
                  <td class="td-pct">${pctCell(d.pct_6m)}</td>
                  <td class="td-pct">${pctCell(d.pct_12m)}</td>
                  <td class="td-pct" style="border-left:2px solid var(--border2)">${sigCell(d.pb_dist10_s)}</td>
-                 <td class="td-pct">${sigCell(d.pb_dist20_s)}</td>
-                 <td class="td-pct" style="border-left:2px solid var(--border2)">${minCell(d.pb_min_s)}</td>
-                 <td class="td-pct">${sigmaCell(d.sigma20_pct)}</td>`;
+                 <td class="td-pct" style="border-left:2px solid var(--border2)">${minCell(d.pb_min_s)}</td>`;
             tbody.appendChild(tr);
         });
 
