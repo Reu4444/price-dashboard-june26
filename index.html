@@ -872,30 +872,27 @@
                         <div class="empty-icon">📊</div>
                         <div class="empty-title">No Data</div>
                     </div>
-                    <table id="vaTable" style="display:none;table-layout:auto;width:auto">
+                    <table id="vaTable" style="display:none;table-layout:fixed;width:100%">
                         <thead>
                             <tr>
                                 <th class="sticky-0" style="width:22px;padding:4px 3px">★</th>
                                 <th class="sticky-1" style="width:22px;padding:4px 3px">TV</th>
-                                <th class="sticky-2" style="cursor:pointer;width:65px" onclick="vaSort('ticker')">TICKER</th>
-                                <th class="sticky-3" style="cursor:pointer;min-width:100px" onclick="vaSort('name')">NAME</th>
-                                <th style="cursor:pointer;width:105px" onclick="vaSort('sector')">SECTOR</th>
-                                <th style="cursor:pointer;width:120px" onclick="vaSort('group')">GROUP</th>
-                                <th style="cursor:pointer;width:55px;text-align:center" class="th-pct" onclick="vaSort('mktcap')">CAP</th>
-                                <!-- Raw percentiles -->
-                                <th style="cursor:pointer;width:58px;text-align:center;border-left:1px solid var(--faint);color:var(--muted);font-size:10px" class="th-pct" onclick="vaSort('pct_1w')" title="Percentile brut 1W">1W</th>
-                                <th style="cursor:pointer;width:58px;text-align:center;color:var(--muted);font-size:10px" class="th-pct" onclick="vaSort('pct_4w')" title="Percentile brut 4W">4W</th>
-                                <th style="cursor:pointer;width:58px;text-align:center;color:var(--muted);font-size:10px" class="th-pct" onclick="vaSort('pct_6m')" title="Percentile brut 6M">6M</th>
-                                <th style="cursor:pointer;width:58px;text-align:center;color:var(--muted);font-size:10px;border-right:1px solid var(--faint)" class="th-pct" onclick="vaSort('pct_12m')" title="Percentile brut 12M">12M</th>
-                                <!-- Vol-adj percentiles -->
-                                <th style="cursor:pointer;width:62px;text-align:center;border-left:2px solid var(--border2);color:#0ea5e9;font-size:10px" class="th-pct" onclick="vaSort('va_1w')" title="Percentile vol-ajusté 1W = ret_1w / σ_5j">VA 1W</th>
-                                <th style="cursor:pointer;width:62px;text-align:center;color:#0ea5e9;font-size:10px" class="th-pct" onclick="vaSort('va_4w')" title="Percentile vol-ajusté 4W = ret_4w / σ_20j">VA 4W</th>
-                                <th style="cursor:pointer;width:62px;text-align:center;color:#0ea5e9;font-size:10px" class="th-pct" onclick="vaSort('va_6m')" title="Percentile vol-ajusté 6M = ret_6m / σ_130j">VA 6M</th>
-                                <th style="cursor:pointer;width:62px;text-align:center;color:#0ea5e9;font-size:10px" class="th-pct" onclick="vaSort('va_12m')" title="Percentile vol-ajusté 12M = ret_12m / σ_260j">VA 12M</th>
-                                <!-- Composite scores -->
-                                <th style="cursor:pointer;width:62px;text-align:center;border-left:2px solid var(--border2);color:#6d28d9;font-weight:700" class="th-pct" onclick="vaSort('rs_ibd')" title="RS IBD standard">RS IBD</th>
-                                <th style="cursor:pointer;width:62px;text-align:center;color:var(--accent2);font-weight:700" class="th-pct" onclick="vaSort('va_rs')" title="RS vol-ajusté composite (même pondération IBD)">VA-RS</th>
-                                <th style="cursor:pointer;width:58px;text-align:center;font-size:10px;border-left:1px solid var(--faint)" class="th-pct" onclick="vaSort('va_delta')" title="VA-RS minus RS IBD — positif = sous-estimé par RS brut">Δ</th>
+                                <th class="sticky-2" style="cursor:pointer;width:60px" onclick="vaSort('ticker')">TICKER</th>
+                                <th class="sticky-3" style="cursor:pointer;width:180px" onclick="vaSort('name')">NAME</th>
+                                <th style="cursor:pointer;width:100px" onclick="vaSort('sector')">SECTOR</th>
+                                <th style="cursor:pointer;width:110px" onclick="vaSort('group')">GROUP</th>
+                                <th style="cursor:pointer;width:50px;text-align:center" class="th-pct" onclick="vaSort('mktcap')">CAP</th>
+                                <th style="cursor:pointer;width:52px;text-align:center;border-left:1px solid var(--faint);color:var(--muted);font-size:10px" class="th-pct" onclick="vaSort('pct_1w')">1W</th>
+                                <th style="cursor:pointer;width:52px;text-align:center;color:var(--muted);font-size:10px" class="th-pct" onclick="vaSort('pct_4w')">4W</th>
+                                <th style="cursor:pointer;width:52px;text-align:center;color:var(--muted);font-size:10px" class="th-pct" onclick="vaSort('pct_6m')">6M</th>
+                                <th style="cursor:pointer;width:52px;text-align:center;color:var(--muted);font-size:10px;border-right:1px solid var(--faint)" class="th-pct" onclick="vaSort('pct_12m')">12M</th>
+                                <th style="cursor:pointer;width:58px;text-align:center;border-left:2px solid var(--border2);color:#0ea5e9;font-size:10px" class="th-pct" onclick="vaSort('va_1w')">VA 1W</th>
+                                <th style="cursor:pointer;width:58px;text-align:center;color:#0ea5e9;font-size:10px" class="th-pct" onclick="vaSort('va_4w')">VA 4W</th>
+                                <th style="cursor:pointer;width:58px;text-align:center;color:#0ea5e9;font-size:10px" class="th-pct" onclick="vaSort('va_6m')">VA 6M</th>
+                                <th style="cursor:pointer;width:58px;text-align:center;color:#0ea5e9;font-size:10px" class="th-pct" onclick="vaSort('va_12m')">VA 12M</th>
+                                <th style="cursor:pointer;width:58px;text-align:center;border-left:2px solid var(--border2);color:#6d28d9;font-weight:700" class="th-pct" onclick="vaSort('rs_ibd')">RS IBD</th>
+                                <th style="cursor:pointer;width:58px;text-align:center;color:var(--accent2);font-weight:700" class="th-pct" onclick="vaSort('va_rs')">VA-RS</th>
+                                <th style="cursor:pointer;width:48px;text-align:center;font-size:10px;border-left:1px solid var(--faint)" class="th-pct" onclick="vaSort('va_delta')">Δ</th>
                             </tr>
                         </thead>
                         <tbody id="vaBody"></tbody>
@@ -926,7 +923,7 @@
                 </div>
                 <div class="table-wrap">
                     <div class="empty" id="emptyBounce" style="display:none"><div class="empty-icon">↗</div><div class="empty-title">No Bounces Found</div></div>
-                    <table id="bounceTable" style="display:none;table-layout:auto;width:auto">
+                    <table id="bounceTable" style="display:none;table-layout:fixed;width:100%">
                         <thead><tr>
                             <th class="sticky-0" style="width:22px;padding:4px 3px">★</th>
                             <th class="sticky-1" style="width:22px;padding:4px 3px">TV</th>
@@ -991,7 +988,7 @@
                         <div class="empty-icon">📊</div>
                         <div class="empty-title">No Data</div>
                     </div>
-                    <table id="vsSpyTable" style="display:none;table-layout:auto;width:auto">
+                    <table id="vsSpyTable" style="display:none;table-layout:fixed;width:100%">
                         <thead>
                             <tr>
                                 <th style="width:22px;padding:4px 3px">★</th>
@@ -1092,7 +1089,7 @@
                         <div class="empty-icon">⏱</div>
                         <div class="empty-title">Choisir une date</div>
                     </div>
-                    <table id="historicalTable" style="display:none;table-layout:auto;width:auto">
+                    <table id="historicalTable" style="display:none;table-layout:fixed;width:100%">
                         <thead>
                             <tr>
                                 <th style="width:24px;padding:4px 3px">★</th>
@@ -1134,7 +1131,7 @@
                         <div class="empty-icon">🌍</div>
                         <div class="empty-title">No Data</div>
                     </div>
-                    <table id="rowTable" style="display:none;table-layout:auto;width:auto">
+                    <table id="rowTable" style="display:none;table-layout:fixed;width:100%">
                         <thead>
                             <tr>
                                 <th class="sticky-0" style="width:22px;padding:4px 3px">★</th>
@@ -1197,7 +1194,7 @@
                         <div class="empty-icon">◈</div>
                         <div class="empty-title">Lance le scan</div>
                     </div>
-                    <table id="consolidationTable" style="display:none;table-layout:auto;width:auto">
+                    <table id="consolidationTable" style="display:none;table-layout:fixed;width:100%">
                         <thead>
                             <tr>
                                 <th class="sticky-0" style="width:22px;padding:4px 3px">★</th>
@@ -1260,7 +1257,7 @@
                         <div class="empty-icon">◈</div>
                         <div class="empty-title">Lance le scan</div>
                     </div>
-                    <table id="vcpTable" style="display:none;table-layout:auto;width:auto">
+                    <table id="vcpTable" style="display:none;table-layout:fixed;width:100%">
                         <thead>
                             <tr>
                                 <th class="sticky-0" style="width:22px;padding:4px 3px">★</th>
@@ -1322,7 +1319,7 @@
                         <div class="empty-icon">📉</div>
                         <div class="empty-title">No Pullbacks Found</div>
                     </div>
-                    <table id="maTable" style="display:none;table-layout:auto;width:auto">
+                    <table id="maTable" style="display:none;table-layout:fixed;width:100%">
                         <thead>
                             <tr>
                                 <th class="sticky-0" style="width:22px;padding:4px 3px">★</th>
@@ -1404,7 +1401,7 @@
                         <div class="empty-icon">⏱</div>
                         <div class="empty-title">Choisir une date</div>
                     </div>
-                    <table id="historicalTable" style="display:none;table-layout:auto;width:auto">
+                    <table id="historicalTable" style="display:none;table-layout:fixed;width:100%">
                         <thead>
                             <tr>
                                 <th style="width:24px;padding:4px 3px">★</th>
@@ -1446,7 +1443,7 @@
                         <div class="empty-icon">🌍</div>
                         <div class="empty-title">No Data</div>
                     </div>
-                    <table id="rowTable" style="display:none;table-layout:auto;width:auto">
+                    <table id="rowTable" style="display:none;table-layout:fixed;width:100%">
                         <thead>
                             <tr>
                                 <th class="sticky-0" style="width:22px;padding:4px 3px">★</th>
@@ -1509,7 +1506,7 @@
                         <div class="empty-icon">◈</div>
                         <div class="empty-title">Lance le scan</div>
                     </div>
-                    <table id="consolidationTable" style="display:none;table-layout:auto;width:auto">
+                    <table id="consolidationTable" style="display:none;table-layout:fixed;width:100%">
                         <thead>
                             <tr>
                                 <th class="sticky-0" style="width:22px;padding:4px 3px">★</th>
@@ -1572,7 +1569,7 @@
                         <div class="empty-icon">◈</div>
                         <div class="empty-title">Lance le scan</div>
                     </div>
-                    <table id="vcpTable" style="display:none;table-layout:auto;width:auto">
+                    <table id="vcpTable" style="display:none;table-layout:fixed;width:100%">
                         <thead>
                             <tr>
                                 <th class="sticky-0" style="width:22px;padding:4px 3px">★</th>
@@ -1676,7 +1673,7 @@
                         <div class="empty-icon">↩</div>
                         <div class="empty-title">Select Dates & Compute</div>
                     </div>
-                    <table id="retRowTable" style="display:none;table-layout:auto;width:auto">
+                    <table id="retRowTable" style="display:none;table-layout:fixed;width:100%">
                         <thead>
                             <tr>
                                 <th style="width:22px;padding:4px 3px">★</th>
@@ -1775,7 +1772,7 @@
                     <button onclick="closeRRGDrill()" style="font-size:9px;padding:3px 12px;background:transparent;border:1px solid var(--border2);color:var(--muted);cursor:pointer;font-family:'IBM Plex Mono',monospace;font-weight:600;letter-spacing:.1em;">✕ CLOSE</button>
                 </div>
                 <div class="table-wrap">
-                    <table id="rrgDrillTable" style="table-layout:auto;width:auto">
+                    <table id="rrgDrillTable" style="table-layout:fixed;width:100%">
                         <thead>
                             <tr>
                                 <th style="width:90px;border-right:1px solid var(--border2)">ROTATION</th>
