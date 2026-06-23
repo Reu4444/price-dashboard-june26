@@ -4977,8 +4977,9 @@ Write a thorough 7-section market analysis.`;
             if (_52wDrillGroup) {
                 if (drill) { drill.style.display = ''; drill.textContent = `← ${_52wDrillGroup}`; }
                 const filtered = _52wRows.filter(d => d.group === _52wDrillGroup);
-                const highS = [...filtered].filter(d => d.dist_high >= -2).sort((a,b) => b.dist_high - a.dist_high);
-                const lowS  = [...filtered].filter(d => d.dist_low <= 5).sort((a,b) => a.dist_low - b.dist_low);
+                // Show ALL tickers in group, sorted by dist_high desc
+                const highS = [...filtered].sort((a,b) => b.dist_high - a.dist_high);
+                const lowS  = [...filtered].sort((a,b) => a.dist_low - b.dist_low);
                 document.getElementById('52wHighContent').innerHTML = makeTable52w(highS, 'high');
                 document.getElementById('52wLowContent').innerHTML  = makeTable52w(lowS, 'low');
             } else {
@@ -5052,25 +5053,26 @@ Write a thorough 7-section market analysis.`;
 
     // Alias for makeTable used in drill-down
     function makeTable52w(sorted, mode) {
-        const thStyle = 'font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:5px 6px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg3);';
+        const thS = 'font-size:9px;letter-spacing:.1em;color:var(--muted);padding:6px 10px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg3);white-space:nowrap;';
+        const thN = 'font-size:9px;letter-spacing:.1em;color:var(--muted);padding:6px 10px;text-align:center;border-bottom:1px solid var(--border);background:var(--bg3);white-space:nowrap;';
         if (!sorted.length) return '<div style="padding:20px;color:var(--muted);font-size:12px;">—</div>';
         let html = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;">
       <thead><tr>
-        <th style="${thStyle}width:52px">TICKER</th>
-        <th style="${thStyle}">NAME</th>
-        <th style="${thStyle}width:90px">SECTOR</th>
-        <th style="${thStyle}width:120px">GROUP</th>
-        <th style="${thStyle}width:65px;text-align:center">${mode === 'high' ? 'TO HIGH' : 'TO LOW'}</th>
+        <th style="${thS}width:60px">TICKER</th>
+        <th style="${thS}">NAME</th>
+        <th style="${thN}width:65px">${mode === 'high' ? 'TO HIGH' : 'TO LOW'}</th>
+        <th style="${thN}width:60px">MKT CAP</th>
       </tr></thead><tbody>`;
         sorted.slice(0, 100).forEach(d => {
             const val = mode === 'high' ? d.dist_high : d.dist_low;
             const c   = mode === 'high' ? 'var(--up)' : 'var(--down)';
+            const label = val === 0 ? '<span style="color:var(--up);font-weight:700;font-size:11px;">✓ Yes</span>'
+                        : `<span style="color:${c};font-weight:700;">${val >= 0 ? '+' : ''}${val}%</span>`;
             html += `<tr style="border-bottom:1px solid var(--faint)">
-        <td style="padding:4px 6px;font-size:12px;font-weight:700;color:var(--accent2);cursor:pointer" onclick="openNews('${d.ticker}')">${d.ticker}</td>
-        <td style="padding:4px 6px;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.name||''}</td>
-        <td style="padding:4px 6px;font-size:11px;color:var(--muted)">${d.sector||''}</td>
-        <td style="padding:4px 6px;font-size:11px;color:var(--muted)">${d.group||''}</td>
-        <td style="padding:4px 6px;font-size:12px;font-weight:700;color:${c};text-align:center">${val >= 0 ? '+' : ''}${val}%</td>
+        <td style="padding:5px 10px;font-size:12px;font-weight:700;color:var(--accent2);cursor:pointer" onclick="openNews('${d.ticker}')">${d.ticker}</td>
+        <td style="padding:5px 10px;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.name||''}</td>
+        <td style="padding:5px 10px;font-size:12px;text-align:center">${label}</td>
+        <td style="padding:5px 10px;font-size:12px;text-align:center;color:var(--muted)">${d.mktcap ? Math.round(d.mktcap)+'B' : '—'}</td>
       </tr>`;
         });
         html += '</tbody></table>';
