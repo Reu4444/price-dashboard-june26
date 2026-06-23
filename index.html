@@ -3984,7 +3984,7 @@
                 cb.dataset.sector = s;
                 cb.onchange = () => {
                     if (cb.checked) _vaExclusions.delete(s); else _vaExclusions.add(s);
-                    updateVaBtn(); renderVolAdj();
+                    renderVolAdj();
                 };
                 const span = document.createElement('span'); span.textContent = s;
                 row.appendChild(cb); row.appendChild(span); list.appendChild(row);
@@ -4027,11 +4027,12 @@
         const avgVaV  = avgVaRs.length ? avgVaRs.reduce((s, d) => s + d.va_rs, 0) / avgVaRs.length : null;
         const underest = allData.filter(d => (d.va_delta ?? -999) > 10).length;
 
-        document.getElementById('vaStatUniverse').textContent = total + ' tickers';
-        document.getElementById('vaStatSigma').textContent    = avgSigV != null ? avgSigV.toFixed(2) + '%/day' : '—';
-        document.getElementById('vaStatTop').textContent      = top80 + ' (' + Math.round(top80/total*100) + '%)';
-        document.getElementById('vaStatAvg').textContent      = avgVaV != null ? Math.round(avgVaV) : '—';
-        document.getElementById('vaStatDiff').innerHTML       = `<span style="color:var(--accent2)">${underest}</span> <span style="font-size:9px;color:var(--muted)">VA-RS &gt; RS+10</span>`;
+        // Stat bar removed — elements no longer in DOM
+        const _vaStatU = document.getElementById('vaStatUniverse'); if (_vaStatU) _vaStatU.textContent = total + ' tickers';
+        const _vaStatS = document.getElementById('vaStatSigma');    if (_vaStatS) _vaStatS.textContent = avgSigV != null ? avgSigV.toFixed(2) + '%/day' : '—';
+        const _vaStatT = document.getElementById('vaStatTop');      if (_vaStatT) _vaStatT.textContent = top80 + ' (' + Math.round(top80/total*100) + '%)';
+        const _vaStatA = document.getElementById('vaStatAvg');      if (_vaStatA) _vaStatA.textContent = avgVaV != null ? Math.round(avgVaV) : '—';
+        const _vaStatD = document.getElementById('vaStatDiff');     if (_vaStatD) _vaStatD.innerHTML = `<span style="color:var(--accent2)">${underest}</span> <span style="font-size:9px;color:var(--muted)">VA-RS &gt; RS+10</span>`;
 
 
         // Cell renderers
