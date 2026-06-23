@@ -874,25 +874,45 @@
                     </div>
                     <table id="vaTable" style="display:none;table-layout:fixed;width:100%">
                         <thead>
+                            <colgroup>
+                                <col style="width:22px">
+                                <col style="width:22px">
+                                <col style="width:60px">
+                                <col><!-- NAME — takes remaining space -->
+                                <col style="width:95px">
+                                <col style="width:110px">
+                                <col style="width:48px">
+                                <col style="width:48px">
+                                <col style="width:48px">
+                                <col style="width:48px">
+                                <col style="width:48px">
+                                <col style="width:52px">
+                                <col style="width:52px">
+                                <col style="width:52px">
+                                <col style="width:52px">
+                                <col style="width:58px">
+                                <col style="width:58px">
+                                <col style="width:44px">
+                            </colgroup>
                             <tr>
-                                <th class="sticky-0" style="width:22px;padding:4px 3px">★</th>
-                                <th class="sticky-1" style="width:22px;padding:4px 3px">TV</th>
-                                <th class="sticky-2" style="cursor:pointer;width:60px" onclick="vaSort('ticker')">TICKER</th>
-                                <th class="sticky-3" style="cursor:pointer;width:180px" onclick="vaSort('name')">NAME</th>
-                                <th style="cursor:pointer;width:100px" onclick="vaSort('sector')">SECTOR</th>
-                                <th style="cursor:pointer;width:110px" onclick="vaSort('group')">GROUP</th>
-                                <th style="cursor:pointer;width:50px;text-align:center" class="th-pct" onclick="vaSort('mktcap')">CAP</th>
-                                <th style="cursor:pointer;width:52px;text-align:center;border-left:1px solid var(--faint);color:var(--muted);font-size:10px" class="th-pct" onclick="vaSort('pct_1w')">1W</th>
-                                <th style="cursor:pointer;width:52px;text-align:center;color:var(--muted);font-size:10px" class="th-pct" onclick="vaSort('pct_4w')">4W</th>
-                                <th style="cursor:pointer;width:52px;text-align:center;color:var(--muted);font-size:10px" class="th-pct" onclick="vaSort('pct_6m')">6M</th>
-                                <th style="cursor:pointer;width:52px;text-align:center;color:var(--muted);font-size:10px;border-right:1px solid var(--faint)" class="th-pct" onclick="vaSort('pct_12m')">12M</th>
-                                <th style="cursor:pointer;width:58px;text-align:center;border-left:2px solid var(--border2);color:#0ea5e9;font-size:10px" class="th-pct" onclick="vaSort('va_1w')">VA 1W</th>
-                                <th style="cursor:pointer;width:58px;text-align:center;color:#0ea5e9;font-size:10px" class="th-pct" onclick="vaSort('va_4w')">VA 4W</th>
-                                <th style="cursor:pointer;width:58px;text-align:center;color:#0ea5e9;font-size:10px" class="th-pct" onclick="vaSort('va_6m')">VA 6M</th>
-                                <th style="cursor:pointer;width:58px;text-align:center;color:#0ea5e9;font-size:10px" class="th-pct" onclick="vaSort('va_12m')">VA 12M</th>
-                                <th style="cursor:pointer;width:58px;text-align:center;border-left:2px solid var(--border2);color:#6d28d9;font-weight:700" class="th-pct" onclick="vaSort('rs_ibd')">RS IBD</th>
-                                <th style="cursor:pointer;width:58px;text-align:center;color:var(--accent2);font-weight:700" class="th-pct" onclick="vaSort('va_rs')">VA-RS</th>
-                                <th style="cursor:pointer;width:48px;text-align:center;font-size:10px;border-left:1px solid var(--faint)" class="th-pct" onclick="vaSort('va_delta')">Δ</th>
+                                <th class="sticky-0" style="padding:4px 3px">★</th>
+                                <th class="sticky-1" style="padding:4px 3px">TV</th>
+                                <th class="sticky-2" style="cursor:pointer" onclick="vaSort('ticker')">TICKER</th>
+                                <th class="sticky-3" style="cursor:pointer" onclick="vaSort('name')">NAME</th>
+                                <th style="cursor:pointer" onclick="vaSort('sector')">SECTOR</th>
+                                <th style="cursor:pointer" onclick="vaSort('group')">GROUP</th>
+                                <th style="cursor:pointer;text-align:center" class="th-pct" onclick="vaSort('mktcap')">CAP</th>
+                                <th style="cursor:pointer;text-align:center;border-left:1px solid var(--faint);color:var(--muted);font-size:10px" class="th-pct" onclick="vaSort('pct_1w')">1W</th>
+                                <th style="cursor:pointer;text-align:center;color:var(--muted);font-size:10px" class="th-pct" onclick="vaSort('pct_4w')">4W</th>
+                                <th style="cursor:pointer;text-align:center;color:var(--muted);font-size:10px" class="th-pct" onclick="vaSort('pct_6m')">6M</th>
+                                <th style="cursor:pointer;text-align:center;color:var(--muted);font-size:10px;border-right:1px solid var(--faint)" class="th-pct" onclick="vaSort('pct_12m')">12M</th>
+                                <th style="cursor:pointer;text-align:center;border-left:2px solid var(--border2);color:#0ea5e9;font-size:10px" class="th-pct" onclick="vaSort('va_1w')">VA 1W</th>
+                                <th style="cursor:pointer;text-align:center;color:#0ea5e9;font-size:10px" class="th-pct" onclick="vaSort('va_4w')">VA 4W</th>
+                                <th style="cursor:pointer;text-align:center;color:#0ea5e9;font-size:10px" class="th-pct" onclick="vaSort('va_6m')">VA 6M</th>
+                                <th style="cursor:pointer;text-align:center;color:#0ea5e9;font-size:10px" class="th-pct" onclick="vaSort('va_12m')">VA 12M</th>
+                                <th style="cursor:pointer;text-align:center;border-left:2px solid var(--border2);color:#6d28d9;font-weight:700" class="th-pct" onclick="vaSort('rs_ibd')">RS IBD</th>
+                                <th style="cursor:pointer;text-align:center;color:var(--accent2);font-weight:700" class="th-pct" onclick="vaSort('va_rs')">VA-RS</th>
+                                <th style="cursor:pointer;text-align:center;font-size:10px;border-left:1px solid var(--faint)" class="th-pct" onclick="vaSort('va_delta')">Δ</th>
                             </tr>
                         </thead>
                         <tbody id="vaBody"></tbody>
