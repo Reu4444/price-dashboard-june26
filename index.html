@@ -912,6 +912,10 @@
                 <div style="padding:6px 16px;margin-bottom:10px;font-size:11px;color:var(--muted);">
                     <span style="background:var(--bg2);border:1px solid var(--border);padding:3px 10px;">abs(Price / SMA<span id="bounceCritN">50</span> − 1) / σ20j ≤ <span id="bounceCritSigma">0.5</span>σ</span>
                 </div>
+                <!-- Explanation -->
+                <div style="padding:10px 16px 6px;font-size:12px;color:var(--muted);border-left:3px solid #f59e0b;margin-bottom:10px;line-height:1.7;">
+                    Filters stocks where <strong style="color:var(--text)">abs(Price / SMA − 1) / σ20</strong> is below the threshold — meaning the price is within N standard deviations of the selected moving average. No uptrend requirement: use RS IBD and PCT columns to assess the quality of the setup.
+                </div>
                 <div class="table-wrap">
                     <div class="empty" id="emptyBounce" style="display:none"><div class="empty-icon">↗</div><div class="empty-title">No Bounces Found</div></div>
                     <table id="bounceTable" style="display:none;table-layout:fixed;width:100%">
@@ -1300,6 +1304,10 @@
                     <span style="background:var(--bg2);border:1px solid var(--border);padding:3px 10px;">EMA20 &gt; SMA50 &gt; SMA200</span>
                     <span style="background:var(--bg2);border:1px solid var(--border);padding:3px 10px;">EMA10 &gt; EMA20</span>
                     <span style="background:var(--bg2);border:1px solid var(--border);padding:3px 10px;">min(|dist EMA10/σ|, |dist EMA20/σ|) ≤ <b id="pbCritSigma">0.5</b>σ</span>
+                </div>
+                <!-- Explanation -->
+                <div style="padding:10px 16px 6px;font-size:12px;color:var(--muted);border-left:3px solid var(--accent2);margin-bottom:10px;line-height:1.7;">
+                    Filters stocks where PCT 4W, 6M and 12M are all above the threshold, the MA structure is bullish (EMA20 &gt; SMA50 &gt; SMA200), EMA10 is above EMA20, and the price is within <strong style="color:var(--text)">0.5σ of either the EMA10 or EMA20</strong> — normalised by the stock's own daily volatility so the distance is comparable across all stocks regardless of price or vol level.
                 </div>
                 <!-- Table -->
                 <div class="table-wrap">
@@ -7849,7 +7857,19 @@ Write a thorough 7-section market analysis.`;
         document.getElementById('emptyRoW').style.display = rows.length ? 'none' : '';
     }
 
-    // ── PULLBACKS MA ─────────────────────────────────────────────
+    // ── GLOBAL HELPERS ───────────────────────────────────────────
+    function calcEMA(prices, n) {
+        if (!prices || prices.length < n) return null;
+        const k = 2 / (n + 1);
+        const seed = prices.slice(0, n);
+        let ema = seed.reduce((s, v) => s + v, 0) / n;
+        for (let i = n - 2; i >= 0; i--) {
+            ema = prices[i] * k + ema * (1 - k);
+        }
+        return ema;
+    }
+
+        // ── PULLBACKS MA ─────────────────────────────────────────────
     let maSortCol = 'pb_min_s', maSortDir = 'asc'; // closest to MA first
 
     function maSort(col) {
