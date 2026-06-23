@@ -786,6 +786,7 @@
             <button class="tab" onclick="switchTab('rrg')">ROTATION</button>
             <button class="tab" onclick="switchTab('compare')">COMPARE</button>
             
+            <button class="tab" onclick="switchTab('daily')">DAILY MOVES</button>
             <button class="tab" onclick="switchTab('narrative')">NARRATIVE</button>
             <button class="tab" onclick="switchTab('method')">METHOD</button>
         </div>
@@ -796,8 +797,8 @@
             <div style="display:flex;gap:0;border-bottom:1px solid var(--border2);margin-bottom:12px;">
                 <button id="priceTabTickers" onclick="switchPriceTab('tickers')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--accent2);border-bottom:2px solid var(--accent2);background:transparent;border-top:none;border-left:none;border-right:none;">STOCKS</button>
                 <button id="priceTabVolAdj" onclick="switchPriceTab('voladj')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;">VOL-ADJ RS</button>
-                <button id="priceTabSectors" onclick="switchPriceTab('sectors')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;">SECTORS</button>
                 <button id="priceTabGroups" onclick="switchPriceTab('groups')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;">GROUPS</button>
+                <button id="priceTabSectors" onclick="switchPriceTab('sectors')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;">SECTORS</button>
                 <button id="priceTabMa" onclick="switchPriceTab('ma')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;">PULLBACKS MA</button>
                 <button id="priceTabBounce" onclick="switchPriceTab('bounce')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;">BOUNCES MA</button>
                 <button id="priceTab52w" onclick="switchPriceTab('52w')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;">52W H/L</button>
@@ -2045,6 +2046,102 @@
     </div>
 
 
+    <!-- TAB: DAILY MOVES -->
+    <div class="tab-content" id="tab-daily">
+        <div style="padding:0 0 12px;">
+
+            <!-- Controls bar -->
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px;background:var(--bg2);border:1px solid var(--border);margin-bottom:12px;">
+                <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">DATE</span>
+                <input type="date" id="dailyDate" class="filter-input" style="width:150px;cursor:pointer;" onchange="renderDaily()">
+                <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
+                <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">RS ≥</span>
+                <input id="dailyRsMin" class="filter-input" type="number" value="" placeholder="ex: 60" style="width:60px;" oninput="renderDaily()">
+                <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
+                <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">MKT CAP ≥</span>
+                <input id="dailyCapMin" class="filter-input" type="number" value="" placeholder="ex: 10" style="width:60px;" oninput="renderDaily()">
+                <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
+                <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">MOVE % ≥</span>
+                <input id="dailyMoveMin" class="filter-input" type="number" value="" placeholder="ex: 3" style="width:60px;" oninput="renderDaily()">
+                <span id="dailyStatus" style="font-size:10px;color:var(--muted);margin-left:auto;font-family:'IBM Plex Mono',monospace;"></span>
+            </div>
+
+            <!-- Stat bar -->
+            <div id="dailyStatBar" style="display:none;display:flex;gap:0;margin-bottom:12px;border:1px solid var(--border);">
+                <div style="flex:1;padding:10px 16px;background:var(--bg2);border-right:1px solid var(--border);">
+                    <div style="font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:3px;">ADVANCING</div>
+                    <div id="dailyStatAdv" style="font-size:16px;font-weight:700;color:var(--up);">—</div>
+                </div>
+                <div style="flex:1;padding:10px 16px;background:var(--bg2);border-right:1px solid var(--border);">
+                    <div style="font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:3px;">DECLINING</div>
+                    <div id="dailyStatDec" style="font-size:16px;font-weight:700;color:var(--down);">—</div>
+                </div>
+                <div style="flex:1;padding:10px 16px;background:var(--bg2);border-right:1px solid var(--border);">
+                    <div style="font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:3px;">AVG WINNER</div>
+                    <div id="dailyStatAvgUp" style="font-size:16px;font-weight:700;color:var(--up);">—</div>
+                </div>
+                <div style="flex:1;padding:10px 16px;background:var(--bg2);border-right:1px solid var(--border);">
+                    <div style="font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:3px;">AVG LOSER</div>
+                    <div id="dailyStatAvgDn" style="font-size:16px;font-weight:700;color:var(--down);">—</div>
+                </div>
+                <div style="flex:1;padding:10px 16px;background:var(--bg2);border-right:1px solid var(--border);">
+                    <div style="font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:3px;">PCT 6M &gt; 70 AVG MOVE</div>
+                    <div id="dailyStatLeaders" style="font-size:16px;font-weight:700;">—</div>
+                </div>
+                <div style="flex:1;padding:10px 16px;background:var(--bg2);border-right:1px solid var(--border);">
+                    <div style="font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:3px;">PCT 6M &lt; 30 AVG MOVE</div>
+                    <div id="dailyStatLaggards" style="font-size:16px;font-weight:700;">—</div>
+                </div>
+                <div style="flex:1;padding:10px 16px;background:var(--bg2);">
+                    <div style="font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:3px;">BREADTH</div>
+                    <div id="dailyStatBreadth" style="font-size:16px;font-weight:700;">—</div>
+                </div>
+            </div>
+
+            <!-- GROUPS/STOCKS toggle -->
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                <div style="display:flex;gap:0;border:1px solid var(--border2);overflow:hidden;">
+                    <button id="dailyBtnGroups" onclick="setDailyView('groups')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 16px;background:var(--accent2);color:#fff;border:none;cursor:pointer;">GROUPS</button>
+                    <button id="dailyBtnStocks" onclick="setDailyView('stocks')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 16px;background:transparent;color:var(--muted);border:none;cursor:pointer;">STOCKS</button>
+                </div>
+                <div id="dailyDrillBar" style="display:none;">
+                    <button onclick="dailyClearDrill()" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 14px;background:transparent;color:var(--accent2);border:1px solid var(--accent2);cursor:pointer;">← GROUPS</button>
+                    <span id="dailyDrillLabel" style="font-size:12px;color:var(--muted);margin-left:10px;"></span>
+                </div>
+            </div>
+
+            <!-- GROUPS VIEW -->
+            <div id="dailyGroupsView">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:var(--up);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--up)">TOP GROUPS</div>
+                        <div id="dailyGroupWinnersContent"></div>
+                    </div>
+                    <div>
+                        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:var(--down);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--down)">WEAK GROUPS</div>
+                        <div id="dailyGroupLosersContent"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STOCKS VIEW -->
+            <div id="dailyStocksView" style="display:none;">
+                <!-- Two-column layout -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div>
+                    <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:var(--up);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--up)">WINNERS</div>
+                    <div id="dailyWinnersContent"></div>
+                </div>
+                <div>
+                    <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:var(--down);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--down)">LOSERS</div>
+                    <div id="dailyLosersContent"></div>
+                </div>
+            </div>
+            </div><!-- end dailyStocksView -->
+
+        </div>
+    </div>
+
     <!-- TAB: METHOD -->
     <div class="tab-content" id="tab-method">
         <div style="padding:24px 32px;">
@@ -3083,6 +3180,7 @@
             const el = document.getElementById('narrativeApiKey');
             if (saved && el && !el.value) el.value = saved;
         }
+        if (tab === 'daily') { initDailyDate(); renderDaily(); }
         renderActive();
     }
 
@@ -3779,6 +3877,240 @@
         document.getElementById('emptyVolAdj').style.display = rows.length ? 'none' : '';
     }
 
+
+    // ── DAILY MOVES ───────────────────────────────────────────────
+    let _dailyDrillGroup = null;
+
+    function initDailyDate() {
+        const el = document.getElementById('dailyDate');
+        if (!el || el.value) return;
+        // Use most recent available price date
+        if (typeof priceDates !== 'undefined' && priceDates.length) {
+            el.value = priceDates[0]; // priceDates[0] = most recent
+        }
+    }
+
+    function dailyClearDrill() {
+        _dailyDrillGroup = null;
+        const bar = document.getElementById('dailyDrillBar');
+        if (bar) bar.style.display = 'none';
+        setDailyView('groups');
+    }
+
+    function renderDaily() {
+        if (!allData.length || !Object.keys(rawPrices).length) return;
+
+        initDailyDate();
+
+        const dateStr  = document.getElementById('dailyDate')?.value;
+        const rsMin    = parseFloat(document.getElementById('dailyRsMin')?.value) || 0;
+        const capMin   = parseFloat(document.getElementById('dailyCapMin')?.value) || 0;
+        const moveMin  = parseFloat(document.getElementById('dailyMoveMin')?.value) || 0;
+
+        // Compute daily move for each ticker
+        const rows = [];
+        allData.forEach(d => {
+            const p = rawPrices[d.ticker];
+            if (!p || p.length < 2) return;
+            if (rsMin  && (d.rs_ibd  ?? 0) < rsMin)  return;
+            if (capMin && (d.mktcap  ?? 0) < capMin)  return;
+
+            // Find the price index for dateStr
+            // rawPrices is newest-first; dates stored in d.dates if available
+            // Use index 0 = today, index 1 = yesterday as fallback
+            // Find index in priceDates
+            let idx = 0;
+            if (dateStr && typeof priceDates !== 'undefined' && priceDates.length) {
+                idx = priceDates.indexOf(dateStr);
+                if (idx === -1) return; // date not in our data
+            }
+
+            const close0 = p[idx];
+            const close1 = p[idx + 1];
+            if (!close0 || !close1) return;
+
+            const move = Math.round((close0 / close1 - 1) * 1000) / 10;
+
+            if (moveMin && Math.abs(move) < moveMin) return;
+
+            // Drill-down filter
+            if (_dailyDrillGroup && d.group !== _dailyDrillGroup) return;
+
+            rows.push({ ...d, daily_move: move, close: close0 });
+        });
+
+        // Stats on full universe (no drill filter)
+        const allRows = [];
+        allData.forEach(d => {
+            const p = rawPrices[d.ticker];
+            if (!p || p.length < 2) return;
+            if (rsMin  && (d.rs_ibd  ?? 0) < rsMin)  return;
+            if (capMin && (d.mktcap  ?? 0) < capMin)  return;
+            let idx = 0;
+            if (dateStr && typeof priceDates !== 'undefined' && priceDates.length) {
+                idx = priceDates.indexOf(dateStr);
+                if (idx === -1) return;
+            }
+            const close0 = p[idx], close1 = p[idx + 1];
+            if (!close0 || !close1) return;
+            const move = Math.round((close0 / close1 - 1) * 1000) / 10;
+            allRows.push({ ...d, daily_move: move });
+        });
+
+        const winners  = allRows.filter(r => r.daily_move > 0);
+        const losers   = allRows.filter(r => r.daily_move < 0);
+        const leaders  = allRows.filter(r => (r.pct_6m ?? 0) >= 70);
+        const laggards = allRows.filter(r => (r.pct_6m ?? 0) < 30);
+        const avg = arr => arr.length ? (arr.reduce((s,r) => s + r.daily_move, 0) / arr.length) : null;
+        const fmt = (v, c) => v != null ? `<span style="color:${c};font-weight:700">${v >= 0 ? '+' : ''}${v.toFixed(1)}%</span>` : '—';
+        const fmtAuto = v => { if (v == null) return '—'; const c = v >= 0 ? 'var(--up)' : 'var(--down)'; return fmt(v, c); };
+
+        const breadth = allRows.length ? Math.round(winners.length / allRows.length * 100) : 0;
+        const breadthC = breadth >= 60 ? 'var(--up)' : breadth <= 40 ? 'var(--down)' : 'var(--text)';
+
+        const sb = document.getElementById('dailyStatBar');
+        if (sb) sb.style.display = 'flex';
+        const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+        set('dailyStatAdv',      `<span style="color:var(--up);font-weight:700">${winners.length}</span>`);
+        set('dailyStatDec',      `<span style="color:var(--down);font-weight:700">${losers.length}</span>`);
+        set('dailyStatAvgUp',    fmt(avg(winners), 'var(--up)'));
+        set('dailyStatAvgDn',    fmt(avg(losers),  'var(--down)'));
+        set('dailyStatLeaders',  fmtAuto(avg(leaders)));
+        set('dailyStatLaggards', fmtAuto(avg(laggards)));
+        set('dailyStatBreadth',  `<span style="color:${breadthC};font-weight:700">${breadth}%</span>`);
+
+        document.getElementById('dailyStatus').textContent =
+            `${rows.length} tickers${_dailyDrillGroup ? ' — ' + _dailyDrillGroup : ''}`;
+
+        // Split into winners/losers for current view (with drill filter)
+        const viewWinners = rows.filter(r => r.daily_move > 0).sort((a,b) => b.daily_move - a.daily_move);
+        const viewLosers  = rows.filter(r => r.daily_move < 0).sort((a,b) => a.daily_move - b.daily_move);
+
+        // Groups view
+        if (_dailyView === 'groups') {
+            renderDailyGroups(allRows);
+        }
+
+        // Stocks view
+        document.getElementById('dailyWinnersContent').innerHTML = makeDailyTable(viewWinners, 'up');
+        document.getElementById('dailyLosersContent').innerHTML  = makeDailyTable(viewLosers,  'down');
+    }
+
+    function makeDailyTable(rows, mode) {
+        if (!rows.length) return '<div style="padding:20px;color:var(--muted);font-size:12px;">—</div>';
+        const thS = 'font-size:9px;letter-spacing:.1em;color:var(--muted);padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg3);white-space:nowrap;';
+        const thN = 'font-size:9px;letter-spacing:.1em;color:var(--muted);padding:6px 8px;text-align:center;border-bottom:1px solid var(--border);background:var(--bg3);white-space:nowrap;';
+        const c   = mode === 'up' ? 'var(--up)' : 'var(--down)';
+        let html  = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+      <thead><tr>
+        <th style="${thS}width:58px">TICKER</th>
+        <th style="${thS}">NAME</th>
+        <th style="${thS}width:85px">GROUP</th>
+        <th style="${thN}width:60px">MOVE</th>
+        <th style="${thN}width:46px">4W</th>
+        <th style="${thN}width:46px">6M</th>
+        <th style="${thN}width:46px">12M</th>
+        <th style="${thN}width:52px">RS IBD</th>
+      </tr></thead><tbody>`;
+
+        rows.slice(0, 200).forEach(d => {
+            const mc = d.daily_move;
+            const moveColor = mc > 0 ? 'var(--up)' : 'var(--down)';
+            html += `<tr style="border-bottom:1px solid var(--faint);cursor:pointer;"
+                onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''"
+                onclick="dailyDrillGroup('${(d.group||'').replace(/'/g,"\'")}')">
+        <td style="padding:5px 8px;font-size:12px;font-weight:700;color:var(--accent2);" onclick="event.stopPropagation();openNews('${d.ticker}')">${d.ticker}</td>
+        <td style="padding:5px 8px;font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.name||''}</td>
+        <td style="padding:5px 8px;font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.group||''}</td>
+        <td style="padding:5px 8px;font-size:13px;font-weight:700;color:${moveColor};text-align:center">${mc >= 0 ? '+' : ''}${mc}%</td>
+        <td style="padding:5px 8px;text-align:center">${pctCell(d.pct_4w)}</td>
+        <td style="padding:5px 8px;text-align:center">${pctCell(d.pct_6m)}</td>
+        <td style="padding:5px 8px;text-align:center">${pctCell(d.pct_12m)}</td>
+        <td style="padding:5px 8px;text-align:center;border-left:1px solid var(--border2)">${pctCell(d.rs_ibd)}</td>
+      </tr>`;
+        });
+        html += '</tbody></table>';
+        return html;
+    }
+
+    let _dailyView = 'groups';
+
+    function setDailyView(view) {
+        _dailyView = view;
+        const bg = document.getElementById('dailyBtnGroups');
+        const bs = document.getElementById('dailyBtnStocks');
+        const gv = document.getElementById('dailyGroupsView');
+        const sv = document.getElementById('dailyStocksView');
+        if (bg) { bg.style.background = view === 'groups' ? 'var(--accent2)' : 'transparent'; bg.style.color = view === 'groups' ? '#fff' : 'var(--muted)'; }
+        if (bs) { bs.style.background = view === 'stocks' ? 'var(--accent2)' : 'transparent'; bs.style.color = view === 'stocks' ? '#fff' : 'var(--muted)'; }
+        if (gv) gv.style.display = view === 'groups' ? '' : 'none';
+        if (sv) sv.style.display  = view === 'stocks' ? '' : 'none';
+        renderDaily();
+    }
+
+    function renderDailyGroups(allRows) {
+        // Group averages
+        const gMap = {};
+        allRows.forEach(r => {
+            const g = r.group || '—';
+            if (!gMap[g]) gMap[g] = { sector: r.sector, moves: [], count: 0 };
+            gMap[g].moves.push(r.daily_move);
+            gMap[g].count++;
+        });
+        const groups = Object.entries(gMap)
+            .filter(([,v]) => v.count >= 2)
+            .map(([group, v]) => ({
+                group, sector: v.sector,
+                count: v.count,
+                avgMove: Math.round(v.moves.reduce((s,x) => s+x, 0) / v.moves.length * 10) / 10,
+                advPct:  Math.round(v.moves.filter(x => x > 0).length / v.moves.length * 100)
+            }));
+
+        const makeGroupTable = (sorted, colorVar) => {
+            if (!sorted.length) return '<div style="padding:20px;color:var(--muted);font-size:12px;">—</div>';
+            const thS = 'font-size:9px;letter-spacing:.1em;color:var(--muted);padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg3);';
+            const thN = 'font-size:9px;letter-spacing:.1em;color:var(--muted);padding:6px 8px;text-align:center;border-bottom:1px solid var(--border);background:var(--bg3);';
+            let html = `<table style="width:100%;border-collapse:collapse;">
+              <thead><tr>
+                <th style="${thS}width:auto">GROUP</th>
+                <th style="${thN}width:70px">SECTOR</th>
+                <th style="${thN}width:44px">#</th>
+                <th style="${thN}width:60px">AVG MOVE</th>
+                <th style="${thN}width:52px">ADV%</th>
+              </tr></thead><tbody>`;
+            sorted.slice(0, 80).forEach(g => {
+                const c = g.avgMove >= 0 ? 'var(--up)' : 'var(--down)';
+                const advC = g.advPct >= 70 ? 'var(--up)' : g.advPct <= 30 ? 'var(--down)' : 'var(--text)';
+                html += `<tr style="border-bottom:1px solid var(--faint);cursor:pointer;"
+                    onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''"
+                    onclick="dailyDrillGroup('${g.group.replace(/'/g,"\'")}')">
+                  <td style="padding:5px 8px;font-size:12px;color:var(--accent2);font-weight:600">${g.group}</td>
+                  <td style="padding:5px 8px;font-size:10px;color:var(--muted);text-align:center">${g.sector||''}</td>
+                  <td style="padding:5px 8px;font-size:12px;text-align:center;color:var(--muted)">${g.count}</td>
+                  <td style="padding:5px 8px;font-size:13px;font-weight:700;color:${c};text-align:center">${g.avgMove >= 0 ? '+' : ''}${g.avgMove}%</td>
+                  <td style="padding:5px 8px;font-size:12px;text-align:center;color:${advC}">${g.advPct}%</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            return html;
+        };
+
+        const topGroups  = [...groups].sort((a,b) => b.avgMove - a.avgMove);
+        const weakGroups = [...groups].sort((a,b) => a.avgMove - b.avgMove);
+        document.getElementById('dailyGroupWinnersContent').innerHTML = makeGroupTable(topGroups,  'var(--up)');
+        document.getElementById('dailyGroupLosersContent').innerHTML  = makeGroupTable(weakGroups, 'var(--down)');
+    }
+
+    function dailyDrillGroup(group) {
+        if (!group) return;
+        _dailyDrillGroup = group;
+        setDailyView('stocks');
+        const bar = document.getElementById('dailyDrillBar');
+        if (bar) bar.style.display = '';
+        const lbl = document.getElementById('dailyDrillLabel');
+        if (lbl) lbl.textContent = group;
+        renderDaily();
+    }
 
     // ── NARRATIVE / MARKET ANALYSIS ──────────────────────────────
 
