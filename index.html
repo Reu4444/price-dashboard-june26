@@ -3158,7 +3158,7 @@
         const activeTabEl = document.querySelector(`.tab[onclick*="${tab}"]`) || document.querySelector(`.tab[onclick*="fund"]`);
         if (activeTabEl)
             activeTabEl.classList.add('active');
-        document.getElementById(`tab-${tab}`).classList.add('active');
+        const _tabEl = document.getElementById(`tab-${tab}`); if (_tabEl) _tabEl.classList.add('active'); else { document.getElementById('tab-price').classList.add('active'); }
         // Hide global RS/EPS&Sales filters on Screening tab (has its own)
         const isScreening = tab === 'best';
         ['rsFilter', 'epsFilter', 'salesFilter'].forEach(id => {
@@ -7276,7 +7276,7 @@ Write a thorough 7-section market analysis.`;
 
     // Watch toggle via event delegation
     document.addEventListener('click', e => {
-        document.getElementById('ctxMenu').style.display = 'none';
+        const _ctx = document.getElementById('ctxMenu'); if (_ctx) _ctx.style.display = 'none';
         const cell = e.target.closest('.watch-toggle');
         if (cell) {
             const ticker = cell.dataset.ticker;
