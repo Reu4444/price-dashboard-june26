@@ -1015,20 +1015,42 @@
             </div>
 
             <div id="pricePanel52w" style="display:none">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-
-                    <!-- LEFT: 52W HIGHS -->
-                    <div>
-                        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:var(--up);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--up)">52W Highs</div>
-                        <div id="52wHighContent"></div>
+                <!-- Sub-toggle -->
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                    <div style="display:flex;gap:0;border:1px solid var(--border2);overflow:hidden;">
+                        <button id="btn52wGroups" onclick="set52wView('groups')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 16px;background:var(--accent2);color:#fff;border:none;cursor:pointer;">GROUPS</button>
+                        <button id="btn52wStocks" onclick="set52wView('stocks')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 16px;background:transparent;color:var(--muted);border:none;cursor:pointer;">STOCKS</button>
                     </div>
+                    <span id="52wDrillLabel" style="font-size:11px;color:var(--muted);cursor:pointer;display:none;" onclick="set52wView('groups')">← Back to groups</span>
+                    <span id="52wCount" style="font-size:10px;color:var(--muted);margin-left:auto;font-family:'IBM Plex Mono',monospace;"></span>
+                </div>
 
-                    <!-- RIGHT: 52W LOWS -->
-                    <div>
-                        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:var(--down);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--down)">52W Lows</div>
-                        <div id="52wLowContent"></div>
+                <!-- GROUPS VIEW -->
+                <div id="52wGroupsView">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div>
+                            <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:var(--up);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--up)">Groups at 52W High</div>
+                            <div id="52wGroupHighContent"></div>
+                        </div>
+                        <div>
+                            <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:var(--down);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--down)">Groups at 52W Low</div>
+                            <div id="52wGroupLowContent"></div>
+                        </div>
                     </div>
+                </div>
 
+                <!-- STOCKS VIEW -->
+                <div id="52wStocksView" style="display:none">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div>
+                            <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:var(--up);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--up)">52W Highs</div>
+                            <div id="52wHighContent"></div>
+                        </div>
+                        <div>
+                            <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:var(--down);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--down)">52W Lows</div>
+                            <div id="52wLowContent"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -4912,8 +4934,147 @@ Write a thorough 7-section market analysis.`;
         // LOW: closest to 52W low = smallest dist_low → sort ascending
         const lowSorted = [...rows].sort((a, b) => a.dist_low - b.dist_low);
 
+        // Store rows globally for drill-down
+        _52wRows = rows;
+
+        // GROUPS VIEW
+        render52wGroups(rows);
+
+        // STOCKS VIEW (hidden by default)
         document.getElementById('52wHighContent').innerHTML = makeTable(highSorted, 'high');
         document.getElementById('52wLowContent').innerHTML = makeTable(lowSorted, 'low');
+
+        document.getElementById('52wCount').textContent = `${rows.length} tickers`;
+    }
+
+    let _52wRows = [];
+    let _52wView = 'groups'; // 'groups' | 'stocks'
+    let _52wDrillGroup = null;
+
+    function set52wView(view, group) {
+        _52wView = view;
+        _52wDrillGroup = group || null;
+
+        const btnG = document.getElementById('btn52wGroups');
+        const btnS = document.getElementById('btn52wStocks');
+        const drill = document.getElementById('52wDrillLabel');
+        const gv = document.getElementById('52wGroupsView');
+        const sv = document.getElementById('52wStocksView');
+
+        if (view === 'groups') {
+            btnG.style.background = 'var(--accent2)'; btnG.style.color = '#fff';
+            btnS.style.background = 'transparent';    btnS.style.color = 'var(--muted)';
+            gv.style.display = '';
+            sv.style.display = 'none';
+            if (drill) drill.style.display = 'none';
+        } else {
+            btnG.style.background = 'transparent';    btnG.style.color = 'var(--muted)';
+            btnS.style.background = 'var(--accent2)'; btnS.style.color = '#fff';
+            gv.style.display = 'none';
+            sv.style.display = '';
+
+            // If drill-down, filter stocks
+            if (_52wDrillGroup) {
+                if (drill) { drill.style.display = ''; drill.textContent = `← ${_52wDrillGroup}`; }
+                const filtered = _52wRows.filter(d => d.group === _52wDrillGroup);
+                const highS = [...filtered].filter(d => d.dist_high >= -2).sort((a,b) => b.dist_high - a.dist_high);
+                const lowS  = [...filtered].filter(d => d.dist_low <= 5).sort((a,b) => a.dist_low - b.dist_low);
+                document.getElementById('52wHighContent').innerHTML = makeTable52w(highS, 'high');
+                document.getElementById('52wLowContent').innerHTML  = makeTable52w(lowS, 'low');
+            } else {
+                if (drill) drill.style.display = 'none';
+                const highS = [..._52wRows].filter(d => d.dist_high >= -2).sort((a,b) => b.dist_high - a.dist_high);
+                const lowS  = [..._52wRows].filter(d => d.dist_low <= 5).sort((a,b) => a.dist_low - b.dist_low);
+                document.getElementById('52wHighContent').innerHTML = makeTable52w(highS, 'high');
+                document.getElementById('52wLowContent').innerHTML  = makeTable52w(lowS, 'low');
+            }
+        }
+    }
+
+    function render52wGroups(rows) {
+        // Group stats
+        const gMap = {};
+        rows.forEach(d => {
+            if (!d.group) return;
+            if (!gMap[d.group]) gMap[d.group] = { sector: d.sector, total: 0, highs: 0, lows: 0 };
+            gMap[d.group].total++;
+            if (d.dist_high >= -2) gMap[d.group].highs++;
+            if (d.dist_low  <=  5) gMap[d.group].lows++;
+        });
+
+        const groups = Object.entries(gMap)
+            .filter(([,v]) => v.total >= 2)
+            .map(([group, v]) => ({
+                group, sector: v.sector,
+                total: v.total,
+                pctHigh: Math.round(v.highs / v.total * 100),
+                pctLow:  Math.round(v.lows  / v.total * 100),
+                highs: v.highs, lows: v.lows
+            }));
+
+        const thS = 'font-size:9px;letter-spacing:.1em;color:var(--muted);padding:5px 8px;border-bottom:1px solid var(--border);background:var(--bg3);text-align:left;';
+        const thN = 'font-size:9px;letter-spacing:.1em;color:var(--muted);padding:5px 8px;border-bottom:1px solid var(--border);background:var(--bg3);text-align:center;';
+
+        const makeGroupTable = (sorted, colorVar, field) => {
+            if (!sorted.length) return '<div style="padding:20px;color:var(--muted);font-size:12px;">—</div>';
+            let html = `<table style="width:100%;border-collapse:collapse;">
+                <thead><tr>
+                    <th style="${thS}width:auto">GROUP</th>
+                    <th style="${thN}width:80px">SECTOR</th>
+                    <th style="${thN}width:50px">TOTAL</th>
+                    <th style="${thN}width:60px;color:${colorVar}">% AT H/L</th>
+                    <th style="${thN}width:50px;color:${colorVar}">#</th>
+                </tr></thead><tbody>`;
+            sorted.forEach(g => {
+                const pct = field === 'high' ? g.pctHigh : g.pctLow;
+                const n   = field === 'high' ? g.highs   : g.lows;
+                const c   = pct >= 70 ? 'var(--up)' : pct >= 40 ? 'var(--text)' : 'var(--muted)';
+                html += `<tr style="cursor:pointer;border-bottom:1px solid var(--faint);"
+                    onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''"
+                    onclick="set52wView('stocks','${g.group.replace(/'/g,"\'")}')">
+                    <td style="padding:5px 8px;font-size:12px;color:var(--accent2);font-weight:600">${g.group}</td>
+                    <td style="padding:5px 8px;font-size:11px;color:var(--muted);text-align:center">${g.sector}</td>
+                    <td style="padding:5px 8px;font-size:12px;text-align:center;color:var(--muted)">${g.total}</td>
+                    <td style="padding:5px 8px;font-size:13px;font-weight:700;text-align:center;color:${c}">${pct}%</td>
+                    <td style="padding:5px 8px;font-size:12px;text-align:center;color:${c}">${n}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            return html;
+        };
+
+        const highGroups = [...groups].sort((a,b) => b.pctHigh - a.pctHigh);
+        const lowGroups  = [...groups].sort((a,b) => b.pctLow  - a.pctLow);
+
+        document.getElementById('52wGroupHighContent').innerHTML = makeGroupTable(highGroups, 'var(--up)',   'high');
+        document.getElementById('52wGroupLowContent').innerHTML  = makeGroupTable(lowGroups,  'var(--down)', 'low');
+    }
+
+    // Alias for makeTable used in drill-down
+    function makeTable52w(sorted, mode) {
+        const thStyle = 'font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:5px 6px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg3);';
+        if (!sorted.length) return '<div style="padding:20px;color:var(--muted);font-size:12px;">—</div>';
+        let html = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+      <thead><tr>
+        <th style="${thStyle}width:52px">TICKER</th>
+        <th style="${thStyle}">NAME</th>
+        <th style="${thStyle}width:90px">SECTOR</th>
+        <th style="${thStyle}width:120px">GROUP</th>
+        <th style="${thStyle}width:65px;text-align:center">${mode === 'high' ? 'TO HIGH' : 'TO LOW'}</th>
+      </tr></thead><tbody>`;
+        sorted.slice(0, 100).forEach(d => {
+            const val = mode === 'high' ? d.dist_high : d.dist_low;
+            const c   = mode === 'high' ? 'var(--up)' : 'var(--down)';
+            html += `<tr style="border-bottom:1px solid var(--faint)">
+        <td style="padding:4px 6px;font-size:12px;font-weight:700;color:var(--accent2);cursor:pointer" onclick="openNews('${d.ticker}')">${d.ticker}</td>
+        <td style="padding:4px 6px;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.name||''}</td>
+        <td style="padding:4px 6px;font-size:11px;color:var(--muted)">${d.sector||''}</td>
+        <td style="padding:4px 6px;font-size:11px;color:var(--muted)">${d.group||''}</td>
+        <td style="padding:4px 6px;font-size:12px;font-weight:700;color:${c};text-align:center">${val >= 0 ? '+' : ''}${val}%</td>
+      </tr>`;
+        });
+        html += '</tbody></table>';
+        return html;
     }
 
     // ── COMPARE ──────────────────────────────────────────────────
