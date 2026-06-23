@@ -103,6 +103,11 @@
 
     .main {
         padding: 20px 24px;
+    }
+    /* Tabs outside .main need same padding */
+    #tab-narrative, #tab-method, #tab-daily, #tab-rrg, #tab-returns, #tab-compare, #tab-best, #tab-fund {
+        padding: 20px 24px;
+        box-sizing: border-box;
     }/* Tabs */
     .tabs {
         display: flex;
@@ -1560,7 +1565,7 @@
 
         <!-- TAB: RRG -->
         <div class="tab-content" id="tab-rrg">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;margin-top:8px;flex-wrap:wrap;">
                 <select id="rrgView" class="filter-select" onchange="renderRRG()">
                     <option value="groups">Groups</option>
                     <option value="sectors">Sectors</option>
@@ -2046,110 +2051,110 @@
     </div>
 
 
-    <!-- TAB: DAILY MOVES -->
-    <div class="tab-content" id="tab-daily">
-        <div style="padding:0 0 12px;">
+        <!-- TAB: DAILY MOVES -->
+        <div class="tab-content" id="tab-daily">
+            <div style="padding:0 0 12px;">
 
-            <!-- Controls bar -->
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px;background:var(--bg2);border:1px solid var(--border);margin-bottom:12px;">
-                <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">DATE</span>
-                <input type="date" id="dailyDate" class="filter-input" style="width:150px;cursor:pointer;" onchange="renderDaily()">
-                <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
-                <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">RS ≥</span>
-                <input id="dailyRsMin" class="filter-input" type="number" value="" placeholder="ex: 60" style="width:60px;" oninput="renderDaily()">
-                <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
-                <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">MKT CAP ≥</span>
-                <input id="dailyCapMin" class="filter-input" type="number" value="" placeholder="ex: 10" style="width:60px;" oninput="renderDaily()">
-                <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
-                <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">MOVE % ≥</span>
-                <input id="dailyMoveMin" class="filter-input" type="number" value="" placeholder="ex: 3" style="width:60px;" oninput="renderDaily()">
-                <span id="dailyStatus" style="font-size:10px;color:var(--muted);margin-left:auto;font-family:'IBM Plex Mono',monospace;"></span>
-            </div>
+                <!-- Controls bar -->
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px;background:var(--bg2);border:1px solid var(--border);margin-bottom:12px;">
+                    <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">DATE</span>
+                    <input type="date" id="dailyDate" class="filter-input" style="width:150px;cursor:pointer;" onchange="renderDaily()">
+                    <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
+                    <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">RS ≥</span>
+                    <input id="dailyRsMin" class="filter-input" type="number" value="" placeholder="ex: 60" style="width:60px;" oninput="renderDaily()">
+                    <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
+                    <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">MKT CAP ≥</span>
+                    <input id="dailyCapMin" class="filter-input" type="number" value="" placeholder="ex: 10" style="width:60px;" oninput="renderDaily()">
+                    <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
+                    <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">MOVE % ≥</span>
+                    <input id="dailyMoveMin" class="filter-input" type="number" value="" placeholder="ex: 3" style="width:60px;" oninput="renderDaily()">
+                    <span id="dailyStatus" style="font-size:10px;color:var(--muted);margin-left:auto;font-family:'IBM Plex Mono',monospace;"></span>
+                </div>
 
-            <!-- Stat bar -->
-            <div id="dailyStatBar" style="display:none;display:flex;gap:0;margin-bottom:12px;border:1px solid var(--border);">
-                <div style="flex:1;padding:10px 16px;background:var(--bg2);border-right:1px solid var(--border);">
-                    <div style="font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:3px;">ADVANCING</div>
-                    <div id="dailyStatAdv" style="font-size:16px;font-weight:700;color:var(--up);">—</div>
+                <!-- Stat bar -->
+                <div id="dailyStatBar" style="display:none;display:flex;gap:0;margin-bottom:12px;border:1px solid var(--border);">
+                    <div style="flex:1;padding:10px 16px;background:var(--bg2);border-right:1px solid var(--border);">
+                        <div style="font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:3px;">ADVANCING</div>
+                        <div id="dailyStatAdv" style="font-size:16px;font-weight:700;color:var(--up);">—</div>
+                    </div>
+                    <div style="flex:1;padding:10px 16px;background:var(--bg2);border-right:1px solid var(--border);">
+                        <div style="font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:3px;">DECLINING</div>
+                        <div id="dailyStatDec" style="font-size:16px;font-weight:700;color:var(--down);">—</div>
+                    </div>
+                    <div style="flex:1;padding:10px 16px;background:var(--bg2);border-right:1px solid var(--border);">
+                        <div style="font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:3px;">AVG WINNER</div>
+                        <div id="dailyStatAvgUp" style="font-size:16px;font-weight:700;color:var(--up);">—</div>
+                    </div>
+                    <div style="flex:1;padding:10px 16px;background:var(--bg2);border-right:1px solid var(--border);">
+                        <div style="font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:3px;">AVG LOSER</div>
+                        <div id="dailyStatAvgDn" style="font-size:16px;font-weight:700;color:var(--down);">—</div>
+                    </div>
+                    <div style="flex:1;padding:10px 16px;background:var(--bg2);border-right:1px solid var(--border);">
+                        <div style="font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:3px;">PCT 6M &gt; 70 AVG MOVE</div>
+                        <div id="dailyStatLeaders" style="font-size:16px;font-weight:700;">—</div>
+                    </div>
+                    <div style="flex:1;padding:10px 16px;background:var(--bg2);border-right:1px solid var(--border);">
+                        <div style="font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:3px;">PCT 6M &lt; 30 AVG MOVE</div>
+                        <div id="dailyStatLaggards" style="font-size:16px;font-weight:700;">—</div>
+                    </div>
+                    <div style="flex:1;padding:10px 16px;background:var(--bg2);">
+                        <div style="font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:3px;">BREADTH</div>
+                        <div id="dailyStatBreadth" style="font-size:16px;font-weight:700;">—</div>
+                    </div>
                 </div>
-                <div style="flex:1;padding:10px 16px;background:var(--bg2);border-right:1px solid var(--border);">
-                    <div style="font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:3px;">DECLINING</div>
-                    <div id="dailyStatDec" style="font-size:16px;font-weight:700;color:var(--down);">—</div>
-                </div>
-                <div style="flex:1;padding:10px 16px;background:var(--bg2);border-right:1px solid var(--border);">
-                    <div style="font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:3px;">AVG WINNER</div>
-                    <div id="dailyStatAvgUp" style="font-size:16px;font-weight:700;color:var(--up);">—</div>
-                </div>
-                <div style="flex:1;padding:10px 16px;background:var(--bg2);border-right:1px solid var(--border);">
-                    <div style="font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:3px;">AVG LOSER</div>
-                    <div id="dailyStatAvgDn" style="font-size:16px;font-weight:700;color:var(--down);">—</div>
-                </div>
-                <div style="flex:1;padding:10px 16px;background:var(--bg2);border-right:1px solid var(--border);">
-                    <div style="font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:3px;">PCT 6M &gt; 70 AVG MOVE</div>
-                    <div id="dailyStatLeaders" style="font-size:16px;font-weight:700;">—</div>
-                </div>
-                <div style="flex:1;padding:10px 16px;background:var(--bg2);border-right:1px solid var(--border);">
-                    <div style="font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:3px;">PCT 6M &lt; 30 AVG MOVE</div>
-                    <div id="dailyStatLaggards" style="font-size:16px;font-weight:700;">—</div>
-                </div>
-                <div style="flex:1;padding:10px 16px;background:var(--bg2);">
-                    <div style="font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:3px;">BREADTH</div>
-                    <div id="dailyStatBreadth" style="font-size:16px;font-weight:700;">—</div>
-                </div>
-            </div>
 
-            <!-- GROUPS/STOCKS toggle -->
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-                <div style="display:flex;gap:0;border:1px solid var(--border2);overflow:hidden;">
-                    <button id="dailyBtnGroups" onclick="setDailyView('groups')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 16px;background:var(--accent2);color:#fff;border:none;cursor:pointer;">GROUPS</button>
-                    <button id="dailyBtnStocks" onclick="setDailyView('stocks')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 16px;background:transparent;color:var(--muted);border:none;cursor:pointer;">STOCKS</button>
-                    <button id="dailyBtnBreadth" onclick="setDailyView('breadth')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 16px;background:transparent;color:var(--muted);border:none;cursor:pointer;">BREADTH</button>
+                <!-- GROUPS/STOCKS toggle -->
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                    <div style="display:flex;gap:0;border:1px solid var(--border2);overflow:hidden;">
+                        <button id="dailyBtnGroups" onclick="setDailyView('groups')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 16px;background:var(--accent2);color:#fff;border:none;cursor:pointer;">GROUPS</button>
+                        <button id="dailyBtnStocks" onclick="setDailyView('stocks')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 16px;background:transparent;color:var(--muted);border:none;cursor:pointer;">STOCKS</button>
+                        <button id="dailyBtnBreadth" onclick="setDailyView('breadth')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 16px;background:transparent;color:var(--muted);border:none;cursor:pointer;">BREADTH</button>
+                    </div>
+                    <div id="dailyDrillBar" style="display:none;">
+                        <button onclick="dailyClearDrill()" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 14px;background:transparent;color:var(--accent2);border:1px solid var(--accent2);cursor:pointer;">← GROUPS</button>
+                        <span id="dailyDrillLabel" style="font-size:12px;color:var(--muted);margin-left:10px;"></span>
+                    </div>
                 </div>
-                <div id="dailyDrillBar" style="display:none;">
-                    <button onclick="dailyClearDrill()" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 14px;background:transparent;color:var(--accent2);border:1px solid var(--accent2);cursor:pointer;">← GROUPS</button>
-                    <span id="dailyDrillLabel" style="font-size:12px;color:var(--muted);margin-left:10px;"></span>
-                </div>
-            </div>
 
-            <!-- GROUPS VIEW -->
-            <div id="dailyGroupsView">
+                <!-- GROUPS VIEW -->
+                <div id="dailyGroupsView">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div>
+                            <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:var(--up);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--up)">TOP GROUPS</div>
+                            <div id="dailyGroupWinnersContent"></div>
+                        </div>
+                        <div>
+                            <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:var(--down);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--down)">WEAK GROUPS</div>
+                            <div id="dailyGroupLosersContent"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STOCKS VIEW -->
+                <div id="dailyStocksView" style="display:none;">
+                    <!-- Two-column layout -->
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                     <div>
-                        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:var(--up);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--up)">TOP GROUPS</div>
-                        <div id="dailyGroupWinnersContent"></div>
+                        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:var(--up);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--up)">WINNERS</div>
+                        <div id="dailyWinnersContent"></div>
                     </div>
                     <div>
-                        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:var(--down);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--down)">WEAK GROUPS</div>
-                        <div id="dailyGroupLosersContent"></div>
+                        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:var(--down);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--down)">LOSERS</div>
+                        <div id="dailyLosersContent"></div>
                     </div>
                 </div>
-            </div>
+                </div><!-- end dailyStocksView -->
 
-            <!-- STOCKS VIEW -->
-            <div id="dailyStocksView" style="display:none;">
-                <!-- Two-column layout -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <div>
-                    <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:var(--up);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--up)">WINNERS</div>
-                    <div id="dailyWinnersContent"></div>
+                <!-- BREADTH VIEW -->
+                <div id="dailyBreadthView" style="display:none;">
+                    <div style="margin-bottom:8px;font-size:11px;color:var(--muted);">% Advancing stocks vs SPY — computed from Firestore price history (252 sessions)</div>
+                    <div style="position:relative;width:100%;height:360px;">
+                        <canvas id="dailyBreadthChart"></canvas>
+                    </div>
                 </div>
-                <div>
-                    <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:var(--down);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--down)">LOSERS</div>
-                    <div id="dailyLosersContent"></div>
-                </div>
-            </div>
-            </div><!-- end dailyStocksView -->
 
-            <!-- BREADTH VIEW -->
-            <div id="dailyBreadthView" style="display:none;">
-                <div style="margin-bottom:8px;font-size:11px;color:var(--muted);">% Advancing stocks vs SPY — computed from Firestore price history (252 sessions)</div>
-                <div style="position:relative;width:100%;height:360px;">
-                    <canvas id="dailyBreadthChart"></canvas>
-                </div>
             </div>
-
         </div>
-    </div>
 
     <!-- TAB: METHOD -->
     <div class="tab-content" id="tab-method">
@@ -4057,6 +4062,57 @@
         else renderDaily();
     }
 
+
+    function makeDailyGroupTable(sorted) {
+        if (!sorted.length) return '<div style="padding:20px;color:var(--muted);font-size:12px;">—</div>';
+        const thS = 'font-size:10px;letter-spacing:.08em;color:var(--muted);padding:7px 12px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg3);cursor:pointer;';
+        const thN = 'font-size:10px;letter-spacing:.08em;color:var(--muted);padding:7px 12px;text-align:center;border-bottom:1px solid var(--border);background:var(--bg3);cursor:pointer;';
+        let html = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+          <thead><tr>
+            <th style="${thS}width:auto" onclick="dailyGroupSort('group')">GROUP</th>
+            <th style="${thN}width:90px" onclick="dailyGroupSort('sector')">SECTOR</th>
+            <th style="${thN}width:44px" onclick="dailyGroupSort('count')">#</th>
+            <th style="${thN}width:80px" onclick="dailyGroupSort('avgMove')">AVG MOVE ↕</th>
+            <th style="${thN}width:60px" onclick="dailyGroupSort('advPct')">ADV% ↕</th>
+          </tr></thead><tbody>`;
+        sorted.slice(0, 80).forEach(g => {
+            const c = g.avgMove >= 0 ? 'var(--up)' : 'var(--down)';
+            const advC = g.advPct >= 70 ? 'var(--up)' : g.advPct <= 30 ? 'var(--down)' : 'var(--text)';
+            html += `<tr style="border-bottom:1px solid var(--faint);cursor:pointer;"
+                onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''"
+                onclick="dailyDrillGroup('${g.group.replace(/'/g,"\'")}')">
+              <td style="padding:7px 12px;font-size:13px;color:var(--accent2);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.group}</td>
+              <td style="padding:7px 12px;font-size:12px;color:var(--muted);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.sector||''}</td>
+              <td style="padding:7px 12px;font-size:13px;text-align:center;color:var(--muted)">${g.count}</td>
+              <td style="padding:7px 12px;font-size:14px;font-weight:700;color:${c};text-align:center">${g.avgMove >= 0 ? '+' : ''}${g.avgMove}%</td>
+              <td style="padding:7px 12px;font-size:13px;text-align:center;color:${advC}">${g.advPct}%</td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        return html;
+    }
+    let _dailyGroupSortCol = 'avgMove', _dailyGroupSortDir = 'desc';
+    let _dailyGroupRows = [];
+
+    function dailyGroupSort(col) {
+        if (_dailyGroupSortCol === col) _dailyGroupSortDir = _dailyGroupSortDir === 'desc' ? 'asc' : 'desc';
+        else { _dailyGroupSortCol = col; _dailyGroupSortDir = 'desc'; }
+        // Re-render with new sort
+        const sorted = [..._dailyGroupRows].sort((a, b) => {
+            const av = a[col], bv = b[col];
+            return _dailyGroupSortDir === 'desc' ? bv - av : av - bv;
+        });
+        const topGroups  = sorted.filter(g => g.avgMove >= 0);
+        const weakGroups = [...sorted].reverse().filter(g => g.avgMove < 0);
+        // If sorting by advPct, show all sorted
+        const allSorted = [..._dailyGroupRows].sort((a, b) => {
+            const av = a[col], bv = b[col];
+            return _dailyGroupSortDir === 'desc' ? bv - av : av - bv;
+        });
+        document.getElementById('dailyGroupWinnersContent').innerHTML = makeDailyGroupTable(allSorted.filter(g => g.avgMove >= 0));
+        document.getElementById('dailyGroupLosersContent').innerHTML  = makeDailyGroupTable([...allSorted].filter(g => g.avgMove < 0).reverse());
+    }
+
     function renderDailyGroups(allRows) {
         // Group averages
         const gMap = {};
@@ -4075,39 +4131,13 @@
                 advPct:  Math.round(v.moves.filter(x => x > 0).length / v.moves.length * 100)
             }));
 
-        const makeGroupTable = (sorted, colorVar) => {
-            if (!sorted.length) return '<div style="padding:20px;color:var(--muted);font-size:12px;">—</div>';
-            const thS = 'font-size:10px;letter-spacing:.08em;color:var(--muted);padding:7px 12px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg3);';
-            const thN = 'font-size:10px;letter-spacing:.08em;color:var(--muted);padding:7px 12px;text-align:center;border-bottom:1px solid var(--border);background:var(--bg3);';
-            let html = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;">
-              <thead><tr>
-                <th style="${thS}width:auto">GROUP</th>
-                <th style="${thN}width:90px">SECTOR</th>
-                <th style="${thN}width:44px">#</th>
-                <th style="${thN}width:80px">AVG MOVE</th>
-                <th style="${thN}width:60px">ADV%</th>
-              </tr></thead><tbody>`;
-            sorted.slice(0, 80).forEach(g => {
-                const c = g.avgMove >= 0 ? 'var(--up)' : 'var(--down)';
-                const advC = g.advPct >= 70 ? 'var(--up)' : g.advPct <= 30 ? 'var(--down)' : 'var(--text)';
-                html += `<tr style="border-bottom:1px solid var(--faint);cursor:pointer;"
-                    onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''"
-                    onclick="dailyDrillGroup('${g.group.replace(/'/g,"\'")}')">
-                  <td style="padding:7px 12px;font-size:13px;color:var(--accent2);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.group}</td>
-                  <td style="padding:7px 12px;font-size:12px;color:var(--muted);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.sector||''}</td>
-                  <td style="padding:7px 12px;font-size:13px;text-align:center;color:var(--muted)">${g.count}</td>
-                  <td style="padding:7px 12px;font-size:14px;font-weight:700;color:${c};text-align:center">${g.avgMove >= 0 ? '+' : ''}${g.avgMove}%</td>
-                  <td style="padding:7px 12px;font-size:13px;text-align:center;color:${advC}">${g.advPct}%</td>
-                </tr>`;
-            });
-            html += '</tbody></table>';
-            return html;
-        };
+        const makeGroupTable = (sorted, colorVar) => makeDailyGroupTable(sorted);
 
+        _dailyGroupRows = groups;
         const topGroups  = [...groups].sort((a,b) => b.avgMove - a.avgMove);
         const weakGroups = [...groups].sort((a,b) => a.avgMove - b.avgMove);
-        document.getElementById('dailyGroupWinnersContent').innerHTML = makeGroupTable(topGroups,  'var(--up)');
-        document.getElementById('dailyGroupLosersContent').innerHTML  = makeGroupTable(weakGroups, 'var(--down)');
+        document.getElementById('dailyGroupWinnersContent').innerHTML = makeDailyGroupTable(topGroups);
+        document.getElementById('dailyGroupLosersContent').innerHTML  = makeDailyGroupTable(weakGroups);
     }
 
     function dailyDrillGroup(group) {
@@ -4125,74 +4155,146 @@
     let _breadthChart = null;
 
     function renderBreadthChart() {
-        if (!allData.length || !Object.keys(rawPrices).length || !priceDates.length) return;
+        const view = document.getElementById('dailyBreadthView');
+        if (!allData.length || !Object.keys(rawPrices).length || !priceDates.length) {
+            if (view) view.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">Load data first (REFRESH DATA), then click BREADTH.</div>';
+            return;
+        }
         if (typeof Chart === 'undefined') {
-            document.getElementById('dailyBreadthView').innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">Loading Chart.js... please try again in a moment.</div>';
+            if (view) view.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">Chart.js loading... please wait 2s and click BREADTH again.</div>';
+            setTimeout(renderBreadthChart, 2000);
             return;
         }
 
+        // Restore canvas if innerHTML was replaced
+        if (!document.getElementById('dailyBreadthChart')) {
+            if (view) view.innerHTML = `
+                <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;flex-wrap:wrap;">
+                    <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">WINDOW</span>
+                    <select id="breadthWindow" class="filter-select" style="width:100px;" onchange="renderBreadthChart()">
+                        <option value="30">30 days</option>
+                        <option value="60">60 days</option>
+                        <option value="90" selected>90 days</option>
+                        <option value="180">180 days</option>
+                        <option value="252">252 days</option>
+                    </select>
+                    <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">LEADERS PCT 6M ≥</span>
+                    <input id="breadthLeaderPct" class="filter-input" type="number" value="70" min="50" max="90" style="width:52px;" onchange="renderBreadthChart()">
+                    <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">LAGGARDS PCT 6M ≤</span>
+                    <input id="breadthLaggardPct" class="filter-input" type="number" value="30" min="10" max="50" style="width:52px;" onchange="renderBreadthChart()">
+                </div>
+                <div style="position:relative;width:100%;height:380px;"><canvas id="dailyBreadthChart"></canvas></div>`;
+        }
+
         const spyPrices = rawPrices['SPY'];
-        if (!spyPrices) { console.warn('SPY not in rawPrices'); return; }
+        if (!spyPrices) {
+            if (view) view.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">SPY not found in price data.</div>';
+            return;
+        }
 
-        // Compute % advancing for each date
-        const n = priceDates.length;
-        const breadthData = [];
+        const windowDays   = parseInt(document.getElementById('breadthWindow')?.value   || 90);
+        const leaderPct    = parseFloat(document.getElementById('breadthLeaderPct')?.value  || 70);
+        const laggardPct   = parseFloat(document.getElementById('breadthLaggardPct')?.value || 30);
 
-        for (let i = 0; i < n - 1; i++) {
-            let adv = 0, total = 0;
+        // Identify leaders and laggards based on CURRENT PCT 6M
+        const leaders  = new Set(allData.filter(d => (d.pct_6m ?? 0) >= leaderPct).map(d => d.ticker));
+        const laggards = new Set(allData.filter(d => (d.pct_6m ?? 0) <= laggardPct).map(d => d.ticker));
+
+        const n = Math.min(windowDays, priceDates.length - 1);
+        const data = [];
+
+        for (let i = 0; i < n; i++) {
+            let advAll = 0, totalAll = 0;
+            let advLeaders = 0, totalLeaders = 0;
+            let advLaggards = 0, totalLaggards = 0;
+
             allData.forEach(d => {
                 const p = rawPrices[d.ticker];
                 if (!p || p.length <= i + 1) return;
                 if (p[i] == null || p[i+1] == null || p[i+1] === 0) return;
-                total++;
-                if (p[i] > p[i+1]) adv++;
+                const up = p[i] > p[i+1];
+                totalAll++;
+                if (up) advAll++;
+                if (leaders.has(d.ticker))  { totalLeaders++;  if (up) advLeaders++; }
+                if (laggards.has(d.ticker)) { totalLaggards++; if (up) advLaggards++; }
             });
-            const pctAdv = total > 0 ? Math.round(adv / total * 100) : null;
-            const spyClose = spyPrices[i] ?? null;
-            breadthData.push({ date: priceDates[i], pctAdv, spyClose, adv, total });
+
+            data.push({
+                date:        priceDates[i],
+                pctAll:      totalAll      > 0 ? Math.round(advAll      / totalAll      * 100) : null,
+                pctLeaders:  totalLeaders  > 0 ? Math.round(advLeaders  / totalLeaders  * 100) : null,
+                pctLaggards: totalLaggards > 0 ? Math.round(advLaggards / totalLaggards * 100) : null,
+                spy:         spyPrices[i] ?? null,
+                nLeaders:    totalLeaders,
+                nLaggards:   totalLaggards,
+            });
         }
 
-        // Sort oldest first for chart
-        breadthData.reverse();
+        // Sort oldest → newest for chart
+        data.reverse();
 
-        const labels   = breadthData.map(d => d.date);
-        const breadth  = breadthData.map(d => d.pctAdv);
-        const spy      = breadthData.map(d => d.spyClose);
-
-        // Background colors: green if >60, red if <40
-        const bgColors = breadth.map(v => v == null ? 'transparent' : v >= 60 ? 'rgba(21,128,61,0.15)' : v <= 40 ? 'rgba(185,28,28,0.15)' : 'rgba(100,116,139,0.08)');
+        const labels = data.map(d => d.date);
 
         const canvas = document.getElementById('dailyBreadthChart');
         if (!canvas) return;
-        canvas.height = 320;
 
-        // Destroy previous chart
         if (_breadthChart) { _breadthChart.destroy(); _breadthChart = null; }
 
-        const isDark = document.body.classList.contains('dark') || document.documentElement.getAttribute('data-theme') === 'dark';
-        const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#1e293b';
         const mutedColor = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() || '#94a3b8';
-        const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#e2e8f0';
+        const gridColor  = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#e2e8f0';
 
         _breadthChart = new Chart(canvas, {
-            type: 'bar',
+            type: 'line',
             data: {
                 labels,
                 datasets: [
                     {
-                        type: 'bar',
-                        label: '% Advancing',
-                        data: breadth,
-                        backgroundColor: bgColors,
-                        borderColor: breadth.map(v => v >= 60 ? 'rgba(21,128,61,0.6)' : v <= 40 ? 'rgba(185,28,28,0.6)' : 'rgba(100,116,139,0.3)'),
-                        borderWidth: 1,
+                        label: '% Adv ALL',
+                        data: data.map(d => d.pctAll),
+                        borderColor: '#94a3b8',
+                        borderWidth: 1.5,
+                        pointRadius: 0,
+                        tension: 0.3,
+                        fill: false,
+                        yAxisID: 'y',
+                        order: 3,
+                    },
+                    {
+                        label: `% Adv LEADERS (PCT6M≥${leaderPct})`,
+                        data: data.map(d => d.pctLeaders),
+                        borderColor: '#15803d',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.3,
+                        fill: false,
                         yAxisID: 'y',
                         order: 2,
                     },
                     {
-                        type: 'line',
+                        label: `% Adv LAGGARDS (PCT6M≤${laggardPct})`,
+                        data: data.map(d => d.pctLaggards),
+                        borderColor: '#b91c1c',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.3,
+                        fill: false,
+                        yAxisID: 'y',
+                        order: 2,
+                    },
+                    {
+                        label: '50% line',
+                        data: data.map(() => 50),
+                        borderColor: 'rgba(148,163,184,0.4)',
+                        borderWidth: 1,
+                        borderDash: [4, 4],
+                        pointRadius: 0,
+                        fill: false,
+                        yAxisID: 'y',
+                        order: 4,
+                    },
+                    {
                         label: 'SPY',
-                        data: spy,
+                        data: data.map(d => d.spy),
                         borderColor: '#6366f1',
                         borderWidth: 2,
                         pointRadius: 0,
@@ -4201,18 +4303,6 @@
                         yAxisID: 'y2',
                         order: 1,
                     },
-                    {
-                        type: 'line',
-                        label: '50% line',
-                        data: breadth.map(() => 50),
-                        borderColor: 'rgba(148,163,184,0.5)',
-                        borderWidth: 1,
-                        borderDash: [4, 4],
-                        pointRadius: 0,
-                        fill: false,
-                        yAxisID: 'y',
-                        order: 3,
-                    }
                 ]
             },
             options: {
@@ -4220,31 +4310,29 @@
                 maintainAspectRatio: false,
                 interaction: { mode: 'index', intersect: false },
                 plugins: {
-                    legend: { display: true, labels: { color: mutedColor, font: { size: 10, family: 'IBM Plex Mono' } } },
+                    legend: {
+                        display: true,
+                        labels: { color: mutedColor, font: { size: 10, family: 'IBM Plex Mono' }, boxWidth: 20 }
+                    },
                     tooltip: {
                         callbacks: {
                             label: ctx => {
-                                if (ctx.dataset.label === '% Advancing') return `Advancing: ${ctx.raw}%`;
                                 if (ctx.dataset.label === 'SPY') return `SPY: $${ctx.raw}`;
-                                return null;
+                                if (ctx.dataset.label === '50% line') return null;
+                                return `${ctx.dataset.label}: ${ctx.raw}%`;
                             },
-                            afterBody: (items) => {
+                            afterBody: items => {
                                 const i = items[0]?.dataIndex;
                                 if (i == null) return [];
-                                const d = breadthData[i];
-                                return [`${d.adv} adv / ${d.total} total`];
+                                const d = data[i];
+                                return [`Leaders: ${d.nLeaders} tickers`, `Laggards: ${d.nLaggards} tickers`];
                             }
                         }
                     }
                 },
                 scales: {
                     x: {
-                        ticks: {
-                            color: mutedColor,
-                            font: { size: 9, family: 'IBM Plex Mono' },
-                            maxTicksLimit: 12,
-                            maxRotation: 0,
-                        },
+                        ticks: { color: mutedColor, font: { size: 9, family: 'IBM Plex Mono' }, maxTicksLimit: 12, maxRotation: 0 },
                         grid: { color: gridColor }
                     },
                     y: {
