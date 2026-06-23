@@ -105,7 +105,7 @@
         padding: 20px 24px;
     }
     /* Tabs outside .main need same padding */
-    #tab-narrative, #tab-method, #tab-daily, #tab-rrg, #tab-returns, #tab-compare, #tab-best, #tab-fund {
+    #tab-narrative, #tab-method, #tab-daily, #tab-breadth, #tab-rrg, #tab-returns, #tab-compare, #tab-best, #tab-fund {
         padding: 20px 24px;
         box-sizing: border-box;
     }/* Tabs */
@@ -787,6 +787,7 @@
         <div class="tabs">
             <button class="tab active" onclick="switchTab('price')">REL. STRENGTH</button>
             <button class="tab" onclick="switchTab('daily')">DAILY MOVES</button>
+            <button class="tab" onclick="switchTab('breadth')">BREADTH</button>
             <button class="tab" onclick="switchTab('rrg')">ROTATION</button>
             <button class="tab" onclick="switchTab('returns')">% RETURNS</button>
             <button class="tab" onclick="switchTab('fund')">FUNDAMENTALS</button>
@@ -2051,7 +2052,68 @@
     </div>
 
 
-        <!-- TAB: DAILY MOVES -->
+        <!-- TAB: BREADTH -->
+    <div class="tab-content" id="tab-breadth">
+        <div style="padding:0 0 20px;">
+
+            <!-- Controls -->
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0 16px;">
+                <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">LEADERS PCT 6M ≥</span>
+                <input id="brLeaderPct" class="filter-input" type="number" value="70" min="50" max="90" style="width:52px;" onchange="renderBreadthTab()">
+                <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
+                <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">WINDOW</span>
+                <select id="brWindow" class="filter-select" style="width:90px;" onchange="renderBreadthTab()">
+                    <option value="30">30 days</option>
+                    <option value="60" selected>60 days</option>
+                    <option value="90">90 days</option>
+                    <option value="180">180 days</option>
+                </select>
+                <span id="brStatus" style="font-size:10px;color:var(--muted);margin-left:auto;font-family:'IBM Plex Mono',monospace;"></span>
+            </div>
+
+            <!-- 4 chart panels + SPY -->
+            <div style="display:flex;flex-direction:column;gap:16px;">
+
+                <div>
+                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">1 — % ADVANCING LEADERS vs ALL (SMA5)</div>
+                    <div style="position:relative;width:100%;height:200px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
+                        <canvas id="brChart1"></canvas>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">2 — % LEADERS AT NEW 3M HIGH (SMA5)</div>
+                    <div style="position:relative;width:100%;height:200px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
+                        <canvas id="brChart2"></canvas>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">3 — LEADERS AVG MOVE vs SPY MOVE — SPREAD (SMA5)</div>
+                    <div style="position:relative;width:100%;height:200px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
+                        <canvas id="brChart3"></canvas>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">4 — % LEADERS ABOVE EMA20 (SMA5)</div>
+                    <div style="position:relative;width:100%;height:200px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
+                        <canvas id="brChart4"></canvas>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">SPY</div>
+                    <div style="position:relative;width:100%;height:140px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
+                        <canvas id="brChartSpy"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB: DAILY MOVES -->
         <div class="tab-content" id="tab-daily">
             <div style="padding:0 0 12px;">
 
@@ -3191,7 +3253,8 @@
             const el = document.getElementById('narrativeApiKey');
             if (saved && el && !el.value) el.value = saved;
         }
-        if (tab === 'daily') { initDailyDate(); setTimeout(renderDaily, 50); }
+        if (tab === 'daily')   { initDailyDate(); setTimeout(renderDaily, 50); }
+        if (tab === 'breadth') { setTimeout(renderBreadthTab, 50); }
         renderActive();
     }
 
@@ -4186,10 +4249,18 @@
                 <div style="position:relative;width:100%;height:380px;"><canvas id="dailyBreadthChart"></canvas></div>`;
         }
 
-        const spyPrices = rawPrices['SPY'];
+        // SPY fallback: try QQQ, IVV, then compute avg of all tickers
+        let spyPrices = rawPrices['SPY'] || rawPrices['QQQ'] || rawPrices['IVV'] || rawPrices['VOO'];
+        let spyLabel = 'SPY';
         if (!spyPrices) {
-            if (view) view.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">SPY not found in price data.</div>';
-            return;
+            // Compute equal-weight index from all tickers
+            const maxLen = Math.max(...Object.values(rawPrices).map(p => p.length));
+            spyPrices = [];
+            for (let i = 0; i < maxLen; i++) {
+                const vals = Object.values(rawPrices).map(p => p[i]).filter(v => v != null && v > 0);
+                spyPrices.push(vals.length ? vals.reduce((s,v) => s+v/vals[0], 0) / vals.length * 100 : null);
+            }
+            spyLabel = 'Avg Index';
         }
 
         const windowDays   = parseInt(document.getElementById('breadthWindow')?.value   || 90);
@@ -4243,114 +4314,230 @@
         const mutedColor = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() || '#94a3b8';
         const gridColor  = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#e2e8f0';
 
+        // ── SMA5 smoothing ──
+        const sma = (arr, n=5) => arr.map((_, i) => {
+            if (i < n-1) return null;
+            const slice = arr.slice(i-n+1, i+1).filter(v => v != null);
+            return slice.length ? Math.round(slice.reduce((s,v) => s+v, 0) / slice.length) : null;
+        });
+        const smoothLeaders  = sma(data.map(d => d.pctLeaders));
+        const smoothLaggards = sma(data.map(d => d.pctLaggards));
+        const smoothAll      = sma(data.map(d => d.pctAll));
+
+        // ── Chart 1: Breadth ──
+        if (_breadthChart) { _breadthChart.destroy(); _breadthChart = null; }
         _breadthChart = new Chart(canvas, {
             type: 'line',
             data: {
                 labels,
                 datasets: [
-                    {
-                        label: '% Adv ALL',
-                        data: data.map(d => d.pctAll),
-                        borderColor: '#94a3b8',
-                        borderWidth: 1.5,
-                        pointRadius: 0,
-                        tension: 0.3,
-                        fill: false,
-                        yAxisID: 'y',
-                        order: 3,
-                    },
-                    {
-                        label: `% Adv LEADERS (PCT6M≥${leaderPct})`,
-                        data: data.map(d => d.pctLeaders),
-                        borderColor: '#15803d',
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        tension: 0.3,
-                        fill: false,
-                        yAxisID: 'y',
-                        order: 2,
-                    },
-                    {
-                        label: `% Adv LAGGARDS (PCT6M≤${laggardPct})`,
-                        data: data.map(d => d.pctLaggards),
-                        borderColor: '#b91c1c',
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        tension: 0.3,
-                        fill: false,
-                        yAxisID: 'y',
-                        order: 2,
-                    },
-                    {
-                        label: '50% line',
-                        data: data.map(() => 50),
-                        borderColor: 'rgba(148,163,184,0.4)',
-                        borderWidth: 1,
-                        borderDash: [4, 4],
-                        pointRadius: 0,
-                        fill: false,
-                        yAxisID: 'y',
-                        order: 4,
-                    },
-                    {
-                        label: 'SPY',
-                        data: data.map(d => d.spy),
-                        borderColor: '#6366f1',
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        tension: 0.3,
-                        fill: false,
-                        yAxisID: 'y2',
-                        order: 1,
-                    },
+                    { label: `Leaders PCT6M≥${leaderPct} (SMA5)`, data: smoothLeaders,  borderColor: '#15803d', borderWidth: 2.5, pointRadius: 0, tension: 0.2, fill: false },
+                    { label: `Laggards PCT6M≤${laggardPct} (SMA5)`, data: smoothLaggards, borderColor: '#b91c1c', borderWidth: 2.5, pointRadius: 0, tension: 0.2, fill: false },
+                    { label: 'All (SMA5)', data: smoothAll, borderColor: '#94a3b8', borderWidth: 1.5, pointRadius: 0, tension: 0.2, fill: false, borderDash: [3,3] },
+                    { label: '50%', data: data.map(() => 50), borderColor: 'rgba(148,163,184,0.35)', borderWidth: 1, borderDash: [4,4], pointRadius: 0, fill: false },
                 ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 interaction: { mode: 'index', intersect: false },
                 plugins: {
-                    legend: {
-                        display: true,
-                        labels: { color: mutedColor, font: { size: 10, family: 'IBM Plex Mono' }, boxWidth: 20 }
-                    },
+                    legend: { display: true, labels: { color: mutedColor, font: { size: 10, family: 'IBM Plex Mono' }, boxWidth: 16 } },
                     tooltip: {
+                        filter: item => item.dataset.label !== '50%',
                         callbacks: {
-                            label: ctx => {
-                                if (ctx.dataset.label === 'SPY') return `SPY: $${ctx.raw}`;
-                                if (ctx.dataset.label === '50% line') return null;
-                                return `${ctx.dataset.label}: ${ctx.raw}%`;
-                            },
-                            afterBody: items => {
-                                const i = items[0]?.dataIndex;
-                                if (i == null) return [];
-                                const d = data[i];
-                                return [`Leaders: ${d.nLeaders} tickers`, `Laggards: ${d.nLaggards} tickers`];
-                            }
+                            label: ctx => `${ctx.dataset.label}: ${ctx.raw != null ? ctx.raw + '%' : '—'}`,
+                            afterBody: items => { const i = items[0]?.dataIndex; if (i == null) return []; const d = data[i]; return [`Leaders: ${d.nLeaders} | Laggards: ${d.nLaggards}`]; }
                         }
                     }
                 },
                 scales: {
-                    x: {
-                        ticks: { color: mutedColor, font: { size: 9, family: 'IBM Plex Mono' }, maxTicksLimit: 12, maxRotation: 0 },
-                        grid: { color: gridColor }
-                    },
-                    y: {
-                        position: 'left',
-                        min: 0, max: 100,
-                        ticks: { color: mutedColor, font: { size: 9 }, callback: v => v + '%' },
-                        grid: { color: gridColor },
-                        title: { display: true, text: '% Advancing', color: mutedColor, font: { size: 9 } }
-                    },
-                    y2: {
-                        position: 'right',
-                        ticks: { color: '#6366f1', font: { size: 9 }, callback: v => '$' + v },
-                        grid: { drawOnChartArea: false },
-                        title: { display: true, text: 'SPY', color: '#6366f1', font: { size: 9 } }
-                    }
+                    x: { ticks: { color: mutedColor, font: { size: 9 }, maxTicksLimit: 10, maxRotation: 0 }, grid: { color: gridColor } },
+                    y: { min: 0, max: 100, ticks: { color: mutedColor, font: { size: 9 }, callback: v => v + '%' }, grid: { color: gridColor } }
                 }
             }
         });
+
+        // ── Chart 2: SPY ──
+        let canvas2 = document.getElementById('dailySpyChart');
+        if (!canvas2) {
+            const wrap2 = document.createElement('div');
+            wrap2.style.cssText = 'position:relative;width:100%;height:160px;margin-top:12px;';
+            wrap2.innerHTML = '<canvas id="dailySpyChart"></canvas>';
+            canvas.closest('div').parentElement.appendChild(wrap2);
+            canvas2 = document.getElementById('dailySpyChart');
+        }
+        if (window._spyChart) { window._spyChart.destroy(); window._spyChart = null; }
+        window._spyChart = new Chart(canvas2, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{ label: spyLabel, data: data.map(d => d.spy), borderColor: '#6366f1', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: { target: 'origin', above: 'rgba(99,102,241,0.07)' } }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: true, labels: { color: mutedColor, font: { size: 10, family: 'IBM Plex Mono' }, boxWidth: 16 } },
+                    tooltip: { callbacks: { label: ctx => `${spyLabel}: $${ctx.raw}` } }
+                },
+                scales: {
+                    x: { ticks: { color: mutedColor, font: { size: 9 }, maxTicksLimit: 10, maxRotation: 0 }, grid: { color: gridColor } },
+                    y: { ticks: { color: '#6366f1', font: { size: 9 }, callback: v => '$'+v }, grid: { color: gridColor } }
+                }
+            }
+        });
+    }
+
+    // ── BREADTH TAB ───────────────────────────────────────────────
+    const _brCharts = {};
+
+    function makeChart(id, datasets, opts = {}) {
+        const canvas = document.getElementById(id);
+        if (!canvas) return;
+        if (_brCharts[id]) { _brCharts[id].destroy(); delete _brCharts[id]; }
+        const mutedColor = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() || '#94a3b8';
+        const gridColor  = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#e2e8f0';
+        _brCharts[id] = new Chart(canvas, {
+            type: 'line',
+            data: { labels: opts.labels || [], datasets },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: true, labels: { color: mutedColor, font: { size: 9, family: 'IBM Plex Mono' }, boxWidth: 14, padding: 8 } },
+                    tooltip: { callbacks: { label: ctx => opts.tooltipFn ? opts.tooltipFn(ctx) : `${ctx.dataset.label}: ${ctx.raw != null ? ctx.raw : '—'}` } }
+                },
+                scales: {
+                    x: { ticks: { color: mutedColor, font: { size: 8 }, maxTicksLimit: 8, maxRotation: 0 }, grid: { color: gridColor } },
+                    y: { min: opts.yMin, max: opts.yMax, ticks: { color: mutedColor, font: { size: 8 }, callback: opts.yFmt || (v => v) }, grid: { color: gridColor } }
+                }
+            }
+        });
+    }
+
+    function renderBreadthTab() {
+        if (!allData.length || !Object.keys(rawPrices).length || !priceDates.length) return;
+        if (typeof Chart === 'undefined') { setTimeout(renderBreadthTab, 1000); return; }
+
+        const leaderPct = parseFloat(document.getElementById('brLeaderPct')?.value || 70);
+        const window60  = parseInt(document.getElementById('brWindow')?.value || 60);
+
+        // Identify current leaders
+        const leaders = allData.filter(d => (d.pct_6m ?? 0) >= leaderPct);
+        const leaderTickers = new Set(leaders.map(d => d.ticker));
+
+        const spyPrices = rawPrices['SPY'] || rawPrices['QQQ'] || rawPrices['IVV'];
+        const n = Math.min(window60, priceDates.length - 64); // need 63 extra for 3M high
+
+        document.getElementById('brStatus').textContent =
+            `${leaders.length} leaders | ${priceDates[0]} → ${priceDates[Math.min(n, priceDates.length-1)]}`;
+
+        // ── Compute all metrics per day ──────────────────────────────
+        const raw = [];
+        for (let i = 0; i < n; i++) {
+            let advL=0, totL=0, advAll=0, totAll=0;
+            let nh3mL=0, totNh=0;
+            let sumMoveL=0, cntMoveL=0;
+            let aboveEma20L=0, totEma20=0;
+
+            const spyClose0 = spyPrices?.[i]   ?? null;
+            const spyClose1 = spyPrices?.[i+1] ?? null;
+            const spyMove = (spyClose0 && spyClose1 && spyClose1 > 0)
+                ? (spyClose0 - spyClose1) / spyClose1 * 100 : null;
+
+            allData.forEach(d => {
+                const p = rawPrices[d.ticker];
+                if (!p || p.length <= i + 64) return;
+                const c0 = p[i], c1 = p[i+1];
+                if (!c0 || !c1 || c1 === 0) return;
+
+                const up = c0 > c1;
+                totAll++; if (up) advAll++;
+
+                if (!leaderTickers.has(d.ticker)) return;
+
+                // % advancing leaders
+                totL++; if (up) advL++;
+
+                // daily move leaders
+                const mv = (c0 - c1) / c1 * 100;
+                sumMoveL += mv; cntMoveL++;
+
+                // 3M new high: price[i] >= max(price[i..i+62])
+                const window3m = p.slice(i, i + 63).filter(v => v != null);
+                if (window3m.length >= 10) {
+                    totNh++;
+                    if (c0 >= Math.max(...window3m)) nh3mL++;
+                }
+
+                // % above EMA20
+                const ema20 = calcEMA(p.slice(i, i + 25), 20);
+                if (ema20 != null) {
+                    totEma20++;
+                    if (c0 > ema20) aboveEma20L++;
+                }
+            });
+
+            const avgMoveL = cntMoveL > 0 ? sumMoveL / cntMoveL : null;
+            const spread   = (avgMoveL != null && spyMove != null) ? avgMoveL - spyMove : null;
+
+            raw.push({
+                date:       priceDates[i],
+                pctAdvL:    totL    > 0 ? Math.round(advL    / totL    * 100) : null,
+                pctAdvAll:  totAll  > 0 ? Math.round(advAll  / totAll  * 100) : null,
+                pctNh3m:    totNh   > 0 ? Math.round(nh3mL   / totNh   * 100) : null,
+                spread:     spread  != null ? Math.round(spread * 10) / 10 : null,
+                pctEma20:   totEma20 > 0 ? Math.round(aboveEma20L / totEma20 * 100) : null,
+                spy:        spyClose0,
+            });
+        }
+
+        raw.reverse(); // oldest → newest
+        const labels = raw.map(d => d.date);
+
+        const sma = (arr, k=5) => arr.map((_, i) => {
+            if (i < k-1) return null;
+            const sl = arr.slice(i-k+1, i+1).filter(v => v != null);
+            return sl.length ? Math.round(sl.reduce((s,v)=>s+v,0)/sl.length * 10)/10 : null;
+        });
+
+        const ds = (label, color, data, dash) => ({
+            label, data, borderColor: color, borderWidth: 2, pointRadius: 0,
+            tension: 0.2, fill: false, ...(dash ? {borderDash: dash} : {})
+        });
+
+        const pctFmt = v => v != null ? v + '%' : '—';
+        const spreadFmt = v => v != null ? (v >= 0 ? '+' : '') + v + '%' : '—';
+
+        // Chart 1 — % Advancing
+        makeChart('brChart1', [
+            ds(`Leaders PCT6M≥${leaderPct} (SMA5)`, '#15803d', sma(raw.map(d => d.pctAdvL))),
+            ds('All (SMA5)', '#94a3b8', sma(raw.map(d => d.pctAdvAll)), [3,3]),
+            { ...ds('50%', 'rgba(148,163,184,0.3)', raw.map(() => 50), [4,4]), borderWidth: 1 },
+        ], { labels, yMin: 0, yMax: 100, yFmt: v => v+'%', tooltipFn: ctx => `${ctx.dataset.label}: ${pctFmt(ctx.raw)}` });
+
+        // Chart 2 — % New 3M High
+        makeChart('brChart2', [
+            ds(`% Leaders New 3M High (SMA5)`, '#0ea5e9', sma(raw.map(d => d.pctNh3m))),
+        ], { labels, yMin: 0, yMax: 100, yFmt: v => v+'%', tooltipFn: ctx => `${ctx.dataset.label}: ${pctFmt(ctx.raw)}` });
+
+        // Chart 3 — Spread
+        makeChart('brChart3', [
+            ds('Leaders avg move − SPY (SMA5)', '#f59e0b', sma(raw.map(d => d.spread))),
+            { ...ds('0', 'rgba(148,163,184,0.3)', raw.map(() => 0), [4,4]), borderWidth: 1 },
+        ], { labels, yFmt: v => (v>=0?'+':'')+v+'%', tooltipFmt: ctx => spreadFmt(ctx.raw),
+             tooltipFn: ctx => `${ctx.dataset.label}: ${spreadFmt(ctx.raw)}` });
+
+        // Chart 4 — % above EMA20
+        makeChart('brChart4', [
+            ds(`% Leaders above EMA20 (SMA5)`, '#6d28d9', sma(raw.map(d => d.pctEma20))),
+            { ...ds('50%', 'rgba(148,163,184,0.3)', raw.map(() => 50), [4,4]), borderWidth: 1 },
+        ], { labels, yMin: 0, yMax: 100, yFmt: v => v+'%', tooltipFn: ctx => `${ctx.dataset.label}: ${pctFmt(ctx.raw)}` });
+
+        // SPY panel
+        makeChart('brChartSpy', [
+            { ...ds('SPY', '#6366f1', raw.map(d => d.spy)), fill: { target: 'origin', above: 'rgba(99,102,241,0.07)' } },
+        ], { labels, yFmt: v => '$'+v, tooltipFn: ctx => `SPY: $${ctx.raw}` });
     }
 
     // ── NARRATIVE / MARKET ANALYSIS ──────────────────────────────
