@@ -4907,9 +4907,18 @@ Write a thorough 7-section market analysis.`;
             const val = mode === 'high' ? d.dist_high : d.dist_low;
             const c   = mode === 'high' ? 'var(--up)' : 'var(--down)';
             const near = mode === 'high' ? val >= -thr : val <= thr;
-            const label = near
-                ? '<span style="color:var(--up);font-weight:700;font-size:11px;">✓ Yes</span>'
-                : `<span style="color:${c};font-weight:700;">${val >= 0 ? '+' : ''}${val}%</span>`;
+            let label;
+            if (near) {
+                label = '<span style="color:var(--up);font-weight:700;font-size:11px;">✓ Yes</span>';
+            } else if (mode === 'high') {
+                // Not at high: black, red if more than 25% below
+                const distColor = val < -25 ? 'var(--down)' : 'var(--text)';
+                label = `<span style="color:${distColor};font-weight:500;">${val >= 0 ? '+' : ''}${val}%</span>`;
+            } else {
+                // Not at low: black if more than 25% above low (= far from low = good), else orange
+                const distColor = val > 25 ? 'var(--text)' : '#f59e0b';
+                label = `<span style="color:${distColor};font-weight:500;">${val >= 0 ? '+' : ''}${val}%</span>`;
+            }
             html += `<tr style="border-bottom:1px solid var(--faint)">
         <td style="padding:5px 10px;font-size:12px;font-weight:700;color:var(--accent2);cursor:pointer" onclick="openNews('${d.ticker}')">${d.ticker}</td>
         <td style="padding:5px 10px;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.name||''}</td>
