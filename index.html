@@ -690,7 +690,7 @@
         <div class="top-bar">
             <button class="btn" id="loadBtn" onclick="loadFromSheets()">REFRESH DATA</button>
             <button class="btn btn-outline" onclick="exportCSV()" id="csvBtn" style="display:none">↓ CSV</button>
-            <input class="filter-input" id="searchInput" placeholder="Search ticker..." oninput="renderActive()" style="display:none">
+            <input class="filter-input" id="searchInput" placeholder="Search ticker..." oninput="renderActiveDebounced()" style="display:none">
             <!-- Sector exclude dropdown -->
             <div id="sectorExcludeWrap" style="display:none;position:relative;">
                 <button id="sectorExcludeBtn" onclick="toggleSectorDropdown()" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.06em;padding:4px 10px;background:var(--bg2);border:1px solid var(--border2);color:var(--muted);cursor:pointer;white-space:nowrap;">
@@ -714,17 +714,17 @@
                 <option value="asc">↑ Asc</option>
             </select>
             <span style="font-size:10px;color:var(--muted);">Mkt Cap &gt;</span>
-            <input class="filter-input" id="mktcapFilter" placeholder="ex: 10 ($B)" oninput="renderActive()" style="display:none;width:80px;">
+            <input class="filter-input" id="mktcapFilter" placeholder="ex: 10 ($B)" oninput="renderActiveDebounced()" style="display:none;width:80px;">
             <span style="font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">RS ≥</span>
-            <input class="filter-input" id="rsFilter" placeholder="ex: 60" oninput="renderActive()" style="display:none;width:60px;" title="Relative Strength: tous les PCT prix ≥ seuil">
+            <input class="filter-input" id="rsFilter" placeholder="ex: 60" oninput="renderActiveDebounced()" style="display:none;width:60px;" title="Relative Strength: tous les PCT prix ≥ seuil">
             <span style="font-size:10px;color:var(--accent2);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--muted);">EPS ≥</span>
-            <input class="filter-input" id="epsFilter" placeholder="ex: 10" oninput="renderActive()" style="display:none;width:55px;" title="pct_eps_cq ≥ seuil">
+            <input class="filter-input" id="epsFilter" placeholder="ex: 10" oninput="renderActiveDebounced()" style="display:none;width:55px;" title="pct_eps_cq ≥ seuil">
             <span style="font-size:10px;color:#f59e0b;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--muted);">Sales ≥</span>
-            <input class="filter-input" id="salesFilter" placeholder="ex: 10" oninput="renderActive()" style="display:none;width:55px;" title="pct_sales_cq ≥ seuil">
+            <input class="filter-input" id="salesFilter" placeholder="ex: 10" oninput="renderActiveDebounced()" style="display:none;width:55px;" title="pct_sales_cq ≥ seuil">
             <span style="font-size:10px;color:#10b981;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">MA20 ≤</span>
-            <input class="filter-input" id="ma20Filter" placeholder="ex: 0" oninput="renderActive()" style="display:none;width:55px;" title="Distance MA20 ≥ seuil (%)">
+            <input class="filter-input" id="ma20Filter" placeholder="ex: 0" oninput="renderActiveDebounced()" style="display:none;width:55px;" title="Distance MA20 ≥ seuil (%)">
             <span style="font-size:10px;color:#f59e0b;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">52W H ≥</span>
-            <input class="filter-input" id="high52Filter" placeholder="ex: -10" oninput="renderActive()" style="display:none;width:55px;" title="Distance 52W High ≥ seuil (%)">
+            <input class="filter-input" id="high52Filter" placeholder="ex: -10" oninput="renderActiveDebounced()" style="display:none;width:55px;" title="Distance 52W High ≥ seuil (%)">
             <span class="last-update" id="lastUpdate"></span>
             <span class="results-count" id="resultsCount"></span>
         </div>
@@ -844,10 +844,10 @@
                     </div>
                     <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
                     <span style="font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;">TOP N</span>
-                    <input id="sectorTopN" class="filter-input" type="number" value="5" min="3" max="15" style="width:48px;" oninput="renderSectors()" title="Top N tickers par secteur">
+                    <input id="sectorTopN" class="filter-input" type="number" value="5" min="3" max="15" style="width:48px;" oninput="debounce(renderSectors,80)()" title="Top N tickers par secteur">
                     <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
                     <span style="font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;">RS MIN</span>
-                    <input id="sectorRsMin" class="filter-input" type="number" value="50" min="0" max="99" style="width:48px;" oninput="renderSectors()" title="Score RS minimum pour entrer dans le top N">
+                    <input id="sectorRsMin" class="filter-input" type="number" value="50" min="0" max="99" style="width:48px;" oninput="debounce(renderSectors,80)()" title="Score RS minimum pour entrer dans le top N">
 
                     <span id="sectorCount" style="font-size:10px;color:var(--muted);margin-left:auto;font-family:'IBM Plex Mono',monospace;"></span>
                 </div>
@@ -856,6 +856,7 @@
 
             <!-- VOL-ADJ RS panel -->
             <div id="priceVolAdjPanel" style="display:none">
+                <div id="vaLoadingMsg" style="display:none;text-align:center;padding:40px;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:13px;">Computing vol-adjusted scores...</div>
 
 
                 <!-- Table -->
@@ -905,7 +906,7 @@
                     </div>
                     <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
                     <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">|DIST| ≤</span>
-                    <input id="bounceSigma" class="filter-input" type="number" value="0.5" min="0.1" max="3" step="0.1" style="width:52px;" oninput="renderBounce()">
+                    <input id="bounceSigma" class="filter-input" type="number" value="0.5" min="0.1" max="3" step="0.1" style="width:52px;" oninput="debounce(renderBounce,80)()">
                     <span style="font-size:9px;color:var(--muted);">σ</span>
                     <span id="bounceCount" style="font-size:10px;color:var(--muted);margin-left:auto;"></span>
                 </div>
@@ -1289,10 +1290,10 @@
                 <!-- Controls: just 2 parameters -->
                 <div style="display:flex;gap:10px;align-items:center;padding:10px 16px;background:var(--bg2);border:1px solid var(--border);margin-bottom:10px;">
                     <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">UPTREND PCT ≥</span>
-                    <input id="pbPctMin" class="filter-input" type="number" value="60" min="0" max="99" style="width:52px;" oninput="renderMa()" title="Seuil PCT 4W, 6M et 12M simultanément">
+                    <input id="pbPctMin" class="filter-input" type="number" value="60" min="0" max="99" style="width:52px;" oninput="debounce(renderMa,80)()" title="Seuil PCT 4W, 6M et 12M simultanément">
                     <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
                     <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">PULLBACK σ ≤</span>
-                    <input id="pbSigma" class="filter-input" type="number" value="0.5" min="0.1" max="3" step="0.1" style="width:52px;" oninput="renderMa()" title="min(|dist EMA10/σ|, |dist EMA20/σ|) ≤ seuil">
+                    <input id="pbSigma" class="filter-input" type="number" value="0.5" min="0.1" max="3" step="0.1" style="width:52px;" oninput="debounce(renderMa,80)()" title="min(|dist EMA10/σ|, |dist EMA20/σ|) ≤ seuil">
                     <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
                     <span id="pbCount" style="font-size:10px;color:var(--muted);margin-left:auto;letter-spacing:.08em;"></span>
                 </div>
@@ -3490,6 +3491,16 @@
         if (uni === 'row') renderRoW();
     }
 
+    // ── DEBOUNCE HELPER ──────────────────────────────────────────
+    function debounce(fn, ms) {
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn(...args), ms);
+        };
+    }
+    const renderActiveDebounced = debounce(() => renderActive(), 80);
+
     function renderActive() {
         if (activeTab === 'price') {
             if (priceSubTab === 'tickers') {
@@ -3966,8 +3977,19 @@
     function renderVolAdj() {
         if (!allData.length) return;
 
-        // Compute on first render or if not yet done
-        if (allData[0].va_rs === undefined) computeVolAdjRS();
+        // Compute VA-RS async if not yet done
+        if (allData[0].va_rs === undefined) {
+            document.getElementById('vaTable').style.display = 'none';
+            const loadingDiv = document.getElementById('vaLoadingMsg');
+            if (loadingDiv) loadingDiv.style.display = '';
+            setTimeout(() => {
+                computeVolAdjRS();
+                const ld = document.getElementById('vaLoadingMsg');
+                if (ld) ld.style.display = 'none';
+                renderVolAdj();
+            }, 20);
+            return;
+        }
 
         // Populate sector exclude list on first render
         const list = document.getElementById('vaExcludeList');
@@ -4052,7 +4074,9 @@
 
         const tbody = document.getElementById('vaBody');
         tbody.innerHTML = '';
-        rows.forEach(d => {
+        const VA_LIMIT = 300;
+        const frag = document.createDocumentFragment();
+        rows.slice(0, VA_LIMIT).forEach(d => {
             const inW = watchlist.includes(d.ticker);
             const tr = document.createElement('tr');
             tr.innerHTML =
@@ -4074,8 +4098,14 @@
                  <td class="td-pct" style="border-left:2px solid var(--border2)">${pctCell(d.rs_ibd)}</td>
                  <td class="td-pct">${pctCell(d.va_rs)}</td>
                  <td class="td-pct" style="border-left:1px solid var(--faint)">${deltaCell(d.va_delta)}</td>`;
-            tbody.appendChild(tr);
+            frag.appendChild(tr);
         });
+        tbody.appendChild(frag);
+        if (rows.length > VA_LIMIT) {
+            const limitRow = document.createElement('tr');
+            limitRow.innerHTML = `<td colspan="20" style="text-align:center;padding:8px;font-size:11px;color:var(--muted);">Showing ${VA_LIMIT} of ${rows.length} — use filters to narrow</td>`;
+            tbody.appendChild(limitRow);
+        }
 
         document.getElementById('vaTable').style.display = rows.length ? 'table' : 'none';
         document.getElementById('emptyVolAdj').style.display = rows.length ? 'none' : '';
@@ -4658,7 +4688,15 @@ Write a thorough 7-section market analysis.`;
 
 
             ;
-            rows.forEach(d => tbody.appendChild(priceRow(d, false)));
+            const DISPLAY_LIMIT = 300;
+            const stockFrag = document.createDocumentFragment();
+            rows.slice(0, DISPLAY_LIMIT).forEach(d => stockFrag.appendChild(priceRow(d, false)));
+            tbody.appendChild(stockFrag);
+            if (rows.length > DISPLAY_LIMIT) {
+                const limitRow = document.createElement('tr');
+                limitRow.innerHTML = `<td colspan="20" style="text-align:center;padding:8px;font-size:11px;color:var(--muted);">Showing ${DISPLAY_LIMIT} of ${rows.length} — use filters to narrow</td>`;
+                tbody.appendChild(limitRow);
+            }
             if (search && rows.length > 0 && rows.length <= 10) {
                 const groups = [...new Set(rows.map(d => d.group).filter(Boolean))];
                 const matchedTickers = new Set(rows.map(d => d.ticker));
