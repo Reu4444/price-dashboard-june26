@@ -674,6 +674,7 @@
         display: none;
     }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -2103,6 +2104,7 @@
                 <div style="display:flex;gap:0;border:1px solid var(--border2);overflow:hidden;">
                     <button id="dailyBtnGroups" onclick="setDailyView('groups')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 16px;background:var(--accent2);color:#fff;border:none;cursor:pointer;">GROUPS</button>
                     <button id="dailyBtnStocks" onclick="setDailyView('stocks')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 16px;background:transparent;color:var(--muted);border:none;cursor:pointer;">STOCKS</button>
+                    <button id="dailyBtnBreadth" onclick="setDailyView('breadth')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 16px;background:transparent;color:var(--muted);border:none;cursor:pointer;">BREADTH</button>
                 </div>
                 <div id="dailyDrillBar" style="display:none;">
                     <button onclick="dailyClearDrill()" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 14px;background:transparent;color:var(--accent2);border:1px solid var(--accent2);cursor:pointer;">← GROUPS</button>
@@ -2138,6 +2140,12 @@
                 </div>
             </div>
             </div><!-- end dailyStocksView -->
+
+            <!-- BREADTH VIEW -->
+            <div id="dailyBreadthView" style="display:none;">
+                <div style="margin-bottom:8px;font-size:11px;color:var(--muted);">% Advancing stocks vs SPY — computed from Firestore price history (252 sessions)</div>
+                <canvas id="dailyBreadthChart" style="width:100%;height:320px;"></canvas>
+            </div>
 
         </div>
     </div>
@@ -4018,7 +4026,7 @@
                 onclick="dailyDrillGroup('${(d.group||'').replace(/'/g,"\'")}')">
         <td style="padding:5px 8px;font-size:12px;font-weight:700;color:var(--accent2);" onclick="event.stopPropagation();openNews('${d.ticker}')">${d.ticker}</td>
         <td style="padding:5px 8px;font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.name||''}</td>
-        <td style="padding:5px 8px;font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.group||''}</td>
+        <td style="padding:5px 8px;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.group||''}</td>
         <td style="padding:5px 8px;font-size:13px;font-weight:700;color:${moveColor};text-align:center">${mc >= 0 ? '+' : ''}${mc}%</td>
         <td style="padding:5px 8px;text-align:center">${pctCell(d.pct_4w)}</td>
         <td style="padding:5px 8px;text-align:center">${pctCell(d.pct_6m)}</td>
@@ -4034,15 +4042,18 @@
 
     function setDailyView(view) {
         _dailyView = view;
-        const bg = document.getElementById('dailyBtnGroups');
-        const bs = document.getElementById('dailyBtnStocks');
-        const gv = document.getElementById('dailyGroupsView');
-        const sv = document.getElementById('dailyStocksView');
-        if (bg) { bg.style.background = view === 'groups' ? 'var(--accent2)' : 'transparent'; bg.style.color = view === 'groups' ? '#fff' : 'var(--muted)'; }
-        if (bs) { bs.style.background = view === 'stocks' ? 'var(--accent2)' : 'transparent'; bs.style.color = view === 'stocks' ? '#fff' : 'var(--muted)'; }
-        if (gv) gv.style.display = view === 'groups' ? '' : 'none';
-        if (sv) sv.style.display  = view === 'stocks' ? '' : 'none';
-        renderDaily();
+        const btns = { groups: 'dailyBtnGroups', stocks: 'dailyBtnStocks', breadth: 'dailyBtnBreadth' };
+        const views = { groups: 'dailyGroupsView', stocks: 'dailyStocksView', breadth: 'dailyBreadthView' };
+        Object.entries(btns).forEach(([k, id]) => {
+            const el = document.getElementById(id);
+            if (el) { el.style.background = k === view ? 'var(--accent2)' : 'transparent'; el.style.color = k === view ? '#fff' : 'var(--muted)'; }
+        });
+        Object.entries(views).forEach(([k, id]) => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = k === view ? '' : 'none';
+        });
+        if (view === 'breadth') renderBreadthChart();
+        else renderDaily();
     }
 
     function renderDailyGroups(allRows) {
@@ -4107,6 +4118,146 @@
         const lbl = document.getElementById('dailyDrillLabel');
         if (lbl) lbl.textContent = group;
         renderDaily();
+    }
+
+    // ── BREADTH CHART ─────────────────────────────────────────────
+    let _breadthChart = null;
+
+    function renderBreadthChart() {
+        if (!allData.length || !Object.keys(rawPrices).length || !priceDates.length) return;
+
+        const spyPrices = rawPrices['SPY'];
+        if (!spyPrices) { console.warn('SPY not in rawPrices'); return; }
+
+        // Compute % advancing for each date
+        const n = priceDates.length;
+        const breadthData = [];
+
+        for (let i = 0; i < n - 1; i++) {
+            let adv = 0, total = 0;
+            allData.forEach(d => {
+                const p = rawPrices[d.ticker];
+                if (!p || p.length <= i + 1) return;
+                if (p[i] == null || p[i+1] == null || p[i+1] === 0) return;
+                total++;
+                if (p[i] > p[i+1]) adv++;
+            });
+            const pctAdv = total > 0 ? Math.round(adv / total * 100) : null;
+            const spyClose = spyPrices[i] ?? null;
+            breadthData.push({ date: priceDates[i], pctAdv, spyClose, adv, total });
+        }
+
+        // Sort oldest first for chart
+        breadthData.reverse();
+
+        const labels   = breadthData.map(d => d.date);
+        const breadth  = breadthData.map(d => d.pctAdv);
+        const spy      = breadthData.map(d => d.spyClose);
+
+        // Background colors: green if >60, red if <40
+        const bgColors = breadth.map(v => v == null ? 'transparent' : v >= 60 ? 'rgba(21,128,61,0.15)' : v <= 40 ? 'rgba(185,28,28,0.15)' : 'rgba(100,116,139,0.08)');
+
+        const canvas = document.getElementById('dailyBreadthChart');
+        if (!canvas) return;
+        canvas.height = 320;
+
+        // Destroy previous chart
+        if (_breadthChart) { _breadthChart.destroy(); _breadthChart = null; }
+
+        const isDark = document.body.classList.contains('dark') || document.documentElement.getAttribute('data-theme') === 'dark';
+        const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#1e293b';
+        const mutedColor = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() || '#94a3b8';
+        const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#e2e8f0';
+
+        _breadthChart = new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: '% Advancing',
+                        data: breadth,
+                        backgroundColor: bgColors,
+                        borderColor: breadth.map(v => v >= 60 ? 'rgba(21,128,61,0.6)' : v <= 40 ? 'rgba(185,28,28,0.6)' : 'rgba(100,116,139,0.3)'),
+                        borderWidth: 1,
+                        yAxisID: 'y',
+                        order: 2,
+                    },
+                    {
+                        type: 'line',
+                        label: 'SPY',
+                        data: spy,
+                        borderColor: '#6366f1',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.3,
+                        fill: false,
+                        yAxisID: 'y2',
+                        order: 1,
+                    },
+                    {
+                        type: 'line',
+                        label: '50% line',
+                        data: breadth.map(() => 50),
+                        borderColor: 'rgba(148,163,184,0.5)',
+                        borderWidth: 1,
+                        borderDash: [4, 4],
+                        pointRadius: 0,
+                        fill: false,
+                        yAxisID: 'y',
+                        order: 3,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: true, labels: { color: mutedColor, font: { size: 10, family: 'IBM Plex Mono' } } },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => {
+                                if (ctx.dataset.label === '% Advancing') return `Advancing: ${ctx.raw}%`;
+                                if (ctx.dataset.label === 'SPY') return `SPY: $${ctx.raw}`;
+                                return null;
+                            },
+                            afterBody: (items) => {
+                                const i = items[0]?.dataIndex;
+                                if (i == null) return [];
+                                const d = breadthData[i];
+                                return [`${d.adv} adv / ${d.total} total`];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: mutedColor,
+                            font: { size: 9, family: 'IBM Plex Mono' },
+                            maxTicksLimit: 12,
+                            maxRotation: 0,
+                        },
+                        grid: { color: gridColor }
+                    },
+                    y: {
+                        position: 'left',
+                        min: 0, max: 100,
+                        ticks: { color: mutedColor, font: { size: 9 }, callback: v => v + '%' },
+                        grid: { color: gridColor },
+                        title: { display: true, text: '% Advancing', color: mutedColor, font: { size: 9 } }
+                    },
+                    y2: {
+                        position: 'right',
+                        ticks: { color: '#6366f1', font: { size: 9 }, callback: v => '$' + v },
+                        grid: { drawOnChartArea: false },
+                        title: { display: true, text: 'SPY', color: '#6366f1', font: { size: 9 } }
+                    }
+                }
+            }
+        });
     }
 
     // ── NARRATIVE / MARKET ANALYSIS ──────────────────────────────
