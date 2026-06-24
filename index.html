@@ -4588,17 +4588,15 @@
                 const mv = (c0/c1 - 1)*100;
                 sumMoveL += mv; cntMoveL++;
 
-                // Panel 1: 3M new high = price today >= max over last 63 sessions
-                // prices newest-first: p[i]=today, p[i+1]=yesterday ... p[i+62]=63 days ago
-                if (p.length > i + 62) {
-                    // Find 3M high with loop (faster than spread)
+                // Panel 1: 3M new high = price today > max of PREVIOUS 63 sessions (exclude today)
+                if (p.length > i + 63) {
                     let win3mMax = 0, win3mLen = 0;
-                    for (let k = i; k < i+63 && k < p.length; k++) {
+                    for (let k = i+1; k < i+64 && k < p.length; k++) {
                         if (p[k] != null && p[k] > 0) { if (p[k] > win3mMax) win3mMax = p[k]; win3mLen++; }
                     }
-                    if (win3mLen >= 30) {
+                    if (win3mLen >= 30 && win3mMax > 0) {
                         totNh++;
-                        if (c0 >= win3mMax) nh3mL++;
+                        if (c0 > win3mMax) nh3mL++; // strictly greater than past 63 days
                     }
                 }
 
