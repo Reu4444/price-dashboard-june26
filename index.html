@@ -4526,7 +4526,6 @@
 
             // Panel 7: # tickers ≥+25% and ≤-25% over 13 weeks (65 sessions)
             let up25q=0, dn25q=0;
-            if (p.length > i+65) { } // placeholder — computed below
             allData.forEach(d => {
                 const p = rawPrices[d.ticker];
                 if (!p || p.length <= i+65) return;
