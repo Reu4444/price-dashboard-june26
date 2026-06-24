@@ -4706,20 +4706,29 @@
         const volFmt  = v => v != null ? v.toFixed(2) + '%' : '—';
         const refLine = (val, lbl) => ds(lbl, 'rgba(148,163,184,0.35)', raw.map(()=>val), { borderDash:[4,4], borderWidth:1 });
 
-        // ── SPY top annotations — raw is oldest→newest here ──
+        // ── SPY top annotations — peak reset on new all-time high ──
         const spyArr = raw.map(d => d.spy);
         const spyTopAnnotations = [];
-        let spyRunMax = -Infinity;
-        for (let i = 0; i < spyArr.length - 1; i++) {
-            const v  = spyArr[i];
-            const v1 = spyArr[i+1]; // next day
-            if (v == null || v1 == null) continue;
-            if (v > spyRunMax) spyRunMax = v;
-            const distFromMax = (v / spyRunMax - 1) * 100;  // 0 = at peak, negative = below
-            const nextDrop    = (v1 / v - 1) * 100;          // negative = drops next day
-            // Mark as top: near rolling high AND next day drops ≥1.75%
-            if (distFromMax >= -1 && nextDrop <= -1.75) {
-                spyTopAnnotations.push(i);
+        let peak = -Infinity;
+        let peakIdx = -1;
+        let peakMarked = false;
+
+        for (let i = 0; i < spyArr.length; i++) {
+            const v = spyArr[i];
+            if (v == null) continue;
+
+            if (v > peak) {
+                // New peak — reset
+                peak      = v;
+                peakIdx   = i;
+                peakMarked = false;
+            } else if (!peakMarked && peakIdx >= 0) {
+                // Check if we've dropped ≥1.75% from peak
+                const drop = (v / peak - 1) * 100;
+                if (drop <= -1.75) {
+                    spyTopAnnotations.push(peakIdx); // mark the peak date
+                    peakMarked = true; // avoid marking same peak twice
+                }
             }
         }
         console.log('SPY tops found:', spyTopAnnotations.length, 'at dates:', spyTopAnnotations.map(i=>raw[i]?.date));
