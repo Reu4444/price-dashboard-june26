@@ -3814,7 +3814,6 @@
     }
 
     let vaSortCol = 'va_rs', vaSortDir = 'desc';
-    let _vaExclusions = new Set();
 
     function vaSort(col) {
         if (vaSortCol === col) vaSortDir = vaSortDir === 'desc' ? 'asc' : 'desc';
@@ -3846,11 +3845,7 @@
 
     function updateVaBtn() {
         const n = _vaExclusions.size;
-        const btn = document.getElementById('vaExcludeBtn');
-        if (btn) {
-            btn.textContent = n > 0 ? `−${n} SECTEURS ▾` : 'ALL ▾';
-            btn.style.color = n > 0 ? 'var(--down)' : 'var(--muted)';
-        }
+        
     }
 
     function renderVolAdj() {
@@ -4534,11 +4529,14 @@
                 // Panel 1: 3M new high = price today >= max over last 63 sessions
                 // prices newest-first: p[i]=today, p[i+1]=yesterday ... p[i+62]=63 days ago
                 if (p.length > i + 62) {
-                    const win = p.slice(i, i+63).filter(v => v != null && v > 0);
-                    if (win.length >= 30) {
+                    // Find 3M high with loop (faster than spread)
+                    let win3mMax = 0, win3mLen = 0;
+                    for (let k = i; k < i+63 && k < p.length; k++) {
+                        if (p[k] != null && p[k] > 0) { if (p[k] > win3mMax) win3mMax = p[k]; win3mLen++; }
+                    }
+                    if (win3mLen >= 30) {
                         totNh++;
-                        // c0 must equal the max of the window (it IS the newest bar)
-                        if (c0 >= Math.max(...win)) nh3mL++;
+                        if (c0 >= win3mMax) nh3mL++;
                     }
                 }
 
@@ -7938,8 +7936,8 @@ Write a thorough 7-section market analysis.`;
         ctxTicker = ticker;
         const menu = document.getElementById('ctxMenu');
         const inWatch = watchlist.includes(ticker);
-        document.getElementById('ctxAddWatch').textContent = inWatch ? '✓ In Watchlist' : '★ Add to Watchlist';
-        document.getElementById('ctxAddWatch').style.color = inWatch ? 'var(--up)' : '';
+        const _ctxW = document.getElementById('ctxAddWatch');
+        if (_ctxW) { _ctxW.textContent = inWatch ? '✓ In Watchlist' : '★ Add to Watchlist'; _ctxW.style.color = inWatch ? 'var(--up)' : ''; }
         menu.style.display = 'block';
         menu.style.left = Math.min(e.clientX, window.innerWidth - 170) + 'px';
         menu.style.top = Math.min(e.clientY, window.innerHeight - 80) + 'px';
