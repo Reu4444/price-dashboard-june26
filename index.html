@@ -6636,7 +6636,6 @@ Write a thorough 7-section market analysis.`;
     window.addEventListener('load', () => {
         initCtxMenu();
         updateWatchTab();
-        loadNotes();
         loadFromSheets().then(() => {
         }).catch(e => console.warn('Auto-load failed:', e));
         // Auto-refresh toutes les 15 minutes
