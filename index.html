@@ -2071,43 +2071,59 @@
                 <span id="brStatus" style="font-size:10px;color:var(--muted);margin-left:auto;font-family:'IBM Plex Mono',monospace;"></span>
             </div>
 
-            <!-- 4 chart panels + SPY -->
+            <!-- 5 chart panels + SPY -->
             <div style="display:flex;flex-direction:column;gap:16px;">
 
                 <div>
-                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">1 — % ADVANCING LEADERS vs ALL (SMA5)</div>
-                    <div style="position:relative;width:100%;height:200px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
+                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">1 — % LEADERS AT NEW 3M HIGH (SMA5)</div>
+                    <div style="position:relative;width:100%;height:180px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
                         <canvas id="brChart1"></canvas>
                     </div>
                 </div>
 
                 <div>
-                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">2 — % LEADERS AT NEW 3M HIGH (SMA5)</div>
-                    <div style="position:relative;width:100%;height:200px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
+                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">2 — LEADERS vs SPY CUMULATIVE INDEX (base 100)</div>
+                    <div style="position:relative;width:100%;height:180px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
                         <canvas id="brChart2"></canvas>
                     </div>
                 </div>
 
                 <div>
-                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">3 — LEADERS AVG MOVE vs SPY MOVE — SPREAD (SMA5)</div>
-                    <div style="position:relative;width:100%;height:200px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
+                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">3 — AVG VOLATILITÉ 10J DES LEADERS (SMA5)</div>
+                    <div style="position:relative;width:100%;height:180px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
                         <canvas id="brChart3"></canvas>
                     </div>
                 </div>
 
                 <div>
-                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">4 — % LEADERS ABOVE SMA20 (SMA5)</div>
-                    <div style="position:relative;width:100%;height:200px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
+                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">4 — % LEADERS EMA10 &gt; EMA20 (SMA5)</div>
+                    <div style="position:relative;width:100%;height:180px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
                         <canvas id="brChart4"></canvas>
                     </div>
                 </div>
 
                 <div>
-                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">SPY</div>
-                    <div style="position:relative;width:100%;height:140px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
-                        <canvas id="brChartSpy"></canvas>
+                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">5 — % ADVANCING LEADERS (SMA5)</div>
+                    <div style="position:relative;width:100%;height:180px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
+                        <canvas id="brChart5"></canvas>
                     </div>
                 </div>
+
+                <div>
+                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">6 — TITRES ≥+4% vs ≤-4% JOURNÉE + RATIO LISSÉ 10J</div>
+                    <div style="position:relative;width:100%;height:180px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
+                        <canvas id="brChart6"></canvas>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">7 — TITRES ≥+25% vs ≤-25% SUR 13 SEMAINES + RATIO LISSÉ 10J</div>
+                    <div style="position:relative;width:100%;height:180px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
+                        <canvas id="brChart7"></canvas>
+                    </div>
+                </div>
+
+
 
             </div>
         </div>
@@ -4391,7 +4407,7 @@
     // ── BREADTH TAB ───────────────────────────────────────────────
     const _brCharts = {};
 
-    function makeChart(id, datasets, opts = {}) {
+    function makeBrChart(id, datasets, opts = {}) {
         const canvas = document.getElementById(id);
         if (!canvas) return;
         if (_brCharts[id]) { _brCharts[id].destroy(); delete _brCharts[id]; }
@@ -4405,11 +4421,12 @@
                 interaction: { mode: 'index', intersect: false },
                 plugins: {
                     legend: { display: true, labels: { color: mutedColor, font: { size: 9, family: 'IBM Plex Mono' }, boxWidth: 14, padding: 8 } },
-                    tooltip: { callbacks: { label: ctx => opts.tooltipFn ? opts.tooltipFn(ctx) : `${ctx.dataset.label}: ${ctx.raw != null ? ctx.raw : '—'}` } }
+                    tooltip: { callbacks: { label: ctx => opts.tooltipFn ? opts.tooltipFn(ctx) : `${ctx.dataset.label}: ${ctx.raw ?? '—'}` } }
                 },
                 scales: {
                     x: { ticks: { color: mutedColor, font: { size: 8 }, maxTicksLimit: 8, maxRotation: 0 }, grid: { color: gridColor } },
-                    y: { min: opts.yMin, max: opts.yMax, ticks: { color: mutedColor, font: { size: 8 }, callback: opts.yFmt || (v => v) }, grid: { color: gridColor } }
+                    y: { min: opts.yMin, max: opts.yMax, ticks: { color: mutedColor, font: { size: 8 }, callback: opts.yFmt || (v => v) }, grid: { color: gridColor } },
+                    ...(opts.extraScales || {})
                 }
             }
         });
@@ -4422,122 +4439,214 @@
         const leaderPct = parseFloat(document.getElementById('brLeaderPct')?.value || 70);
         const window60  = parseInt(document.getElementById('brWindow')?.value || 60);
 
-        // Identify current leaders
+        // Current leaders
         const leaders = allData.filter(d => (d.pct_6m ?? 0) >= leaderPct);
         const leaderTickers = new Set(leaders.map(d => d.ticker));
 
         const spyPrices = rawPrices['SPY'] || rawPrices['QQQ'] || rawPrices['IVV'];
-        const n = Math.min(window60, priceDates.length - 64); // need 63 extra for 3M high
+        // Need 63 extra for 3M high window
+        const n = Math.min(window60, priceDates.length - 65);
 
         document.getElementById('brStatus').textContent =
-            `${leaders.length} leaders | ${priceDates[0]} → ${priceDates[Math.min(n, priceDates.length-1)]}`;
+            `${leaders.length} leaders | ${priceDates[Math.min(n-1, priceDates.length-1)]} → ${priceDates[0]}`;
 
-        // ── Compute all metrics per day ──────────────────────────────
+        // ── Compute metrics per day ──────────────────────────────────
         const raw = [];
         for (let i = 0; i < n; i++) {
-            let advL=0, totL=0, advAll=0, totAll=0;
+            let advL=0, totL=0;
             let nh3mL=0, totNh=0;
-            let sumMoveL=0, cntMoveL=0;
-            let aboveEma20L=0, totEma20=0;
+            let sumVol10=0, cntVol10=0;
+            let ema10gtEma20=0, totEma=0;
 
-            const spyClose0 = spyPrices?.[i]   ?? null;
-            const spyClose1 = spyPrices?.[i+1] ?? null;
-            const spyMove = (spyClose0 && spyClose1 && spyClose1 > 0)
-                ? (spyClose0 - spyClose1) / spyClose1 * 100 : null;
+            const spyC0 = spyPrices?.[i]   ?? null;
+            const spyC1 = spyPrices?.[i+1] ?? null;
+            const spyMove = (spyC0 && spyC1 && spyC1 > 0) ? (spyC0/spyC1 - 1)*100 : null;
+
+            let sumMoveL = 0, cntMoveL = 0;
 
             allData.forEach(d => {
                 const p = rawPrices[d.ticker];
-                if (!p || p.length <= i + 64) return;
+                if (!p || !leaderTickers.has(d.ticker)) return;
+
                 const c0 = p[i], c1 = p[i+1];
                 if (!c0 || !c1 || c1 === 0) return;
 
-                const up = c0 > c1;
-                totAll++; if (up) advAll++;
+                // Panel 1: % advancing
+                totL++; if (c0 > c1) advL++;
 
-                if (!leaderTickers.has(d.ticker)) return;
-
-                // % advancing leaders
-                totL++; if (up) advL++;
-
-                // daily move leaders
-                const mv = (c0 - c1) / c1 * 100;
+                // Panel 2: daily return
+                const mv = (c0/c1 - 1)*100;
                 sumMoveL += mv; cntMoveL++;
 
-                // 3M new high: price[i] >= max(price[i..i+62])
-                const window3m = p.slice(i, i + 63).filter(v => v != null);
-                if (window3m.length >= 10) {
-                    totNh++;
-                    if (c0 >= Math.max(...window3m)) nh3mL++;
+                // Panel 1b: 3M new high (need i+63 bars)
+                if (p.length > i + 63) {
+                    const win = p.slice(i, i+63).filter(v => v != null);
+                    if (win.length >= 10) {
+                        totNh++;
+                        if (c0 >= Math.max(...win)) nh3mL++;
+                    }
                 }
 
-                // % above SMA20
+                // Panel 3: vol 10j = std of 10 daily returns
+                if (p.length > i + 10) {
+                    const rets = [];
+                    for (let k = i; k < i+10; k++) {
+                        if (p[k] && p[k+1] && p[k+1] > 0) rets.push((p[k]/p[k+1]-1)*100);
+                    }
+                    if (rets.length >= 5) {
+                        const mean = rets.reduce((s,v)=>s+v,0)/rets.length;
+                        const vol  = Math.sqrt(rets.reduce((s,v)=>s+(v-mean)**2,0)/rets.length);
+                        sumVol10 += vol; cntVol10++;
+                    }
+                }
+
+                // Panel 4: EMA10 > EMA20 (simple SMA for speed)
                 if (p.length > i + 20) {
-                    const sma20 = p.slice(i, i + 20).reduce((s,v) => s + (v||0), 0) / 20;
-                    totEma20++;
-                    if (c0 > sma20) aboveEma20L++;
+                    const sma10 = p.slice(i, i+10).reduce((s,v)=>s+(v||0),0)/10;
+                    const sma20 = p.slice(i, i+20).reduce((s,v)=>s+(v||0),0)/20;
+                    totEma++;
+                    if (sma10 > sma20) ema10gtEma20++;
                 }
             });
 
-            const avgMoveL = cntMoveL > 0 ? sumMoveL / cntMoveL : null;
+            const avgMoveL = cntMoveL > 0 ? sumMoveL/cntMoveL : null;
             const spread   = (avgMoveL != null && spyMove != null) ? avgMoveL - spyMove : null;
 
+            // Panel 6: # tickers ≥+4% and ≤-4% daily (all tickers)
+            let up4=0, dn4=0;
+            allData.forEach(d => {
+                const p = rawPrices[d.ticker];
+                if (!p || p.length <= i+1) return;
+                const c0=p[i], c1=p[i+1];
+                if (!c0||!c1||c1===0) return;
+                const mv = (c0/c1-1)*100;
+                if (mv >= 4)  up4++;
+                if (mv <= -4) dn4++;
+            });
+
+            // Panel 7: # tickers ≥+25% and ≤-25% over 13 weeks (65 sessions)
+            let up25q=0, dn25q=0;
+            if (p.length > i+65) { } // placeholder — computed below
+            allData.forEach(d => {
+                const p = rawPrices[d.ticker];
+                if (!p || p.length <= i+65) return;
+                const c0=p[i], c65=p[i+65];
+                if (!c0||!c65||c65===0) return;
+                const ret13w = (c0/c65-1)*100;
+                if (ret13w >= 25) up25q++;
+                if (ret13w <= -25) dn25q++;
+            });
+
             raw.push({
-                date:       priceDates[i],
-                pctAdvL:    totL    > 0 ? Math.round(advL    / totL    * 100) : null,
-                pctAdvAll:  totAll  > 0 ? Math.round(advAll  / totAll  * 100) : null,
-                pctNh3m:    totNh   > 0 ? Math.round(nh3mL   / totNh   * 100) : null,
-                spread:     spread  != null ? Math.round(spread * 10) / 10 : null,
-                pctEma20:   totEma20 > 0 ? Math.round(aboveEma20L / totEma20 * 100) : null,
-                spy:        spyClose0,
+                date:     priceDates[i],
+                pctAdv:   totL    > 0 ? Math.round(advL/totL*100)           : null,
+                pctNh3m:  totNh   > 0 ? Math.round(nh3mL/totNh*100)         : null,
+                spread,
+                vol10:    cntVol10 > 0 ? Math.round(sumVol10/cntVol10*100)/100 : null,
+                pctEma:   totEma  > 0 ? Math.round(ema10gtEma20/totEma*100) : null,
+                spy:      spyC0,
+                up4, dn4,
+                up25q, dn25q,
             });
         }
 
         raw.reverse(); // oldest → newest
         const labels = raw.map(d => d.date);
 
-        const sma = (arr, k=5) => arr.map((_, i) => {
-            if (i < k-1) return null;
-            const sl = arr.slice(i-k+1, i+1).filter(v => v != null);
+        // SMA5 helper
+        const sma5 = arr => arr.map((_, i) => {
+            if (i < 4) return null;
+            const sl = arr.slice(i-4, i+1).filter(v => v != null);
             return sl.length ? Math.round(sl.reduce((s,v)=>s+v,0)/sl.length * 10)/10 : null;
         });
 
-        const ds = (label, color, data, dash) => ({
-            label, data, borderColor: color, borderWidth: 2, pointRadius: 0,
-            tension: 0.2, fill: false, ...(dash ? {borderDash: dash} : {})
+        // Panel 2: cumulative index
+        const spreadArr = raw.map(d => d.spread);
+        const cumIndex = [];
+        let idx = 100;
+        for (const v of spreadArr) {
+            if (v == null) { cumIndex.push(null); continue; }
+            idx = idx * (1 + v/100);
+            cumIndex.push(Math.round(idx * 10)/10);
+        }
+
+        const ds = (label, color, data, extra={}) => ({
+            label, data, borderColor: color, borderWidth: 2,
+            pointRadius: 0, tension: 0.2, fill: false, ...extra
+        });
+        const pctFmt  = v => v != null ? v + '%' : '—';
+        const idxFmt  = v => v != null ? v.toFixed(1) : '—';
+        const volFmt  = v => v != null ? v.toFixed(2) + '%' : '—';
+        const refLine = (val, lbl) => ds(lbl, 'rgba(148,163,184,0.35)', raw.map(()=>val), { borderDash:[4,4], borderWidth:1 });
+
+        // ── Panel 1: % New 3M High ──
+        makeBrChart('brChart1', [
+            ds(`% Leaders New 3M High (SMA5)`, '#0ea5e9', sma5(raw.map(d=>d.pctNh3m))),
+        ], { labels, yMin:0, yMax:100, yFmt: v=>v+'%', tooltipFn: ctx=>`${ctx.dataset.label}: ${pctFmt(ctx.raw)}` });
+
+        // ── Panel 2: Cumulative index ──
+        makeBrChart('brChart2', [
+            ds('Leaders vs SPY (base 100)', '#15803d', cumIndex),
+            refLine(100, 'base 100'),
+        ], { labels, yFmt: v=>v.toFixed(0), tooltipFn: ctx=>ctx.dataset.label==='base 100'?null:`${ctx.dataset.label}: ${idxFmt(ctx.raw)}` });
+
+        // ── Panel 3: Avg Vol 10j ──
+        makeBrChart('brChart3', [
+            ds('Avg Vol 10j Leaders (SMA5)', '#f59e0b', sma5(raw.map(d=>d.vol10))),
+        ], { labels, yFmt: v=>v+'%', tooltipFn: ctx=>`${ctx.dataset.label}: ${volFmt(ctx.raw)}` });
+
+        // ── Panel 4: % EMA10 > EMA20 ──
+        makeBrChart('brChart4', [
+            ds('% Leaders EMA10 > EMA20 (SMA5)', '#6d28d9', sma5(raw.map(d=>d.pctEma))),
+            refLine(50, '50%'),
+        ], { labels, yMin:0, yMax:100, yFmt: v=>v+'%', tooltipFn: ctx=>ctx.dataset.label==='50%'?null:`${ctx.dataset.label}: ${pctFmt(ctx.raw)}` });
+
+        // ── Panel 5: % Advancing SMA5 ──
+        makeBrChart('brChart5', [
+            ds(`% Advancing Leaders (SMA5)`, '#94a3b8', sma5(raw.map(d=>d.pctAdv))),
+            refLine(50, '50%'),
+        ], { labels, yMin:0, yMax:100, yFmt: v=>v+'%', tooltipFn: ctx=>ctx.dataset.label==='50%'?null:`${ctx.dataset.label}: ${pctFmt(ctx.raw)}` });
+
+        // ── Panel 6: Daily ±4% ──
+        const up4arr   = raw.map(d => d.up4);
+        const dn4arr   = raw.map(d => d.dn4);
+        // Ratio SMA10: sum(up4 over 10j) / sum(dn4 over 10j)
+        const ratio4 = raw.map((_, i) => {
+            if (i < 9) return null;
+            const sumUp = up4arr.slice(i-9, i+1).reduce((s,v)=>s+(v||0),0);
+            const sumDn = dn4arr.slice(i-9, i+1).reduce((s,v)=>s+(v||0),0);
+            return sumDn > 0 ? Math.round(sumUp/sumDn * 100)/100 : null;
+        });
+        makeBrChart('brChart6', [
+            ds('# ≥+4% jour', '#15803d', up4arr),
+            ds('# ≤-4% jour', '#b91c1c', dn4arr),
+            { ...ds('Ratio SMA10 (axe D)', '#f59e0b', ratio4), yAxisID: 'y2' },
+        ], {
+            labels, yFmt: v=>v,
+            tooltipFn: ctx => `${ctx.dataset.label}: ${ctx.raw ?? '—'}`,
+            extraScales: { y2: { position:'right', ticks:{ color:'#f59e0b', font:{size:8}, callback: v=>v+'x' }, grid:{drawOnChartArea:false} } }
         });
 
-        const pctFmt = v => v != null ? v + '%' : '—';
-        const spreadFmt = v => v != null ? (v >= 0 ? '+' : '') + v + '%' : '—';
+        // ── Panel 7: 13W ±25% ──
+        const up25arr  = raw.map(d => d.up25q);
+        const dn25arr  = raw.map(d => d.dn25q);
+        const ratio25 = raw.map((_, i) => {
+            if (i < 9) return null;
+            const sumUp = up25arr.slice(i-9,i+1).reduce((s,v)=>s+(v||0),0);
+            const sumDn = dn25arr.slice(i-9,i+1).reduce((s,v)=>s+(v||0),0);
+            return sumDn > 0 ? Math.round(sumUp/sumDn*100)/100 : null;
+        });
+        makeBrChart('brChart7', [
+            ds('# ≥+25% 13W', '#15803d', up25arr),
+            ds('# ≤-25% 13W', '#b91c1c', dn25arr),
+            { ...ds('Ratio SMA10 (axe D)', '#f59e0b', ratio25), yAxisID: 'y2' },
+        ], {
+            labels, yFmt: v=>v,
+            tooltipFn: ctx => `${ctx.dataset.label}: ${ctx.raw ?? '—'}`,
+            extraScales: { y2: { position:'right', ticks:{ color:'#f59e0b', font:{size:8}, callback: v=>v+'x' }, grid:{drawOnChartArea:false} } }
+        });
 
-        // Chart 1 — % Advancing
-        makeChart('brChart1', [
-            ds(`Leaders PCT6M≥${leaderPct} (SMA5)`, '#15803d', sma(raw.map(d => d.pctAdvL))),
-            ds('All (SMA5)', '#94a3b8', sma(raw.map(d => d.pctAdvAll)), [3,3]),
-            { ...ds('50%', 'rgba(148,163,184,0.3)', raw.map(() => 50), [4,4]), borderWidth: 1 },
-        ], { labels, yMin: 0, yMax: 100, yFmt: v => v+'%', tooltipFn: ctx => `${ctx.dataset.label}: ${pctFmt(ctx.raw)}` });
 
-        // Chart 2 — % New 3M High
-        makeChart('brChart2', [
-            ds(`% Leaders New 3M High (SMA5)`, '#0ea5e9', sma(raw.map(d => d.pctNh3m))),
-        ], { labels, yMin: 0, yMax: 100, yFmt: v => v+'%', tooltipFn: ctx => `${ctx.dataset.label}: ${pctFmt(ctx.raw)}` });
-
-        // Chart 3 — Spread
-        makeChart('brChart3', [
-            ds('Leaders avg move − SPY (SMA5)', '#f59e0b', sma(raw.map(d => d.spread))),
-            { ...ds('0', 'rgba(148,163,184,0.3)', raw.map(() => 0), [4,4]), borderWidth: 1 },
-        ], { labels, yFmt: v => (v>=0?'+':'')+v+'%', tooltipFmt: ctx => spreadFmt(ctx.raw),
-             tooltipFn: ctx => `${ctx.dataset.label}: ${spreadFmt(ctx.raw)}` });
-
-        // Chart 4 — % above EMA20
-        makeChart('brChart4', [
-            ds(`% Leaders above SMA20 (SMA5)`, '#6d28d9', sma(raw.map(d => d.pctEma20))),
-            { ...ds('50%', 'rgba(148,163,184,0.3)', raw.map(() => 50), [4,4]), borderWidth: 1 },
-        ], { labels, yMin: 0, yMax: 100, yFmt: v => v+'%', tooltipFn: ctx => `${ctx.dataset.label}: ${pctFmt(ctx.raw)}` });
-
-        // SPY panel
-        makeChart('brChartSpy', [
-            { ...ds('SPY', '#6366f1', raw.map(d => d.spy)), fill: { target: 'origin', above: 'rgba(99,102,241,0.07)' } },
-        ], { labels, yFmt: v => '$'+v, tooltipFn: ctx => `SPY: $${ctx.raw}` });
     }
 
     // ── NARRATIVE / MARKET ANALYSIS ──────────────────────────────
