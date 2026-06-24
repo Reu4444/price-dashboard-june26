@@ -2071,59 +2071,77 @@
                 <span id="brStatus" style="font-size:10px;color:var(--muted);margin-left:auto;font-family:'IBM Plex Mono',monospace;"></span>
             </div>
 
-            <!-- 5 chart panels + SPY -->
+            <!-- Charts: 2x2 grid + panels 6&7 split -->
             <div style="display:flex;flex-direction:column;gap:16px;">
 
-                <div>
-                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">1 — % LEADERS AT NEW 3M HIGH (SMA5)</div>
-                    <div style="position:relative;width:100%;height:180px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
-                        <canvas id="brChart1"></canvas>
+                <!-- Row 1: panels 1 & 2 -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                        <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">1 — % LEADERS AT NEW 3M HIGH (SMA5)</div>
+                        <div style="position:relative;width:100%;height:250px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
+                            <canvas id="brChart1"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">2 — LEADERS vs SPY INDEX CUMULATIF (base 100)</div>
+                        <div style="position:relative;width:100%;height:250px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
+                            <canvas id="brChart2"></canvas>
+                        </div>
                     </div>
                 </div>
 
-                <div>
-                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">2 — LEADERS vs SPY CUMULATIVE INDEX (base 100)</div>
-                    <div style="position:relative;width:100%;height:180px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
-                        <canvas id="brChart2"></canvas>
+                <!-- Row 2: panels 3 & 4 -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                        <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">3 — AVG VOLATILITÉ 10J DES LEADERS (SMA5)</div>
+                        <div style="position:relative;width:100%;height:250px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
+                            <canvas id="brChart3"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">4 — % LEADERS EMA10 &gt; EMA20 (SMA5)</div>
+                        <div style="position:relative;width:100%;height:250px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
+                            <canvas id="brChart4"></canvas>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Row 3: panel 5 -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                        <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">5 — % ADVANCING LEADERS (SMA5)</div>
+                        <div style="position:relative;width:100%;height:250px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
+                            <canvas id="brChart5"></canvas>
+                        </div>
+                    </div>
+                    <div></div>
+                </div>
+
+                <!-- Row 4: panel 6 split -->
                 <div>
-                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">3 — AVG VOLATILITÉ 10J DES LEADERS (SMA5)</div>
-                    <div style="position:relative;width:100%;height:180px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
-                        <canvas id="brChart3"></canvas>
+                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">6 — TITRES ±4% JOURNÉE</div>
+                    <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px;">
+                        <div style="position:relative;height:250px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
+                            <canvas id="brChart6a"></canvas>
+                        </div>
+                        <div style="position:relative;height:250px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
+                            <canvas id="brChart6b"></canvas>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Row 5: panel 7 split -->
                 <div>
-                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">4 — % LEADERS EMA10 &gt; EMA20 (SMA5)</div>
-                    <div style="position:relative;width:100%;height:180px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
-                        <canvas id="brChart4"></canvas>
+                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">7 — TITRES ±25% SUR 13 SEMAINES</div>
+                    <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px;">
+                        <div style="position:relative;height:250px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
+                            <canvas id="brChart7a"></canvas>
+                        </div>
+                        <div style="position:relative;height:250px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
+                            <canvas id="brChart7b"></canvas>
+                        </div>
                     </div>
                 </div>
-
-                <div>
-                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">5 — % ADVANCING LEADERS (SMA5)</div>
-                    <div style="position:relative;width:100%;height:180px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
-                        <canvas id="brChart5"></canvas>
-                    </div>
-                </div>
-
-                <div>
-                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">6 — TITRES ≥+4% vs ≤-4% JOURNÉE + RATIO LISSÉ 10J</div>
-                    <div style="position:relative;width:100%;height:180px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
-                        <canvas id="brChart6"></canvas>
-                    </div>
-                </div>
-
-                <div>
-                    <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">7 — TITRES ≥+25% vs ≤-25% SUR 13 SEMAINES + RATIO LISSÉ 10J</div>
-                    <div style="position:relative;width:100%;height:180px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
-                        <canvas id="brChart7"></canvas>
-                    </div>
-                </div>
-
-
 
             </div>
         </div>
@@ -4413,15 +4431,40 @@
         if (_brCharts[id]) { _brCharts[id].destroy(); delete _brCharts[id]; }
         const mutedColor = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() || '#94a3b8';
         const gridColor  = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#e2e8f0';
+
+        // Add SPY top markers as a scatter dataset
+        let allDatasets = [...datasets];
+        if (opts.spyTops && opts.spyTops.length && datasets[0]?.data?.length) {
+            const topData = opts.labels.map((_, i) => opts.spyTops.includes(i) ? (datasets[0].data[i] ?? null) : null);
+            allDatasets.push({
+                label: 'SPY Top ▼',
+                data: topData,
+                type: 'scatter',
+                pointStyle: 'triangle',
+                rotation: 180,
+                pointRadius: 7,
+                pointBackgroundColor: '#b91c1c',
+                borderColor: 'transparent',
+                showLine: false,
+                yAxisID: datasets[0].yAxisID || 'y',
+            });
+        }
+
         _brCharts[id] = new Chart(canvas, {
             type: 'line',
-            data: { labels: opts.labels || [], datasets },
+            data: { labels: opts.labels || [], datasets: allDatasets },
             options: {
                 responsive: true, maintainAspectRatio: false,
                 interaction: { mode: 'index', intersect: false },
                 plugins: {
-                    legend: { display: true, labels: { color: mutedColor, font: { size: 9, family: 'IBM Plex Mono' }, boxWidth: 14, padding: 8 } },
-                    tooltip: { callbacks: { label: ctx => opts.tooltipFn ? opts.tooltipFn(ctx) : `${ctx.dataset.label}: ${ctx.raw ?? '—'}` } }
+                    legend: { display: true, labels: {
+                        color: mutedColor, font: { size: 9, family: 'IBM Plex Mono' }, boxWidth: 14, padding: 8,
+                        filter: item => item.text !== 'SPY Top ▼' || (opts.spyTops && opts.spyTops.length > 0)
+                    }},
+                    tooltip: { callbacks: { label: ctx => {
+                        if (ctx.dataset.label === 'SPY Top ▼') return ctx.raw != null ? '▼ SPY Top' : null;
+                        return opts.tooltipFn ? opts.tooltipFn(ctx) : `${ctx.dataset.label}: ${ctx.raw ?? '—'}`;
+                    }}}
                 },
                 scales: {
                     x: { ticks: { color: mutedColor, font: { size: 8 }, maxTicksLimit: 8, maxRotation: 0 }, grid: { color: gridColor } },
@@ -4578,33 +4621,49 @@
         const volFmt  = v => v != null ? v.toFixed(2) + '%' : '—';
         const refLine = (val, lbl) => ds(lbl, 'rgba(148,163,184,0.35)', raw.map(()=>val), { borderDash:[4,4], borderWidth:1 });
 
+        // ── SPY top annotations ──
+        // Find days where SPY was within -2% of its rolling max before a drop
+        const spyArr = raw.map(d => d.spy);
+        const spyTopAnnotations = [];
+        const rollingMax = [];
+        let runMax = -Infinity;
+        for (let i = 0; i < spyArr.length; i++) {
+            if (spyArr[i] != null && spyArr[i] > runMax) runMax = spyArr[i];
+            rollingMax.push(runMax);
+        }
+        for (let i = 1; i < spyArr.length - 1; i++) {
+            if (spyArr[i] == null || spyArr[i+1] == null) continue;
+            const distFromMax = (spyArr[i] / rollingMax[i] - 1) * 100;
+            const nextDrop    = (spyArr[i+1] / spyArr[i] - 1) * 100;
+            if (distFromMax >= -1 && nextDrop <= -2) {
+                spyTopAnnotations.push(i); // index in raw (oldest→newest)
+            }
+        }
+
         // ── Panel 1: % New 3M High ──
         makeBrChart('brChart1', [
             ds(`% Leaders New 3M High (SMA5)`, '#0ea5e9', sma5(raw.map(d=>d.pctNh3m))),
-        ], { labels, yMin:0, yMax:100, yFmt: v=>v+'%', tooltipFn: ctx=>`${ctx.dataset.label}: ${pctFmt(ctx.raw)}` });
+        ], { labels, yMin:0, yMax:100, yFmt: v=>v+'%', tooltipFn: ctx=>`${ctx.dataset.label}: ${pctFmt(ctx.raw)}`, spyTops: spyTopAnnotations });
 
         // ── Panel 2: Cumulative index ──
         makeBrChart('brChart2', [
             ds('Leaders vs SPY (base 100)', '#15803d', cumIndex),
-            refLine(100, 'base 100'),
-        ], { labels, yFmt: v=>v.toFixed(0), tooltipFn: ctx=>ctx.dataset.label==='base 100'?null:`${ctx.dataset.label}: ${idxFmt(ctx.raw)}` });
+        ], { labels, yFmt: v=>v.toFixed(0), tooltipFn: ctx=>`${ctx.dataset.label}: ${idxFmt(ctx.raw)}`, spyTops: spyTopAnnotations });
 
         // ── Panel 3: Avg Vol 10j ──
         makeBrChart('brChart3', [
             ds('Avg Vol 10j Leaders (SMA5)', '#f59e0b', sma5(raw.map(d=>d.vol10))),
-        ], { labels, yFmt: v=>v+'%', tooltipFn: ctx=>`${ctx.dataset.label}: ${volFmt(ctx.raw)}` });
+        ], { labels, yFmt: v=>v+'%', tooltipFn: ctx=>`${ctx.dataset.label}: ${volFmt(ctx.raw)}`, spyTops: spyTopAnnotations });
 
         // ── Panel 4: % EMA10 > EMA20 ──
         makeBrChart('brChart4', [
             ds('% Leaders EMA10 > EMA20 (SMA5)', '#6d28d9', sma5(raw.map(d=>d.pctEma))),
-            refLine(50, '50%'),
-        ], { labels, yMin:0, yMax:100, yFmt: v=>v+'%', tooltipFn: ctx=>ctx.dataset.label==='50%'?null:`${ctx.dataset.label}: ${pctFmt(ctx.raw)}` });
+        ], { labels, yMin:0, yMax:100, yFmt: v=>v+'%', tooltipFn: ctx=>`${ctx.dataset.label}: ${pctFmt(ctx.raw)}`, spyTops: spyTopAnnotations });
 
         // ── Panel 5: % Advancing SMA5 ──
         makeBrChart('brChart5', [
             ds(`% Advancing Leaders (SMA5)`, '#94a3b8', sma5(raw.map(d=>d.pctAdv))),
-            refLine(50, '50%'),
-        ], { labels, yMin:0, yMax:100, yFmt: v=>v+'%', tooltipFn: ctx=>ctx.dataset.label==='50%'?null:`${ctx.dataset.label}: ${pctFmt(ctx.raw)}` });
+        ], { labels, yMin:0, yMax:100, yFmt: v=>v+'%', tooltipFn: ctx=>`${ctx.dataset.label}: ${pctFmt(ctx.raw)}`, spyTops: spyTopAnnotations });
 
         // ── Panel 6: Daily ±4% ──
         const up4arr   = raw.map(d => d.up4);
@@ -4616,15 +4675,13 @@
             const sumDn = dn4arr.slice(i-9, i+1).reduce((s,v)=>s+(v||0),0);
             return sumDn > 0 ? Math.round(sumUp/sumDn * 100)/100 : null;
         });
-        makeBrChart('brChart6', [
+        makeBrChart('brChart6a', [
             ds('# ≥+4% jour', '#15803d', up4arr),
             ds('# ≤-4% jour', '#b91c1c', dn4arr),
-            { ...ds('Ratio SMA10 (axe D)', '#f59e0b', ratio4), yAxisID: 'y2' },
-        ], {
-            labels, yFmt: v=>v,
-            tooltipFn: ctx => `${ctx.dataset.label}: ${ctx.raw ?? '—'}`,
-            extraScales: { y2: { position:'right', ticks:{ color:'#f59e0b', font:{size:8}, callback: v=>v+'x' }, grid:{drawOnChartArea:false} } }
-        });
+        ], { labels, yFmt: v=>v, spyTops: spyTopAnnotations, tooltipFn: ctx=>`${ctx.dataset.label}: ${ctx.raw ?? '—'}` });
+        makeBrChart('brChart6b', [
+            ds('Ratio SMA10', '#f59e0b', ratio4),
+        ], { labels, yFmt: v=>v+'x', spyTops: spyTopAnnotations, tooltipFn: ctx=>`${ctx.dataset.label}: ${ctx.raw ?? '—'}` });
 
         // ── Panel 7: 13W ±25% ──
         const up25arr  = raw.map(d => d.up25q);
@@ -4635,15 +4692,13 @@
             const sumDn = dn25arr.slice(i-9,i+1).reduce((s,v)=>s+(v||0),0);
             return sumDn > 0 ? Math.round(sumUp/sumDn*100)/100 : null;
         });
-        makeBrChart('brChart7', [
+        makeBrChart('brChart7a', [
             ds('# ≥+25% 13W', '#15803d', up25arr),
             ds('# ≤-25% 13W', '#b91c1c', dn25arr),
-            { ...ds('Ratio SMA10 (axe D)', '#f59e0b', ratio25), yAxisID: 'y2' },
-        ], {
-            labels, yFmt: v=>v,
-            tooltipFn: ctx => `${ctx.dataset.label}: ${ctx.raw ?? '—'}`,
-            extraScales: { y2: { position:'right', ticks:{ color:'#f59e0b', font:{size:8}, callback: v=>v+'x' }, grid:{drawOnChartArea:false} } }
-        });
+        ], { labels, yFmt: v=>v, spyTops: spyTopAnnotations, tooltipFn: ctx=>`${ctx.dataset.label}: ${ctx.raw ?? '—'}` });
+        makeBrChart('brChart7b', [
+            ds('Ratio SMA10', '#f59e0b', ratio25),
+        ], { labels, yFmt: v=>v+'x', spyTops: spyTopAnnotations, tooltipFn: ctx=>`${ctx.dataset.label}: ${ctx.raw ?? '—'}` });
 
 
     }
