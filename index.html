@@ -7926,9 +7926,9 @@ Write a thorough 7-section market analysis.`;
 
     // ctxMenu listeners init après DOM ready
     function initCtxMenu() {
-        document.getElementById('ctxAddWatch').addEventListener('click', () => {
-            if (ctxTicker)
-                addToWatchlist(ctxTicker);
+        const ctxAdd = document.getElementById('ctxAddWatch');
+        if (ctxAdd) ctxAdd.addEventListener('click', () => {
+            if (ctxTicker) addToWatchlist(ctxTicker);
         });
 
     }
