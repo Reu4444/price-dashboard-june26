@@ -703,7 +703,7 @@
 
         <!-- Controls -->
         <div class="top-bar">
-            <button class="btn" id="loadBtn" onclick="loadFromSheets()">REFRESH DATA</button>
+            <button class="btn" id="loadBtn" onclick="loadWithCache(true)">REFRESH DATA</button>
             <button class="btn btn-outline" onclick="exportCSV()" id="csvBtn" style="display:none">↓ CSV</button>
             <input class="filter-input" id="searchInput" placeholder="Search ticker..." oninput="renderActiveDebounced()" style="display:none">
             <!-- Sector exclude dropdown -->
@@ -2426,6 +2426,7 @@
         rowSortDir = 'desc';
     let descMap = {};
     let watchlist = JSON.parse(localStorage.getItem('watchlist') || '[]');
+    let _loadedFromCache = false;
     let activeTab = 'price';
     let sortCols = {
         price: 'pct_1w',
@@ -2873,6 +2874,49 @@
     }
 
     // ── LOAD ─────────────────────────────────────────────────────
+    // ── INDEXEDDB CACHE ───────────────────────────────────────────
+    const IDB_NAME    = 'price-dashboard';
+    const IDB_VERSION = 1;
+    const IDB_STORE   = 'cache';
+
+    function openIDB() {
+        return new Promise((resolve, reject) => {
+            const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+            req.onupgradeneeded = e => e.target.result.createObjectStore(IDB_STORE);
+            req.onsuccess  = e => resolve(e.target.result);
+            req.onerror    = e => reject(e.target.error);
+        });
+    }
+
+    async function idbGet(key) {
+        const db = await openIDB();
+        return new Promise((resolve, reject) => {
+            const tx  = db.transaction(IDB_STORE, 'readonly');
+            const req = tx.objectStore(IDB_STORE).get(key);
+            req.onsuccess = e => resolve(e.target.result);
+            req.onerror   = e => reject(e.target.error);
+        });
+    }
+
+    async function idbSet(key, value) {
+        const db = await openIDB();
+        return new Promise((resolve, reject) => {
+            const tx  = db.transaction(IDB_STORE, 'readwrite');
+            const req = tx.objectStore(IDB_STORE).put(value, key);
+            req.onsuccess = () => resolve();
+            req.onerror   = e => reject(e.target.error);
+        });
+    }
+
+    function isSameDay(ts) {
+        if (!ts) return false;
+        const cached = new Date(ts);
+        const now    = new Date();
+        return cached.getFullYear() === now.getFullYear() &&
+               cached.getMonth()    === now.getMonth()    &&
+               cached.getDate()     === now.getDate();
+    }
+
     async function loadFromSheets() {
         const btn = document.getElementById('loadBtn');
         btn.disabled = true;
@@ -2910,6 +2954,8 @@
                 signal: AbortSignal.timeout(60000)
             }).then(r => r.json()).catch(() => null),
             ]);
+            // Mark as fresh fetch (not from cache)
+            _loadedFromCache = false;
             // Parse JSON directly — no CSV conversion
             const infoMap = infoResp ? parseInfoJSON(infoResp.data) : {};
             descMap = descResp ? parseDescJSON(descResp.data) : {};
@@ -3244,6 +3290,22 @@
                 });
                 if (priceSubTab === 'row')
                     renderRoW();
+            }
+
+            // ── Save PROCESSED data to IndexedDB cache ──
+            try {
+                // Save raw responses + processed allData + rawPrices
+                await Promise.all([
+                    idbSet('allData',    allData),
+                    idbSet('rawPrices',  rawPrices),
+                    idbSet('priceDates', priceDates),
+                    idbSet('allDataRoW', allDataRoW),
+                    idbSet('rawPricesRoW', rawPricesRoW),
+                    idbSet('meta',       { timestamp: Date.now(), count: allData.length }),
+                ]);
+                console.log('✓ Processed data saved to IndexedDB cache (' + allData.length + ' tickers)');
+            } catch(cacheErr) {
+                console.warn('Cache save failed (data may be too large):', cacheErr);
             }
 
         } catch (e) {
@@ -6633,14 +6695,87 @@ Write a thorough 7-section market analysis.`;
         a.click();
     }
 
+    // ── LOAD WITH CACHE ───────────────────────────────────────────
+    async function loadWithCache(forceRefresh = false) {
+        const btn = document.getElementById('loadBtn');
+
+        if (!forceRefresh) {
+            try {
+                const meta = await idbGet('meta');
+                if (meta && isSameDay(meta.timestamp)) {
+                    btn.disabled = true;
+                    btn.textContent = '⟳ LOADING...';
+                    document.getElementById('progressText').textContent = 'Loading from cache...';
+                    document.getElementById('progressWrap').classList.add('on');
+                    document.getElementById('progressFill').style.width = '40%';
+
+                    // Restore processed data directly
+                    const [cachedData, cachedPrices, cachedDates, cachedDataRoW, cachedPricesRoW] = await Promise.all([
+                        idbGet('allData'), idbGet('rawPrices'), idbGet('priceDates'),
+                        idbGet('allDataRoW'), idbGet('rawPricesRoW')
+                    ]);
+
+                    if (cachedData && cachedPrices && cachedData.length > 0) {
+                        // Restore global state
+                        allData     = cachedData;
+                        rawPrices   = cachedPrices;
+                        priceDates  = cachedDates || [];
+                        allDataRoW  = cachedDataRoW || [];
+                        rawPricesRoW = cachedPricesRoW || {};
+
+                        document.getElementById('progressFill').style.width = '100%';
+                        document.getElementById('progressText').textContent = `✓ ${allData.length} tickers chargés (cache)`;
+                        document.getElementById('progressPct').textContent = '100%';
+                        document.getElementById('statsBar').classList.add('on');
+
+                        // Restore UI
+                        const p0Date = priceDates[0] || '';
+                        if (p0Date) document.getElementById('lastUpdate').textContent = `P0 (last price): ${p0Date}`;
+
+                        // Populate group filter
+                        const groups = [...new Set(allData.map(d => d.group).filter(Boolean))].sort();
+                        const gEl = document.getElementById('groupFilter');
+                        if (gEl) {
+                            gEl.innerHTML = '<option value="all">All Groups</option>';
+                            groups.forEach(g => { const o = document.createElement('option'); o.value = g; o.textContent = g; gEl.appendChild(o); });
+                        }
+                        // Populate sector filter
+                        const sectors = [...new Set(allData.map(d => d.sector).filter(Boolean))].sort();
+                        const sEl = document.getElementById('sectorFilter');
+                        if (sEl) {
+                            sEl.innerHTML = '<option value="all">All Sectors</option>';
+                            sectors.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sEl.appendChild(o); });
+                        }
+                        ['searchInput','groupFilter','sortDir','csvBtn','mktcapFilter','rsFilter','epsFilter','salesFilter','ma20Filter','high52Filter'].forEach(id => {
+                            const el = document.getElementById(id); if (el) el.style.display = '';
+                        });
+                        const sew = document.getElementById('sectorExcludeWrap'); if (sew) sew.style.display = '';
+
+                        updateStats();
+                        renderActive();
+
+                        btn.disabled = false;
+                        btn.textContent = 'REFRESH DATA';
+                        console.log(`✓ Loaded ${allData.length} tickers from IndexedDB cache`);
+                        return;
+                    }
+                }
+            } catch(e) {
+                console.warn('Cache read failed, fetching fresh:', e);
+            }
+        }
+
+        // No cache, stale, or force refresh
+        await loadFromSheets();
+    }
+
     window.addEventListener('load', () => {
         initCtxMenu();
         updateWatchTab();
-        loadFromSheets().then(() => {
-        }).catch(e => console.warn('Auto-load failed:', e));
-        // Auto-refresh toutes les 15 minutes
+        loadWithCache().catch(e => console.warn('Auto-load failed:', e));
+        // Auto-refresh toutes les 15 minutes — only if cache is stale
         setInterval(() => {
-            loadFromSheets().catch(e => console.warn('Auto-refresh 15min failed:', e));
+            loadWithCache(false).catch(e => console.warn('Auto-refresh failed:', e));
         }, 15 * 60 * 1000);
     });
 
