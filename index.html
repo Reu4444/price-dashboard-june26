@@ -2083,7 +2083,7 @@
                         </div>
                     </div>
                     <div>
-                        <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">2 — LEADERS vs SPY INDEX CUMULATIF (base 100)</div>
+                        <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">2 — LEADERS vs SPY INDEX CUMULATIF (EMA10)</div>
                         <div style="position:relative;width:100%;height:250px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
                             <canvas id="brChart2"></canvas>
                         </div>
@@ -2093,13 +2093,13 @@
                 <!-- Row 2: panels 3 & 4 -->
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                     <div>
-                        <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">3 — AVG VOLATILITÉ 10J DES LEADERS (SMA5)</div>
+                        <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">5 — AVG VOLATILITÉ 10J DES LEADERS</div>
                         <div style="position:relative;width:100%;height:250px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
                             <canvas id="brChart3"></canvas>
                         </div>
                     </div>
                     <div>
-                        <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">4 — % LEADERS EMA10 &gt; EMA20 (SMA5)</div>
+                        <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">3 — % LEADERS EMA10 &gt; EMA20 (SMA5)</div>
                         <div style="position:relative;width:100%;height:250px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
                             <canvas id="brChart4"></canvas>
                         </div>
@@ -2109,13 +2109,13 @@
                 <!-- Row 3: panels 5 & 8 -->
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                     <div>
-                        <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">5 — % ADVANCING LEADERS (SMA5)</div>
+                        <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">6 — % ADVANCING LEADERS (SMA5)</div>
                         <div style="position:relative;width:100%;height:250px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
                             <canvas id="brChart5"></canvas>
                         </div>
                     </div>
                     <div>
-                        <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">8 — AVG DISTANCE LEADERS À SMA50 (%)</div>
+                        <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin-bottom:6px;">4 — AVG DISTANCE LEADERS À SMA50 (%)</div>
                         <div style="position:relative;width:100%;height:250px;border:1px solid var(--border);padding:8px;box-sizing:border-box;">
                             <canvas id="brChart8"></canvas>
                         </div>
@@ -4531,11 +4531,13 @@
                 const mv = (c0/c1 - 1)*100;
                 sumMoveL += mv; cntMoveL++;
 
-                // Panel 1b: 3M new high (need i+63 bars)
-                if (p.length > i + 63) {
-                    const win = p.slice(i, i+63).filter(v => v != null);
-                    if (win.length >= 10) {
+                // Panel 1: 3M new high = price today >= max over last 63 sessions
+                // prices newest-first: p[i]=today, p[i+1]=yesterday ... p[i+62]=63 days ago
+                if (p.length > i + 62) {
+                    const win = p.slice(i, i+63).filter(v => v != null && v > 0);
+                    if (win.length >= 30) {
                         totNh++;
+                        // c0 must equal the max of the window (it IS the newest bar)
                         if (c0 >= Math.max(...win)) nh3mL++;
                     }
                 }
@@ -4644,24 +4646,23 @@
         const volFmt  = v => v != null ? v.toFixed(2) + '%' : '—';
         const refLine = (val, lbl) => ds(lbl, 'rgba(148,163,184,0.35)', raw.map(()=>val), { borderDash:[4,4], borderWidth:1 });
 
-        // ── SPY top annotations ──
-        // Find days where SPY was within -2% of its rolling max before a drop
+        // ── SPY top annotations — raw is oldest→newest here ──
         const spyArr = raw.map(d => d.spy);
         const spyTopAnnotations = [];
-        const rollingMax = [];
-        let runMax = -Infinity;
-        for (let i = 0; i < spyArr.length; i++) {
-            if (spyArr[i] != null && spyArr[i] > runMax) runMax = spyArr[i];
-            rollingMax.push(runMax);
-        }
-        for (let i = 1; i < spyArr.length - 1; i++) {
-            if (spyArr[i] == null || spyArr[i+1] == null) continue;
-            const distFromMax = (spyArr[i] / rollingMax[i] - 1) * 100;
-            const nextDrop    = (spyArr[i+1] / spyArr[i] - 1) * 100;
-            if (distFromMax >= -0.5 && nextDrop <= -1.75) {
-                spyTopAnnotations.push(i); // index in raw (oldest→newest)
+        let spyRunMax = -Infinity;
+        for (let i = 0; i < spyArr.length - 1; i++) {
+            const v  = spyArr[i];
+            const v1 = spyArr[i+1]; // next day
+            if (v == null || v1 == null) continue;
+            if (v > spyRunMax) spyRunMax = v;
+            const distFromMax = (v / spyRunMax - 1) * 100;  // 0 = at peak, negative = below
+            const nextDrop    = (v1 / v - 1) * 100;          // negative = drops next day
+            // Mark as top: near rolling high AND next day drops ≥1.75%
+            if (distFromMax >= -1 && nextDrop <= -1.75) {
+                spyTopAnnotations.push(i);
             }
         }
+        console.log('SPY tops found:', spyTopAnnotations.length, 'at dates:', spyTopAnnotations.map(i=>raw[i]?.date));
 
         // ── Panel 1: % New 3M High ──
         makeBrChart('brChart1', [
@@ -4669,8 +4670,8 @@
         ], { labels, yMin:0, yMax:100, yFmt: v=>v+'%', tooltipFn: ctx=>`${ctx.dataset.label}: ${pctFmt(ctx.raw)}`, spyTops: spyTopAnnotations });
 
         // ── Panel 2: Cumulative index + EMA5 ──
-        const ema5idx = (() => {
-            const k = 2/(5+1);
+        const ema10idx = (() => {
+            const k = 2/(10+1);
             let ema = null;
             return cumIndex.map(v => {
                 if (v == null) return null;
@@ -4680,7 +4681,7 @@
         })();
         makeBrChart('brChart2', [
             ds('Leaders vs SPY (base 100)', '#15803d', cumIndex),
-            { ...ds('EMA5', '#f59e0b', ema5idx), borderWidth: 1.5, borderDash: [3,2] },
+            { ...ds('EMA10', '#f59e0b', ema10idx), borderWidth: 1.5, borderDash: [3,2] },
         ], { labels, yFmt: v=>v.toFixed(0), tooltipFn: ctx=>`${ctx.dataset.label}: ${idxFmt(ctx.raw)}`, spyTops: spyTopAnnotations });
 
         // ── Panel 3: Avg Vol 10j ──
