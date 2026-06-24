@@ -2172,77 +2172,66 @@
                     <span id="dailyStatus" style="font-size:10px;color:var(--muted);margin-left:auto;font-family:'IBM Plex Mono',monospace;"></span>
                 </div>
 
-                <!-- Stat bar: 2 rows compact -->
+                <!-- Stat bar: 3 rows -->
                 <div id="dailyStatBar" style="display:none;margin-bottom:12px;border:1px solid var(--border);font-family:'IBM Plex Mono',monospace;">
-                    <!-- Row 1: Total -->
-                    <div style="display:flex;gap:0;border-bottom:1px solid var(--border);align-items:stretch;">
-                        <div style="padding:4px 12px;background:var(--bg3);display:flex;align-items:center;width:80px;border-right:1px solid var(--border);flex-shrink:0;">
-                            <span style="font-size:9px;color:var(--muted);letter-spacing:.08em;font-weight:700;">ALL</span>
+                    <!-- Row 1: All stocks -->
+                    <div style="display:flex;align-items:stretch;border-bottom:1px solid var(--border);">
+                        <div style="padding:8px 18px;background:var(--bg3);display:flex;align-items:center;width:100px;border-right:1px solid var(--border);flex-shrink:0;">
+                            <span style="font-size:10px;color:var(--muted);letter-spacing:.08em;font-weight:700;">ALL STOCKS</span>
                         </div>
-                        <div style="padding:4px 12px;background:var(--bg2);border-right:1px solid var(--border);min-width:80px;">
-                            <div style="font-size:8px;color:var(--muted);margin-bottom:1px;">ADV</div>
-                            <div id="dailyStatAdv" style="font-size:14px;font-weight:700;color:var(--up);">—</div>
+                        <div style="padding:8px 18px;background:var(--bg2);border-right:1px solid var(--border);">
+                            <div style="font-size:9px;color:var(--muted);letter-spacing:.06em;margin-bottom:3px;text-transform:uppercase">ADV</div><div id="dailyStatAdv" style="font-size:11px;font-weight:600;color:var(--up);">—</div>
                         </div>
-                        <div style="padding:4px 12px;background:var(--bg2);border-right:1px solid var(--border);min-width:80px;">
-                            <div style="font-size:8px;color:var(--muted);margin-bottom:1px;">DEC</div>
-                            <div id="dailyStatDec" style="font-size:14px;font-weight:700;color:var(--down);">—</div>
+                        <div style="padding:8px 18px;background:var(--bg2);border-right:1px solid var(--border);">
+                            <div style="font-size:9px;color:var(--muted);letter-spacing:.06em;margin-bottom:3px;text-transform:uppercase">DEC</div><div id="dailyStatDec" style="font-size:11px;font-weight:600;color:var(--down);">—</div>
                         </div>
-                        <div style="padding:4px 12px;background:var(--bg2);border-right:1px solid var(--border);min-width:70px;">
-                            <div style="font-size:8px;color:var(--muted);margin-bottom:1px;">RATIO</div>
-                            <div id="dailyStatRatio" style="font-size:14px;font-weight:700;">—</div>
+                        <div style="padding:8px 18px;background:var(--bg2);border-right:1px solid var(--border);">
+                            <div style="font-size:9px;color:var(--muted);letter-spacing:.06em;margin-bottom:3px;text-transform:uppercase">RATIO ADV/DEC</div><div id="dailyStatRatio" style="font-size:11px;font-weight:600;">—</div>
                         </div>
-                        <div style="padding:4px 12px;background:var(--bg2);border-right:1px solid var(--border);min-width:80px;">
-                            <div style="font-size:8px;color:var(--muted);margin-bottom:1px;">AVG WIN</div>
-                            <div id="dailyStatAvgUp" style="font-size:14px;font-weight:700;color:var(--up);">—</div>
+                        <div style="padding:8px 18px;background:var(--bg2);border-right:1px solid var(--border);">
+                            <div style="font-size:9px;color:var(--muted);letter-spacing:.06em;margin-bottom:3px;text-transform:uppercase">AVG WINNER</div><div id="dailyStatAvgUp" style="font-size:11px;font-weight:600;color:var(--up);">—</div>
                         </div>
-                        <div style="padding:4px 12px;background:var(--bg2);min-width:80px;">
-                            <div style="font-size:8px;color:var(--muted);margin-bottom:1px;">AVG LOSS</div>
-                            <div id="dailyStatAvgDn" style="font-size:14px;font-weight:700;color:var(--down);">—</div>
+                        <div style="padding:8px 18px;background:var(--bg2);border-right:2px solid var(--border2);">
+                            <div style="font-size:9px;color:var(--muted);letter-spacing:.06em;margin-bottom:3px;text-transform:uppercase">AVG LOSER</div><div id="dailyStatAvgDn" style="font-size:11px;font-weight:600;color:var(--down);">—</div>
                         </div>
-                        <div style="padding:4px 12px;background:var(--bg2);border-left:2px solid var(--border2);min-width:70px;">
-                            <div style="font-size:8px;color:var(--up);margin-bottom:1px;">≥+4%</div>
-                            <div id="dailyStatUp4" style="font-size:14px;font-weight:700;color:var(--up);">—</div>
+                        <div style="padding:8px 18px;background:var(--bg2);border-right:1px solid var(--border);">
+                            <div style="font-size:9px;color:var(--muted);letter-spacing:.06em;margin-bottom:3px;text-transform:uppercase;color:var(--up);">≥ +4%</div><div id="dailyStatUp4" style="font-size:11px;font-weight:600;color:var(--up);">—</div>
                         </div>
-                        <div style="padding:4px 12px;background:var(--bg2);border-left:1px solid var(--border);min-width:70px;">
-                            <div style="font-size:8px;color:var(--down);margin-bottom:1px;">≤-4%</div>
-                            <div id="dailyStatDn4" style="font-size:14px;font-weight:700;color:var(--down);">—</div>
+                        <div style="padding:8px 18px;background:var(--bg2);border-right:1px solid var(--border);">
+                            <div style="font-size:9px;color:var(--muted);letter-spacing:.06em;margin-bottom:3px;text-transform:uppercase;color:var(--down);">≤ -4%</div><div id="dailyStatDn4" style="font-size:11px;font-weight:600;color:var(--down);">—</div>
                         </div>
-                        <div style="padding:4px 12px;background:var(--bg2);border-left:1px solid var(--border);min-width:70px;">
-                            <div style="font-size:8px;color:var(--muted);margin-bottom:1px;">RATIO ±4%</div>
-                            <div id="dailyStatRatio4" style="font-size:14px;font-weight:700;">—</div>
+                        <div style="padding:8px 18px;background:var(--bg2);">
+                            <div style="font-size:9px;color:var(--muted);letter-spacing:.06em;margin-bottom:3px;text-transform:uppercase">RATIO ±4%</div><div id="dailyStatRatio4" style="font-size:11px;font-weight:600;">—</div>
                         </div>
                     </div>
-                    <!-- Row 2: Leaders & Laggards inline -->
-                    <div style="display:flex;gap:0;align-items:stretch;">
-                        <div style="padding:4px 12px;background:var(--bg3);display:flex;align-items:center;width:80px;border-right:1px solid var(--border);flex-shrink:0;">
-                            <span style="font-size:9px;color:#15803d;font-weight:700;">LEAD<br><span style="font-size:8px;color:#15803d;font-weight:400;">6M&gt;70</span></span>
+                    <!-- Row 2: Leaders -->
+                    <div style="display:flex;align-items:stretch;border-bottom:1px solid var(--border);">
+                        <div style="padding:8px 18px;background:var(--bg3);display:flex;align-items:center;width:100px;border-right:1px solid var(--border);flex-shrink:0;">
+                            <span style="font-size:10px;color:#15803d;font-weight:700;">LEADERS<br><span style="font-size:9px;font-weight:400;">PCT 6M &gt; 70</span></span>
                         </div>
-                        <div style="padding:4px 12px;background:var(--bg2);border-right:1px solid var(--border);min-width:70px;">
-                            <div style="font-size:8px;color:var(--muted);margin-bottom:1px;">ADV%</div>
-                            <div id="dailyStatLAdv" style="font-size:14px;font-weight:700;color:#15803d;">—</div>
+                        <div style="padding:8px 18px;background:var(--bg2);border-right:1px solid var(--border);">
+                            <div style="font-size:9px;color:var(--muted);letter-spacing:.06em;margin-bottom:3px;text-transform:uppercase">ADV%</div><div id="dailyStatLAdv" style="font-size:11px;font-weight:600;">—</div>
                         </div>
-                        <div style="padding:4px 12px;background:var(--bg2);border-right:1px solid var(--border);min-width:80px;">
-                            <div style="font-size:8px;color:var(--muted);margin-bottom:1px;">AVG MOVE</div>
-                            <div id="dailyStatLeaders" style="font-size:14px;font-weight:700;">—</div>
+                        <div style="padding:8px 18px;background:var(--bg2);border-right:1px solid var(--border);">
+                            <div style="font-size:9px;color:var(--muted);letter-spacing:.06em;margin-bottom:3px;text-transform:uppercase">AVG MOVE</div><div id="dailyStatLeaders" style="font-size:11px;font-weight:600;">—</div>
                         </div>
-                        <div style="padding:4px 12px;background:var(--bg2);border-right:2px solid var(--border2);min-width:50px;">
-                            <div style="font-size:8px;color:var(--muted);margin-bottom:1px;">N</div>
-                            <div id="dailyStatLN" style="font-size:14px;color:var(--muted);">—</div>
+                        <div style="padding:8px 18px;background:var(--bg2);">
+                            <div style="font-size:9px;color:var(--muted);letter-spacing:.06em;margin-bottom:3px;text-transform:uppercase">N TITRES</div><div id="dailyStatLN" style="font-size:11px;font-weight:600;color:var(--muted);">—</div>
                         </div>
-                        <div style="padding:4px 12px;background:var(--bg3);display:flex;align-items:center;width:80px;border-right:1px solid var(--border);flex-shrink:0;">
-                            <span style="font-size:9px;color:#b91c1c;font-weight:700;">LAG<br><span style="font-size:8px;color:#b91c1c;font-weight:400;">6M&lt;30</span></span>
+                    </div>
+                    <!-- Row 3: Laggards -->
+                    <div style="display:flex;align-items:stretch;">
+                        <div style="padding:8px 18px;background:var(--bg3);display:flex;align-items:center;width:100px;border-right:1px solid var(--border);flex-shrink:0;">
+                            <span style="font-size:10px;color:#b91c1c;font-weight:700;">LAGGARDS<br><span style="font-size:9px;font-weight:400;">PCT 6M &lt; 30</span></span>
                         </div>
-                        <div style="padding:4px 12px;background:var(--bg2);border-right:1px solid var(--border);min-width:70px;">
-                            <div style="font-size:8px;color:var(--muted);margin-bottom:1px;">ADV%</div>
-                            <div id="dailyStatLagAdv" style="font-size:14px;font-weight:700;color:#b91c1c;">—</div>
+                        <div style="padding:8px 18px;background:var(--bg2);border-right:1px solid var(--border);">
+                            <div style="font-size:9px;color:var(--muted);letter-spacing:.06em;margin-bottom:3px;text-transform:uppercase">ADV%</div><div id="dailyStatLagAdv" style="font-size:11px;font-weight:600;">—</div>
                         </div>
-                        <div style="padding:4px 12px;background:var(--bg2);border-right:1px solid var(--border);min-width:80px;">
-                            <div style="font-size:8px;color:var(--muted);margin-bottom:1px;">AVG MOVE</div>
-                            <div id="dailyStatLaggards" style="font-size:14px;font-weight:700;">—</div>
+                        <div style="padding:8px 18px;background:var(--bg2);border-right:1px solid var(--border);">
+                            <div style="font-size:9px;color:var(--muted);letter-spacing:.06em;margin-bottom:3px;text-transform:uppercase">AVG MOVE</div><div id="dailyStatLaggards" style="font-size:11px;font-weight:600;">—</div>
                         </div>
-                        <div style="padding:4px 12px;background:var(--bg2);min-width:50px;">
-                            <div style="font-size:8px;color:var(--muted);margin-bottom:1px;">N</div>
-                            <div id="dailyStatLagN" style="font-size:14px;color:var(--muted);">—</div>
+                        <div style="padding:8px 18px;background:var(--bg2);">
+                            <div style="font-size:9px;color:var(--muted);letter-spacing:.06em;margin-bottom:3px;text-transform:uppercase">N TITRES</div><div id="dailyStatLagN" style="font-size:11px;font-weight:600;color:var(--muted);">—</div>
                         </div>
                     </div>
                 </div>
@@ -4212,18 +4201,19 @@
 
         set('dailyStatAdv',      `<span style="color:var(--up);font-weight:700">${winners.length}</span>`);
         set('dailyStatDec',      `<span style="color:var(--down);font-weight:700">${losers.length}</span>`);
-        set('dailyStatRatio',    `<span style="color:${ratioC};font-weight:700">${ratio}</span>`);
+        set('dailyStatRatio',    `<span style="color:${ratioC}">${ratio}</span>`);
         set('dailyStatAvgUp',    fmt(avg(winners), 'var(--up)'));
         set('dailyStatAvgDn',    fmt(avg(losers),  'var(--down)'));
         set('dailyStatUp4',      `<span style="color:var(--up);font-weight:700">${up4.length}</span>`);
         set('dailyStatDn4',      `<span style="color:var(--down);font-weight:700">${dn4.length}</span>`);
-        set('dailyStatRatio4',   `<span style="color:${ratio4C};font-weight:700">${ratio4}</span>`);
-        set('dailyStatLAdv',     lAdvPct   != null ? `<span style="color:${lAdvC};font-weight:700">${lAdvPct}%</span>` : '—');
+        set('dailyStatRatio4',   `<span style="color:${ratio4C}">${ratio4}</span>`);
+        const advColor = pct => pct >= 75 ? 'var(--up)' : pct <= 25 ? 'var(--down)' : 'var(--text)';
+        set('dailyStatLAdv',     lAdvPct   != null ? `<span style="color:${advColor(lAdvPct)}">${lAdvPct}%</span>` : '—');
         set('dailyStatLeaders',  fmtAuto(avg(leaders)));
-        set('dailyStatLN',       `<span style="color:var(--muted)">${leaders.length}</span>`);
-        set('dailyStatLagAdv',   lagAdvPct != null ? `<span style="color:${lagAdvC};font-weight:700">${lagAdvPct}%</span>` : '—');
+        set('dailyStatLN',       `${leaders.length}`);
+        set('dailyStatLagAdv',   lagAdvPct != null ? `<span style="color:${advColor(lagAdvPct)}">${lagAdvPct}%</span>` : '—');
         set('dailyStatLaggards', fmtAuto(avg(laggards)));
-        set('dailyStatLagN',     `<span style="color:var(--muted)">${laggards.length}</span>`);
+        set('dailyStatLagN',     `${laggards.length}`);
 
         document.getElementById('dailyStatus').textContent =
             `${rows.length} tickers${_dailyDrillGroup ? ' — ' + _dailyDrillGroup : ''}`;
