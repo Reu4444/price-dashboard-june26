@@ -3686,8 +3686,18 @@
             if (!prices || prices.length < 210) return;
 
             // Compute MAs (prices newest-first)
-            const ema10 = calcEMA(prices, 10);
-            const ema20 = calcEMA(prices, 20);
+            // Inline EMA calculation (k=2/(n+1), newest-first prices)
+            const _ema = (p, n) => {
+                if (!p || p.length < n) return null;
+                const k = 2/(n+1);
+                // seed on oldest n bars, then roll forward newest-first reversed
+                const rev = p.slice(0, Math.min(p.length, n*3)).reverse();
+                let e = rev.slice(0, n).reduce((s,v) => s+(v||0), 0) / n;
+                for (let j = n; j < rev.length; j++) e = rev[j]*k + e*(1-k);
+                return e;
+            };
+            const ema10 = _ema(prices, 10);
+            const ema20 = _ema(prices, 20);
             if (!ema10 || !ema20) return;
 
             // SMA50, SMA200
@@ -5042,8 +5052,8 @@
 
         const thB = 'padding:5px 10px;font-size:9px;font-weight:600;letter-spacing:.06em;color:var(--muted);border:1px solid var(--border);background:var(--bg3);text-align:center;';
         const thL = 'padding:5px 10px;font-size:9px;font-weight:600;letter-spacing:.06em;color:var(--muted);border:1px solid var(--border);background:var(--bg3);text-align:left;';
-        const td  = 'padding:4px 10px;font-size:12px;border:1px solid var(--faint);text-align:center;';
-        const tdD = 'padding:4px 10px;font-size:11px;border:1px solid var(--faint);text-align:left;color:var(--muted);font-family:"IBM Plex Mono",monospace;';
+        const td  = 'padding:4px 10px;font-size:12px;border-top:1px solid var(--faint);border-bottom:1px solid var(--faint);border-left:1px solid transparent;border-right:1px solid transparent;text-align:center;';
+        const tdD = 'padding:4px 10px;font-size:11px;border-top:1px solid var(--faint);border-bottom:1px solid var(--faint);text-align:left;color:var(--muted);font-family:"IBM Plex Mono",monospace;';
 
         let html = `<table style="border-collapse:collapse;width:100%;font-family:'IBM Plex Mono',monospace;">
           <thead>
@@ -5061,7 +5071,7 @@
           </thead><tbody>`;
 
         rows.forEach((r, idx) => {
-            const bg = idx % 2 === 0 ? '' : 'background:var(--bg2);';
+            const bg = idx % 2 === 0 ? 'background:var(--bg);' : 'background:var(--bg2);';
             const aRatio = r.rf(r.aUp2, r.aDn2);
             const lRatio = r.rf(r.lUp2, r.lDn2);
             const lagRatio = r.rf(r.lagUp2, r.lagDn2);
