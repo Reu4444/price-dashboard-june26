@@ -805,8 +805,8 @@
                 <button id="priceTabVolAdj" onclick="switchPriceTab('voladj')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;">VOL-ADJ RS</button>
                 <button id="priceTabGroups" onclick="switchPriceTab('groups')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;">GROUPS</button>
                 <button id="priceTabSectors" onclick="switchPriceTab('sectors')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;">SECTORS</button>
-                <button id="priceTabMa" onclick="switchPriceTab('ma')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;">PULLBACKS MA</button>
-                <button id="priceTabBounce" onclick="switchPriceTab('bounce')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;">BOUNCES MA</button>
+                <button id="priceTabMa" onclick="switchPriceTab('ma')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;">PULLBACKS ST MA</button>
+                <button id="priceTabBounce" onclick="switchPriceTab('bounce')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;">BOUNCES LT MA</button>
                 <button id="priceTab52w" onclick="switchPriceTab('52w')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;">52W H/L</button>
                 <button id="priceTabConsolidation" onclick="switchPriceTab('consolidation')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;">CONSOLIDATION</button>
 
@@ -1250,17 +1250,15 @@
                     <span id="pbCount" style="font-size:10px;color:var(--muted);margin-left:auto;letter-spacing:.08em;"></span>
                 </div>
                 <!-- Criteria display -->
-                <div style="display:flex;gap:8px;flex-wrap:wrap;padding:8px 16px;margin-bottom:10px;font-size:11px;color:var(--muted);">
-                    <span style="background:var(--bg2);border:1px solid var(--border);padding:3px 10px;">PCT 4W ≥ <b id="pbCritPct4w">60</b></span>
-                    <span style="background:var(--bg2);border:1px solid var(--border);padding:3px 10px;">PCT 6M ≥ <b id="pbCritPct6m">60</b></span>
-                    <span style="background:var(--bg2);border:1px solid var(--border);padding:3px 10px;">PCT 12M ≥ <b id="pbCritPct12m">60</b></span>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;padding:6px 16px;margin-bottom:8px;font-size:11px;color:var(--muted);">
+                    <span style="background:var(--bg2);border:1px solid var(--border);padding:3px 10px;">PCT 4W / 6M / 12M ≥ <b id="pbCritPct4w">60</b></span>
                     <span style="background:var(--bg2);border:1px solid var(--border);padding:3px 10px;">EMA20 &gt; SMA50 &gt; SMA200</span>
                     <span style="background:var(--bg2);border:1px solid var(--border);padding:3px 10px;">EMA10 &gt; EMA20</span>
-                    <span style="background:var(--bg2);border:1px solid var(--border);padding:3px 10px;">min(|dist EMA10/σ|, |dist EMA20/σ|) ≤ <b id="pbCritSigma">0.5</b>σ</span>
+                    <span style="background:var(--bg2);border:1px solid var(--border);padding:3px 10px;">min(dist EMA10, dist EMA20) / σ ≤ <b id="pbCritSigma">0.5</b></span>
                 </div>
                 <!-- Explanation -->
-                <div style="padding:10px 16px 6px;font-size:12px;color:var(--muted);border-left:3px solid var(--accent2);margin-bottom:10px;line-height:1.7;">
-                    Filters stocks where PCT 4W, 6M and 12M are all above the threshold, the MA structure is bullish (EMA20 &gt; SMA50 &gt; SMA200), EMA10 is above EMA20, and the price is within <strong style="color:var(--text)">0.5σ of either the EMA10 or EMA20</strong> — normalised by the stock's own daily volatility so the distance is comparable across all stocks regardless of price or vol level.
+                <div style="padding:8px 16px 6px;font-size:11px;color:var(--muted);border-left:3px solid var(--accent2);margin-bottom:10px;">
+                    Uptrend structure intact (EMA cascade) + price pulling back within <strong style="color:var(--text)">N σ</strong> of EMA10 or EMA20 — σ normalised per stock so distance is comparable across all names.
                 </div>
                 <!-- Table -->
                 <div class="table-wrap">
@@ -2310,7 +2308,7 @@
                 </div>
             </div>
             <div style="margin-bottom:18px;background:var(--bg2);border:1px solid var(--border);border-top:2px solid #10b981;padding:14px 18px;">
-                <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.12em;color:#10b981;margin-bottom:10px;">EMA 10 / 20 — PULLBACKS MA</div>
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.12em;color:#10b981;margin-bottom:10px;">EMA 10 / 20 — PULLBACKS ST MA</div>
                 <div style="font-size:13px;line-height:1.8;color:var(--muted);border-left:2px solid #10b981;padding-left:10px;margin-bottom:12px;">
                     O'Neil documented that the greatest winners repeatedly find support at their <strong style="color:var(--text)">10-week moving average</strong> during their major advances,
                     offering successive low-risk re-entry opportunities. The bullish MA cascade (EMA20 &gt; SMA50 &gt; SMA200) confirms institutions are in accumulation mode.
@@ -2334,7 +2332,7 @@
                 </div>
             </div>
             <div style="margin-bottom:18px;background:var(--bg2);border:1px solid var(--border);border-top:2px solid #f59e0b;padding:14px 18px;">
-                <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.12em;color:#f59e0b;margin-bottom:10px;">BOUNCES MA (SMA 50 / 100 / 200)</div>
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.12em;color:#f59e0b;margin-bottom:10px;">BOUNCES LT MA (SMA 50 / 100 / 200)</div>
                 
                 <div style="font-size:13px;line-height:1.8;color:var(--muted);border-left:2px solid #f59e0b;padding-left:10px;margin-bottom:12px;">
                     SMA 50, 100 and 200 are widely watched by institutions. When a strong stock pulls back to one of these levels, professional buyers who missed the initial breakout use them to accumulate. O'Neil documented how clean touches with light volume and quick recoveries signal institutional demand absorbing supply.
@@ -3656,7 +3654,7 @@
         });
     }
 
-    // ── PULLBACKS MA ─────────────────────────────────────────────
+    // ── PULLBACKS ST MA ─────────────────────────────────────────────
     let _maSortCol = 'pb_min_s', _maSortDir = 'asc';
 
     function maSort(col) {
@@ -3672,7 +3670,7 @@
         const sigmaMax = parseFloat(document.getElementById('pbSigma')?.value   || 0.5);
 
         // Update criteria display
-        ['pbCritPct4w','pbCritPct6m','pbCritPct12m'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = pctMin; });
+        ['pbCritPct4w'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = pctMin; });
         const sc = document.getElementById('pbCritSigma'); if (sc) sc.textContent = sigmaMax;
 
         const rows = [];
@@ -3791,7 +3789,7 @@
         }).join('');
     }
 
-    // ── BOUNCES MA ──────────────────────────────────────────────
+    // ── BOUNCES LT MA ──────────────────────────────────────────────
     let bounceMaN = 50;
     let bounceSortCol = 'bounce_dist_s', bounceSortDir = 'asc';
 
@@ -4534,7 +4532,8 @@
         let spyLabel = 'SPY';
         if (!spyPrices) {
             // Compute equal-weight index from all tickers
-            const maxLen = Math.max(...Object.values(rawPrices).map(p => p.length));
+            let maxLen = 0;
+            Object.values(rawPrices).forEach(p => { if (p.length > maxLen) maxLen = p.length; });
             spyPrices = [];
             for (let i = 0; i < maxLen; i++) {
                 const vals = Object.values(rawPrices).map(p => p[i]).filter(v => v != null && v > 0);
@@ -4809,40 +4808,37 @@
             const avgMoveL = cntMoveL > 0 ? sumMoveL/cntMoveL : null;
             const spread   = (avgMoveL != null && spyMove != null) ? avgMoveL - spyMove : null;
 
-            // Panel 6: # tickers ≥+4% and ≤-4% daily (all tickers)
-            let up4=0, dn4=0;
+            // Panels 6,7,8 — merged into single pass (was 3 separate forEach)
+            let up4=0, dn4=0, up25q=0, dn25q=0, sumDist50=0, cntDist50=0;
             allData.forEach(d => {
                 const p = rawPrices[d.ticker];
-                if (!p || p.length <= i+1) return;
-                const c0=p[i], c1=p[i+1];
-                if (!c0||!c1||c1===0) return;
-                const mv = (c0/c1-1)*100;
-                if (mv >= 4)  up4++;
-                if (mv <= -4) dn4++;
-            });
-
-            // Panel 7: # tickers ≥+25% and ≤-25% over 13 weeks (65 sessions)
-            let up25q=0, dn25q=0;
-            allData.forEach(d => {
-                const p = rawPrices[d.ticker];
-                if (!p || p.length <= i+65) return;
-                const c0=p[i], c65=p[i+65];
-                if (!c0||!c65||c65===0) return;
-                const ret13w = (c0/c65-1)*100;
-                if (ret13w >= 25) up25q++;
-                if (ret13w <= -25) dn25q++;
-            });
-
-            // Panel 8: avg distance to SMA50
-            let sumDist50=0, cntDist50=0;
-            allData.forEach(d => {
-                if (!leaderTickers.has(d.ticker)) return;
-                const p = rawPrices[d.ticker];
-                if (!p || p.length <= i+50) return;
-                const c0 = p[i];
-                if (!c0) return;
-                const sma50 = p.slice(i, i+50).reduce((s,v)=>s+(v||0),0)/50;
-                if (sma50 > 0) { sumDist50 += (c0/sma50-1)*100; cntDist50++; }
+                if (!p) return;
+                // Panel 6: ±4% daily
+                if (p.length > i+1) {
+                    const c0=p[i], c1=p[i+1];
+                    if (c0 && c1 && c1 !== 0) {
+                        const mv = (c0/c1-1)*100;
+                        if (mv >= 4) up4++; if (mv <= -4) dn4++;
+                    }
+                }
+                // Panel 7: ±25% 13W
+                if (p.length > i+65) {
+                    const c0=p[i], c65=p[i+65];
+                    if (c0 && c65 && c65 !== 0) {
+                        const r13 = (c0/c65-1)*100;
+                        if (r13 >= 25) up25q++; if (r13 <= -25) dn25q++;
+                    }
+                }
+                // Panel 8: dist to SMA50 (leaders only)
+                if (leaderTickers.has(d.ticker) && p.length > i+50) {
+                    const c0 = p[i];
+                    if (c0) {
+                        let s50 = 0;
+                        for (let _k=i; _k<i+50; _k++) s50 += (p[_k]||0);
+                        const sma50 = s50/50;
+                        if (sma50 > 0) { sumDist50 += (c0/sma50-1)*100; cntDist50++; }
+                    }
+                }
             });
 
             raw.push({
@@ -5006,13 +5002,19 @@
         const laggards = new Set(allData.filter(d => (d.pct_6m ?? 0) < 30).map(d => d.ticker));
 
         const rows = [];
+        // Pre-compute per-ticker flags once (outside day loop)
+        const _tickers = allData.map(d => ({
+            prices: rawPrices[d.ticker] || null,
+            isLeader:  leaders.has(d.ticker),
+            isLaggard: laggards.has(d.ticker),
+        }));
+
         for (let i = 0; i < Math.min(window60, priceDates.length - 1); i++) {
             let aAdv=0, aDec=0, aUp2=0, aDn2=0, aUp4=0, aDn4=0, aTotal=0;
             let lAdv=0, lDec=0, lUp2=0, lDn2=0, lUp4=0, lDn4=0, lTotal=0;
             let lagAdv=0, lagDec=0, lagUp2=0, lagDn2=0, lagUp4=0, lagDn4=0, lagTotal=0;
 
-            allData.forEach(d => {
-                const p = rawPrices[d.ticker];
+            _tickers.forEach(({ prices: p, isLeader, isLaggard }) => {
                 if (!p || p.length <= i + 1) return;
                 const c0 = p[i], c1 = p[i+1];
                 if (!c0 || !c1 || c1 === 0) return;
@@ -5024,13 +5026,13 @@
                 if (mv >=  thresh) aUp2++; if (mv <= -thresh) aDn2++;
                 if (mv >=  thresh*2) aUp4++; if (mv <= -thresh*2) aDn4++;
 
-                if (leaders.has(d.ticker)) {
+                if (isLeader) {
                     lTotal++;
                     if (up) lAdv++; else lDec++;
                     if (mv >=  thresh) lUp2++; if (mv <= -thresh) lDn2++;
                     if (mv >=  thresh*2) lUp4++; if (mv <= -thresh*2) lDn4++;
                 }
-                if (laggards.has(d.ticker)) {
+                if (isLaggard) {
                     lagTotal++;
                     if (up) lagAdv++; else lagDec++;
                     if (mv >=  thresh) lagUp2++; if (mv <= -thresh) lagDn2++;
@@ -8579,7 +8581,9 @@ Write a thorough 7-section market analysis.`;
             const ma50_dist = ma50v ? Math.round((price / ma50v - 1) * 1000) / 10 : null;
 
             // 52W high
-            const high52 = Math.max(...p.slice(0, Math.min(252, p.length)));
+            const _sl252 = p.slice(0, Math.min(252, p.length));
+            let high52 = -Infinity;
+            for (let _k = 0; _k < _sl252.length; _k++) { if (_sl252[_k] > high52) high52 = _sl252[_k]; }
             const dist52w = high52 > 0 ? Math.round((price / high52 - 1) * 1000) / 10 : null;
 
             // 52W high filter (adjustable)
@@ -8596,8 +8600,8 @@ Write a thorough 7-section market analysis.`;
                     continue;
                 const slice = p.slice(0, days); // p[0]=most recent
 
-                const high = Math.max(...slice);
-                const low = Math.min(...slice);
+                let high = -Infinity, low = Infinity;
+                for (let _j = 0; _j < slice.length; _j++) { if (slice[_j] > high) high = slice[_j]; if (slice[_j] < low) low = slice[_j]; }
                 if (high <= 0 || low <= 0)
                     continue;
 
