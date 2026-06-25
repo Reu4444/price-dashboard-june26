@@ -51,7 +51,7 @@
     }
 
     header {
-        padding: 14px 24px;
+        padding: 6px 24px;
         border-bottom: 1px solid var(--border);
         display: flex;
         align-items: center;
@@ -229,8 +229,8 @@
     .progress-wrap {
         background: var(--bg2);
         border: 1px solid var(--border);
-        padding: 16px;
-        margin-bottom: 16px;
+        padding: 6px 16px;
+        margin-bottom: 10px;
         display: none;
     }
 
@@ -697,7 +697,7 @@
                 LIVE
             </span>
             <span id="clock">--:--:--</span>
-            <span id="nextRefresh" style="font-size:9px;color:var(--muted)">next refresh: --:--</span>
+
         </div>
     </header>
 
@@ -736,14 +736,14 @@
             <input class="filter-input" id="mktcapFilter" placeholder="ex: 10 ($B)" oninput="renderActiveDebounced()" style="display:none;width:80px;">
             <span style="font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">RS ≥</span>
             <input class="filter-input" id="rsFilter" placeholder="ex: 60" oninput="renderActiveDebounced()" style="display:none;width:60px;" title="Relative Strength: tous les PCT prix ≥ seuil">
+            <span style="font-size:10px;color:#f59e0b;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">52W H ≥</span>
+            <input class="filter-input" id="high52Filter" placeholder="ex: -10" oninput="renderActiveDebounced()" style="display:none;width:55px;" title="Distance 52W High ≥ seuil (%)">
+            <span style="font-size:10px;color:#10b981;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">MA20 ≤</span>
+            <input class="filter-input" id="ma20Filter" placeholder="ex: 0" oninput="renderActiveDebounced()" style="display:none;width:55px;" title="Distance MA20 ≥ seuil (%)">
             <span style="font-size:10px;color:var(--accent2);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--muted);">EPS ≥</span>
             <input class="filter-input" id="epsFilter" placeholder="ex: 10" oninput="renderActiveDebounced()" style="display:none;width:55px;" title="pct_eps_cq ≥ seuil">
             <span style="font-size:10px;color:#f59e0b;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--muted);">Sales ≥</span>
             <input class="filter-input" id="salesFilter" placeholder="ex: 10" oninput="renderActiveDebounced()" style="display:none;width:55px;" title="pct_sales_cq ≥ seuil">
-            <span style="font-size:10px;color:#10b981;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">MA20 ≤</span>
-            <input class="filter-input" id="ma20Filter" placeholder="ex: 0" oninput="renderActiveDebounced()" style="display:none;width:55px;" title="Distance MA20 ≥ seuil (%)">
-            <span style="font-size:10px;color:#f59e0b;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">52W H ≥</span>
-            <input class="filter-input" id="high52Filter" placeholder="ex: -10" oninput="renderActiveDebounced()" style="display:none;width:55px;" title="Distance 52W High ≥ seuil (%)">
             <span class="last-update" id="lastUpdate"></span>
             <span class="results-count" id="resultsCount"></span>
         </div>
@@ -843,9 +843,9 @@
                                 <th style="cursor:pointer" class="th-pct" data-sort-col="pct_4w" data-sort-tab="price" onclick="setSortCol('pct_4w','price')">PCT 4W</th>
                                 <th style="cursor:pointer" class="th-pct" data-sort-col="pct_6m" data-sort-tab="price" onclick="setSortCol('pct_6m','price')">PCT 6M</th>
                                 <th style="cursor:pointer" class="th-pct" data-sort-col="pct_12m" data-sort-tab="price" onclick="setSortCol('pct_12m','price')">PCT 12M</th>
-                                <th style="cursor:pointer" class="th-pct" data-sort-col="rs_ibd" data-sort-tab="price" onclick="setSortCol('rs_ibd','price')" style="border-left:1px solid var(--border2);border-right:1px solid var(--border2)">RS IBD</th>
+                                <th style="cursor:pointer" class="th-pct" data-sort-col="rs_ibd" data-sort-tab="price" onclick="setSortCol('rs_ibd','price')" style="border-left:1px solid var(--border2);">RS IBD</th>
                                 <th style="cursor:pointer" class="th-pct" data-sort-col="ma20_dist" data-sort-tab="price" onclick="setSortCol('ma20_dist','price')" style="color:#10b981">vs MA20</th>
-                                <th style="cursor:pointer" class="th-pct" data-sort-col="high52_dist" data-sort-tab="price" onclick="setSortCol('high52_dist','price')" style="border-right:1px solid var(--border2);color:#f59e0b">vs 52W H</th>
+                                <th style="cursor:pointer" class="th-pct" data-sort-col="high52_dist" data-sort-tab="price" onclick="setSortCol('high52_dist','price')" style=";color:#f59e0b">vs 52W H</th>
                             </tr>
                         </thead>
                         <tbody id="priceBody"></tbody>
@@ -898,7 +898,7 @@
                                 <th style="cursor:pointer;text-align:center;border-left:1px solid var(--border2)" class="th-pct" onclick="vaSort('pct_1w')">1W</th>
                                 <th style="cursor:pointer;text-align:center" class="th-pct" onclick="vaSort('pct_4w')">4W</th>
                                 <th style="cursor:pointer;text-align:center" class="th-pct" onclick="vaSort('pct_6m')">6M</th>
-                                <th style="cursor:pointer;text-align:center;border-right:1px solid var(--border2)" class="th-pct" onclick="vaSort('pct_12m')">12M</th>
+                                <th style="cursor:pointer;text-align:center;" class="th-pct" onclick="vaSort('pct_12m')">12M</th>
                                 <th style="cursor:pointer;text-align:center;border-left:1px solid var(--border2);color:#0ea5e9" class="th-pct" onclick="vaSort('va_1w')">VA 1W</th>
                                 <th style="cursor:pointer;text-align:center;color:#0ea5e9" class="th-pct" onclick="vaSort('va_4w')">VA 4W</th>
                                 <th style="cursor:pointer;text-align:center;color:#0ea5e9" class="th-pct" onclick="vaSort('va_6m')">VA 6M</th>
@@ -942,9 +942,10 @@
                             <th style="cursor:pointer;" onclick="bounceSort('sector')">SECTOR</th>
                             <th style="cursor:pointer;" onclick="bounceSort('group')">GROUP</th>
                             <th class="th-pct" style="cursor:pointer;" onclick="bounceSort('mktcap')">MKT CAP</th>
-                            <th class="th-pct" style="cursor:pointer;border-left:1px solid var(--border2);color:#6d28d9;" onclick="bounceSort('rs_ibd')">RS IBD</th>
+                            <th class="th-pct" style="cursor:pointer;border-left:1px solid var(--border2);" onclick="bounceSort('pct_4w')">PCT 4W</th>
                             <th class="th-pct" style="cursor:pointer;" onclick="bounceSort('pct_6m')">PCT 6M</th>
                             <th class="th-pct" style="cursor:pointer;" onclick="bounceSort('pct_12m')">PCT 12M</th>
+                            <th class="th-pct" style="cursor:pointer;border-left:1px solid var(--border2);color:#6d28d9;" onclick="bounceSort('rs_ibd')">RS IBD</th>
                             <th class="th-pct" style="cursor:pointer;border-left:1px solid var(--border2);color:#f59e0b;" onclick="bounceSort('bounce_dist_s')">DIST (σ)</th>
                         </tr></thead>
                         <tbody id="bounceBody"></tbody>
@@ -1095,9 +1096,9 @@
                                 <th style="cursor:pointer;text-align:center;width:68px" class="th-pct" onclick="rowSort('pct_4w')">PCT 4W</th>
                                 <th style="cursor:pointer;text-align:center;width:68px" class="th-pct" onclick="rowSort('pct_6m')">PCT 6M</th>
                                 <th style="cursor:pointer;text-align:center;width:68px" class="th-pct" onclick="rowSort('pct_12m')">PCT 12M</th>
-                                <th style="cursor:pointer;text-align:center;border-left:1px solid var(--border2);border-right:1px solid var(--border2);width:68px;color:#6d28d9" class="th-pct" onclick="rowSort('rs_ibd')">RS IBD</th>
+                                <th style="cursor:pointer;text-align:center;border-left:1px solid var(--border2);;width:68px;color:#6d28d9" class="th-pct" onclick="rowSort('rs_ibd')">RS IBD</th>
                                 <th style="cursor:pointer;text-align:center;width:68px;color:#10b981" class="th-pct" onclick="rowSort('ma20_dist')">vs MA20</th>
-                                <th style="cursor:pointer;text-align:center;border-right:1px solid var(--border2);width:68px;color:#f59e0b" class="th-pct" onclick="rowSort('high52_dist')">vs 52W H</th>
+                                <th style="cursor:pointer;text-align:center;;width:68px;color:#f59e0b" class="th-pct" onclick="rowSort('high52_dist')">vs 52W H</th>
                             </tr>
                         </thead>
                         <tbody id="rowBody"></tbody>
@@ -1319,9 +1320,9 @@
                                 <th style="cursor:pointer;text-align:center;width:68px" class="th-pct" onclick="rowSort('pct_4w')">PCT 4W</th>
                                 <th style="cursor:pointer;text-align:center;width:68px" class="th-pct" onclick="rowSort('pct_6m')">PCT 6M</th>
                                 <th style="cursor:pointer;text-align:center;width:68px" class="th-pct" onclick="rowSort('pct_12m')">PCT 12M</th>
-                                <th style="cursor:pointer;text-align:center;border-left:1px solid var(--border2);border-right:1px solid var(--border2);width:68px;color:#6d28d9" class="th-pct" onclick="rowSort('rs_ibd')">RS IBD</th>
+                                <th style="cursor:pointer;text-align:center;border-left:1px solid var(--border2);;width:68px;color:#6d28d9" class="th-pct" onclick="rowSort('rs_ibd')">RS IBD</th>
                                 <th style="cursor:pointer;text-align:center;width:68px;color:#10b981" class="th-pct" onclick="rowSort('ma20_dist')">vs MA20</th>
-                                <th style="cursor:pointer;text-align:center;border-right:1px solid var(--border2);width:68px;color:#f59e0b" class="th-pct" onclick="rowSort('high52_dist')">vs 52W H</th>
+                                <th style="cursor:pointer;text-align:center;;width:68px;color:#f59e0b" class="th-pct" onclick="rowSort('high52_dist')">vs 52W H</th>
                             </tr>
                         </thead>
                         <tbody id="rowBody"></tbody>
@@ -1636,7 +1637,7 @@
                     <table id="rrgDrillTable" style="table-layout:fixed;width:100%">
                         <thead>
                             <tr>
-                                <th style="width:90px;border-right:1px solid var(--border2)">ROTATION</th>
+                                <th style="width:90px;">ROTATION</th>
                                 <th style="width:22px;padding:4px 3px">★</th>
                                 <th style="width:22px;padding:4px 3px">TV</th>
                                 <th style="width:58px">TICKER</th>
@@ -2437,7 +2438,7 @@
     let sortDir = 'desc';
     let currentDrillRow = null;
 
-    let nextRefreshTime = Date.now() + 15 * 60 * 1000;
+
 
     setInterval(() => {
         const now = new Date();
@@ -2445,13 +2446,7 @@
         now.toLocaleTimeString('en-US', {
             hour12: false
         });
-        // Countdown to next refresh
-        const remaining = Math.max(0, nextRefreshTime - Date.now());
-        const m = Math.floor(remaining / 60000);
-        const s = Math.floor((remaining % 60000) / 1000);
-        document.getElementById('nextRefresh').textContent =
-        `next refresh: ${m}:${s.toString().padStart(2, '0')}`;
-    }, 1000);
+, 1000);
 
     // ── PROXY ────────────────────────────────────────────────────
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxqVzEtKgrjf8GXQS1jePSsagDeIMHPOH-DsQycdtCL7Go1eZiCQ8GsCweo9xw-sss/exec';
@@ -3762,14 +3757,11 @@
         };
 
         body.innerHTML = rows.slice(0, 300).map(d => {
-            const pct4wC  = (d.pct_4w??0)  >= pctMin ? 'var(--up)' : 'var(--down)';
-            const pct6mC  = (d.pct_6m??0)  >= pctMin ? 'var(--up)' : 'var(--down)';
-            const pct12mC = (d.pct_12m??0) >= pctMin ? 'var(--up)' : 'var(--down)';
             return `<tr>
                 ${infoTds(d)}
-                <td class="td-pct" style="border-left:1px solid var(--border2);color:${pct4wC}">${d.pct_4w??'—'}</td>
-                <td class="td-pct" style="color:${pct6mC}">${d.pct_6m??'—'}</td>
-                <td class="td-pct" style="color:${pct12mC}">${d.pct_12m??'—'}</td>
+                <td class="td-pct" style="border-left:1px solid var(--border2);">${pctCell(d.pct_4w)}</td>
+                <td class="td-pct">${pctCell(d.pct_6m)}</td>
+                <td class="td-pct">${pctCell(d.pct_12m)}</td>
                 <td class="td-pct" style="border-left:1px solid var(--border2);color:#6d28d9">${d.rs_ibd??'—'}</td>
                 <td class="td-pct" style="border-left:1px solid var(--border2);color:#0ea5e9">${d.pb_dist10_s}</td>
                 <td class="td-pct" style="color:#10b981">${d.pb_dist20_s}</td>
@@ -3849,9 +3841,10 @@
         rows.forEach(d => {
             const tr = document.createElement('tr');
             tr.innerHTML = infoTds(d) +
-                `<td class="td-pct" style="border-left:1px solid var(--border2)">${pctCell(d.rs_ibd)}</td>
+                `<td class="td-pct" style="border-left:1px solid var(--border2)">${pctCell(d.pct_4w)}</td>
                  <td class="td-pct">${pctCell(d.pct_6m)}</td>
                  <td class="td-pct">${pctCell(d.pct_12m)}</td>
+                 <td class="td-pct" style="border-left:1px solid var(--border2)">${pctCell(d.rs_ibd)}</td>
                  <td class="td-pct" style="border-left:1px solid var(--border2)">${distCell(d.bounce_dist_s)}</td>`;
             tbody.appendChild(tr);
         });
@@ -5039,7 +5032,7 @@
         let html = `<table style="border-collapse:collapse;width:100%;font-family:'IBM Plex Mono',monospace;border:1px solid var(--border);">
           <thead>
             <tr>
-                <th rowspan="2" style="${thL}min-width:90px;border-right:1px solid var(--border2);">DATE</th>
+                <th rowspan="2" style="${thL}min-width:90px;;">DATE</th>
                 <th colspan="3" style="${thB}border-bottom:none;">All Stocks</th>
                 <th colspan="3" style="${thB}border-bottom:none;color:#15803d;border-left:1px solid var(--border2);">Leaders</th>
                 <th colspan="3" style="${thB}border-bottom:none;color:#b91c1c;border-left:1px solid var(--border2);">Laggards</th>
@@ -5057,7 +5050,7 @@
             const lRatio = r.rf(r.lUp2, r.lDn2);
             const lagRatio = r.rf(r.lagUp2, r.lagDn2);
             html += `<tr style="${bg}">
-                <td style="${tdD};border-left:1px solid var(--border);border-right:1px solid var(--border2);">${r.date}</td>
+                <td style="${tdD};border-left:1px solid var(--border);;">${r.date}</td>
                 <td style="${td}color:var(--up);">${r.aUp2}</td>
                 <td style="${td}color:var(--down);">${r.aDn2}</td>
                 <td style="${td}color:${r.rc(r.aUp2,r.aDn2)};font-weight:600;">${aRatio}</td>
@@ -5066,7 +5059,7 @@
                 <td style="${td}color:${r.rc(r.lUp2,r.lDn2)};font-weight:600;">${lRatio}</td>
                 <td style="${td}color:var(--up);border-left:1px solid var(--border2);">${r.lagUp2}</td>
                 <td style="${td}color:var(--down);">${r.lagDn2}</td>
-                <td style="${td}color:${r.rc(r.lagUp2,r.lagDn2)};font-weight:600;border-right:1px solid var(--border);">${lagRatio}</td>
+                <td style="${td}color:${r.rc(r.lagUp2,r.lagDn2)};font-weight:600;;">${lagRatio}</td>
             </tr>`;
         });
 
@@ -5494,9 +5487,9 @@ Write a thorough 7-section market analysis.`;
     <td class="td-pct">${pctCell(d.pct_4w)}</td>
     <td class="td-pct">${pctCell(d.pct_6m)}</td>
     <td class="td-pct">${pctCell(d.pct_12m)}</td>
-    <td class="td-pct" style="border-left:1px solid var(--border2);border-right:1px solid var(--border2)">${pctCell(d.rs_ibd)}</td>
+    <td class="td-pct" style="border-left:1px solid var(--border2);">${pctCell(d.rs_ibd)}</td>
     <td class="td-pct" style="border-left:1px solid var(--border2)">${distCell(d.ma20_dist)}</td>
-    <td class="td-pct" style="border-right:1px solid var(--border2)">${distCell52w(d.high52_dist)}</td>`;
+    <td class="td-pct" style="">${distCell52w(d.high52_dist)}</td>`;
         return tr;
     }
 
@@ -5630,9 +5623,9 @@ Write a thorough 7-section market analysis.`;
         <th style="cursor:pointer" class="th-pct" data-sort-col="pct_4w" data-sort-tab="price" onclick="setSortCol('pct_4w','price')">PCT 4W</th>
         <th style="cursor:pointer" class="th-pct" data-sort-col="pct_6m" data-sort-tab="price" onclick="setSortCol('pct_6m','price')">PCT 6M</th>
         <th style="cursor:pointer" class="th-pct" data-sort-col="pct_12m" data-sort-tab="price" onclick="setSortCol('pct_12m','price')">PCT 12M</th>
-        <th class="th-pct" data-sort-col="rs_ibd" data-sort-tab="price" onclick="setSortCol('rs_ibd','price')" style="cursor:pointer;border-left:1px solid var(--border2);border-right:1px solid var(--border2);color:#6d28d9">RS IBD</th>
+        <th class="th-pct" data-sort-col="rs_ibd" data-sort-tab="price" onclick="setSortCol('rs_ibd','price')" style="cursor:pointer;border-left:1px solid var(--border2);;color:#6d28d9">RS IBD</th>
         <th class="th-pct" data-sort-col="ma20_dist" data-sort-tab="price" onclick="setSortCol('ma20_dist','price')" style="cursor:pointer;border-left:1px solid var(--border2);color:#10b981">vs MA20</th>
-        <th class="th-pct" data-sort-col="high52_dist" data-sort-tab="price" onclick="setSortCol('high52_dist','price')" style="cursor:pointer;border-right:1px solid var(--border2);color:#f59e0b">vs 52W H</th>
+        <th class="th-pct" data-sort-col="high52_dist" data-sort-tab="price" onclick="setSortCol('high52_dist','price')" style="cursor:pointer;;color:#f59e0b">vs 52W H</th>
       </tr>`
 
 
@@ -7043,10 +7036,7 @@ Write a thorough 7-section market analysis.`;
         initCtxMenu();
         updateWatchTab();
         loadWithCache().catch(e => console.warn('Auto-load failed:', e));
-        // Auto-refresh toutes les 15 minutes — only if cache is stale
-        setInterval(() => {
-            loadWithCache(false).catch(e => console.warn('Auto-refresh failed:', e));
-        }, 15 * 60 * 1000);
+
     });
 
     // Auto-refresh at 23:00 EST every day
@@ -8038,7 +8028,7 @@ Write a thorough 7-section market analysis.`;
             const inW = watchlist.includes(d.ticker);
             const tr = document.createElement('tr');
             tr.innerHTML = `
-      <td style="border-right:1px solid var(--border2);padding:6px 7px">
+      <td style=";padding:6px 7px">
         <span style="background:${
             q.color}18;color:${q.color};border:1px solid ${q.color}66;font-size:9px;font-weight:700;padding:2px 7px">${q.name}</span>
       </td>
@@ -8384,7 +8374,7 @@ Write a thorough 7-section market analysis.`;
         ].filter(s => s.val != null);
 
         document.getElementById('tpStats').innerHTML = stats.map((s, i) =>
-            `<div style="flex:1;padding:8px 10px;${i < stats.length-1 ? 'border-right:1px solid var(--border);' : ''}text-align:center;">
+            `<div style="flex:1;padding:8px 10px;${i < stats.length-1 ? ';' : ''}text-align:center;">
                 <div style="font-size:7px;color:var(--muted);letter-spacing:.1em;margin-bottom:3px;">${s.label}</div>
                 <div style="font-size:13px;font-weight:700;color:${s.color};font-family:'IBM Plex Mono',monospace;">${s.val}</div>
             </div>`
