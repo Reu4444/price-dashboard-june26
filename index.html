@@ -2169,47 +2169,34 @@
                     <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
                     <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">MOVE % ≥</span>
                     <input id="dailyMoveMin" class="filter-input" type="number" value="" placeholder="ex: 3" style="width:60px;" oninput="renderDaily()">
-                    <span id="dailyStatus" style="font-size:10px;color:var(--muted);margin-left:auto;font-family:'IBM Plex Mono',monospace;"></span>
-                </div>
-
-                <!-- Stat bar -->
-                <div id="dailyStatBar" style="display:none;margin-bottom:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text);display:flex;gap:32px;flex-wrap:wrap;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
-                    <div>
-                        <span style="font-size:9px;color:var(--muted);letter-spacing:.08em;">ALL</span>
-                        <span id="dailyStatN" style="font-size:9px;color:var(--muted);margin-right:10px;"></span>
-                        <span style="font-size:9px;color:var(--muted);">ADV/DEC </span><span id="dailyStatRatio" style="font-size:13px;margin-right:10px;">—</span>
-                        <span style="font-size:9px;color:var(--muted);">±2% </span><span id="dailyStatRatio2" style="font-size:13px;margin-right:10px;">—</span>
-                        <span style="font-size:9px;color:var(--muted);">±4% </span><span id="dailyStatRatio4" style="font-size:13px;margin-right:16px;">—</span>
-                        <span style="font-size:9px;color:var(--muted);">(</span><span id="dailyStatCountAll" style="font-size:12px;">—</span>
-                        <span style="font-size:9px;color:var(--muted);margin-left:4px;">|</span>
-                        <span id="dailyStatCount2All" style="font-size:12px;margin-left:4px;">—</span>
-                        <span style="font-size:9px;color:var(--muted);margin-left:4px;">|</span>
-                        <span id="dailyStatCount4All" style="font-size:12px;margin-left:4px;">—</span><span style="font-size:9px;color:var(--muted);">)</span>
+                    <!-- Stats inline in controls bar -->
+                    <div id="dailyStatBar" style="display:none;margin-left:auto;font-family:'IBM Plex Mono',monospace;display:flex;flex-direction:column;gap:2px;align-items:flex-end;">
+                        <div style="white-space:nowrap;font-size:11px;">
+                            <span style="font-size:9px;color:var(--muted);font-weight:600;">ALL</span>
+                            <span id="dailyStatN" style="font-size:9px;color:var(--muted);margin-right:10px;"></span>
+                            <span style="font-size:9px;color:var(--muted);">ADV/DEC </span><span id="dailyStatRatio" style="font-size:13px;margin-right:12px;">—</span>
+                            <span style="font-size:9px;color:var(--muted);">±2% </span><span id="dailyStatRatio2" style="font-size:13px;margin-right:12px;">—</span>
+                            <span style="font-size:9px;color:var(--muted);">±4% </span><span id="dailyStatRatio4" style="font-size:13px;margin-right:16px;">—</span>
+                            <span id="dailyStatCountAll" style="font-size:11px;color:var(--muted);">—</span>
+                        </div>
+                        <div style="white-space:nowrap;font-size:11px;">
+                            <span style="font-size:9px;color:#15803d;font-weight:600;">LEADERS</span>
+                            <span id="dailyStatLN" style="font-size:9px;color:var(--muted);margin-right:10px;"></span>
+                            <span style="font-size:9px;color:var(--muted);">ADV/DEC </span><span id="dailyStatLRatio" style="font-size:13px;margin-right:12px;">—</span>
+                            <span style="font-size:9px;color:var(--muted);">±2% </span><span id="dailyStatLRatio2" style="font-size:13px;margin-right:12px;">—</span>
+                            <span style="font-size:9px;color:var(--muted);">±4% </span><span id="dailyStatLRatio4" style="font-size:13px;margin-right:16px;">—</span>
+                            <span id="dailyStatCountL" style="font-size:11px;color:var(--muted);">—</span>
+                        </div>
+                        <div style="white-space:nowrap;font-size:11px;">
+                            <span style="font-size:9px;color:#b91c1c;font-weight:600;">LAGGARDS</span>
+                            <span id="dailyStatLagN" style="font-size:9px;color:var(--muted);margin-right:10px;"></span>
+                            <span style="font-size:9px;color:var(--muted);">ADV/DEC </span><span id="dailyStatLagRatio" style="font-size:13px;margin-right:12px;">—</span>
+                            <span style="font-size:9px;color:var(--muted);">±2% </span><span id="dailyStatLagRatio2" style="font-size:13px;margin-right:12px;">—</span>
+                            <span style="font-size:9px;color:var(--muted);">±4% </span><span id="dailyStatLagRatio4" style="font-size:13px;margin-right:16px;">—</span>
+                            <span id="dailyStatCountLag" style="font-size:11px;color:var(--muted);">—</span>
+                        </div>
                     </div>
-                    <div>
-                        <span style="font-size:9px;color:#15803d;letter-spacing:.08em;">LEADERS</span>
-                        <span id="dailyStatLN" style="font-size:9px;color:var(--muted);margin-right:10px;"></span>
-                        <span style="font-size:9px;color:var(--muted);">ADV/DEC </span><span id="dailyStatLRatio" style="font-size:13px;margin-right:10px;">—</span>
-                        <span style="font-size:9px;color:var(--muted);">±2% </span><span id="dailyStatLRatio2" style="font-size:13px;margin-right:10px;">—</span>
-                        <span style="font-size:9px;color:var(--muted);">±4% </span><span id="dailyStatLRatio4" style="font-size:13px;margin-right:16px;">—</span>
-                        <span style="font-size:9px;color:var(--muted);">(</span><span id="dailyStatCountL" style="font-size:12px;">—</span>
-                        <span style="font-size:9px;color:var(--muted);margin-left:4px;">|</span>
-                        <span id="dailyStatCount2L" style="font-size:12px;margin-left:4px;">—</span>
-                        <span style="font-size:9px;color:var(--muted);margin-left:4px;">|</span>
-                        <span id="dailyStatCount4L" style="font-size:12px;margin-left:4px;">—</span><span style="font-size:9px;color:var(--muted);">)</span>
-                    </div>
-                    <div>
-                        <span style="font-size:9px;color:#b91c1c;letter-spacing:.08em;">LAGGARDS</span>
-                        <span id="dailyStatLagN" style="font-size:9px;color:var(--muted);margin-right:10px;"></span>
-                        <span style="font-size:9px;color:var(--muted);">ADV/DEC </span><span id="dailyStatLagRatio" style="font-size:13px;margin-right:10px;">—</span>
-                        <span style="font-size:9px;color:var(--muted);">±2% </span><span id="dailyStatLagRatio2" style="font-size:13px;margin-right:10px;">—</span>
-                        <span style="font-size:9px;color:var(--muted);">±4% </span><span id="dailyStatLagRatio4" style="font-size:13px;margin-right:16px;">—</span>
-                        <span style="font-size:9px;color:var(--muted);">(</span><span id="dailyStatCountLag" style="font-size:12px;">—</span>
-                        <span style="font-size:9px;color:var(--muted);margin-left:4px;">|</span>
-                        <span id="dailyStatCount2Lag" style="font-size:12px;margin-left:4px;">—</span>
-                        <span style="font-size:9px;color:var(--muted);margin-left:4px;">|</span>
-                        <span id="dailyStatCount4Lag" style="font-size:12px;margin-left:4px;">—</span><span style="font-size:9px;color:var(--muted);">)</span>
-                    </div>
+                    <span id="dailyStatus" style="display:none;"></span>
                 </div>
 
                                 <!-- GROUPS/STOCKS toggle -->
@@ -4154,7 +4141,7 @@
         const breadthC = breadth >= 60 ? 'var(--up)' : breadth <= 40 ? 'var(--down)' : 'var(--text)';
 
         const sb = document.getElementById('dailyStatBar');
-        if (sb) sb.style.display = '';
+        if (sb) sb.style.display = 'flex';
         const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
 
         const ratioFmt = (a, b) => {
@@ -4201,19 +4188,18 @@
         set('dailyStatLagRatio4',ratioFmt(up4Lag.length,  dn4Lag.length));
 
         // Table 2: counts "X / Y"
-        const cnt = (a, b) => `<span style="color:var(--up)">${a}</span> <span style="color:var(--muted)">/</span> <span style="color:var(--down)">${b}</span>`;
-        set('dailyStatCountAll',  cnt(winners.length,  losers.length));
-        set('dailyStatCount2All', cnt(up2All.length,   dn2All.length));
-        set('dailyStatCount4All', cnt(up4All.length,   dn4All.length));
-        set('dailyStatCountL',    cnt(lWin.length,     lLos.length));
-        set('dailyStatCount2L',   cnt(up2L.length,     dn2L.length));
-        set('dailyStatCount4L',   cnt(up4L.length,     dn4L.length));
-        set('dailyStatCountLag',  cnt(lagWin.length,   lagLos.length));
-        set('dailyStatCount2Lag', cnt(up2Lag.length,   dn2Lag.length));
-        set('dailyStatCount4Lag', cnt(up4Lag.length,   dn4Lag.length));
+        const cnt = (a, b, c, d, e, f) => 
+            `<span style="color:var(--up)">${a}</span><span style="color:var(--muted);">/</span><span style="color:var(--down)">${b}</span>` +
+            ` <span style="color:var(--muted);font-size:9px;">|</span> ` +
+            `<span style="color:var(--up)">${c}</span><span style="color:var(--muted);">/</span><span style="color:var(--down)">${d}</span>` +
+            ` <span style="color:var(--muted);font-size:9px;">|</span> ` +
+            `<span style="color:var(--up)">${e}</span><span style="color:var(--muted);">/</span><span style="color:var(--down)">${f}</span>`;
+        set('dailyStatCountAll', cnt(winners.length, losers.length, up2All.length, dn2All.length, up4All.length, dn4All.length));
+        set('dailyStatCountL',   cnt(lWin.length,    lLos.length,  up2L.length,   dn2L.length,  up4L.length,  dn4L.length));
+        set('dailyStatCountLag', cnt(lagWin.length,  lagLos.length,up2Lag.length, dn2Lag.length,up4Lag.length,dn4Lag.length));
 
-        document.getElementById('dailyStatus').textContent =
-            `${rows.length} tickers${_dailyDrillGroup ? ' — ' + _dailyDrillGroup : ''}`;
+        // status now shown in controls bar count
+
 
         // Split into winners/losers for current view (with drill filter)
         const viewWinners = rows.filter(r => r.daily_move > 0).sort((a,b) => b.daily_move - a.daily_move);
