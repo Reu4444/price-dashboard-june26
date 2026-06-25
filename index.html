@@ -2391,8 +2391,6 @@
 
 
 
-        <!-- NOTES PANEL -->
-
     <script>
     const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRZbp_T7BQ8Yz9Ijf8ef7gW1UCscNlpFcqoz4tHj5NU7xk2gpkeYIfFvnEG6L0esIKdWhJvE-rWuJ3q/pub?gid=0&single=true&output=csv';
     const SHEET_DAILY_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQOBwVpGrCTGQ5013Bq28Plyat-4ecxnoIegyamAqhDjbJyyJsG-xw8pclDsCV6rT6b_TmtZ5n362Kn/pub?gid=0&single=true&output=csv';
@@ -5822,20 +5820,17 @@ Write a thorough 7-section market analysis.`;
         });
 
         function makeTable(sorted, mode) {
-            const thStyle = 'font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:5px 6px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg3);';
-            let html = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+            let html = `<table style="width:100%;border-collapse:collapse;">
       <thead><tr>
-        <th style="${
-            thStyle}width:52px">TICKER</th>
-        <th style="${thStyle}">NAME</th>
-        <th style="${thStyle}width:90px">SECTOR</th>
-        <th style="${thStyle}width:120px">GROUP</th>
-        <th style="${thStyle}width:65px;text-align:center">${mode === 'high' ? 'TO HIGH' : 'TO LOW'}</th>
-        <th style="${thStyle}width:60px;text-align:center">MKT CAP</th>
-      </tr></thead>
-      <tbody>`
-
-            ;
+        <th class="sticky-0" style="width:22px;padding:4px 3px">★</th>
+        <th class="sticky-1" style="width:22px;padding:4px 3px">TV</th>
+        <th class="sticky-2" style="cursor:pointer;">TICKER</th>
+        <th class="sticky-3" style="cursor:pointer;">NAME</th>
+        <th style="cursor:pointer;">SECTOR</th>
+        <th style="cursor:pointer;">GROUP</th>
+        <th class="th-pct">MKT CAP</th>
+        <th class="th-pct" style="border-left:1px solid var(--border);">${mode === 'high' ? 'TO HIGH' : 'TO LOW'}</th>
+      </tr></thead><tbody>`;
 
             sorted.forEach(d => {
                 const distVal = mode === 'high'
@@ -5845,15 +5840,10 @@ Write a thorough 7-section market analysis.`;
                 ? (d.dist_high >= -5 ? 'var(--up)' : d.dist_high >= -20 ? 'var(--muted)' : 'var(--down)')
                 : (d.dist_low <= 15 ? 'var(--down)' : d.dist_low <= 40 ? 'var(--muted)' : 'var(--up)');
 
-                html += `<tr style="border-bottom:0.5px solid var(--faint);background:var(--bg2)">
-        <td style="padding:6px 7px;font-weight:600;font-size:13px;color:var(--accent2);cursor:pointer" onclick="openNews('${d.ticker}','')">${d.ticker}</td>
-        <td style="padding:6px 7px;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.name || ''}</td>
-        <td style="padding:6px 7px;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.sector || ''}</td>
-        <td style="padding:6px 7px;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.group || ''}</td>
-        <td style="padding:6px 7px;text-align:center;font-size:12px;font-weight:700;color:${distColor}">${distVal}</td>
-        <td style="padding:6px 7px;text-align:center;font-size:12px;color:var(--muted)">${fmktcap(d.mktcap)}</td>
-      </tr>`
-                ;
+                html += `<tr>
+        ${infoTds(d)}
+        <td class="td-pct" style="border-left:1px solid var(--border);color:${distColor};font-weight:700;">${distVal}</td>
+      </tr>`;
             });
 
             html += `</tbody></table>`;
