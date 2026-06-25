@@ -4925,13 +4925,13 @@
             <tr>
                 <th rowspan="2" style="${thL}min-width:90px;">DATE</th>
                 <th colspan="3" style="${thB}border-bottom:none;">All Stocks</th>
-                <th colspan="3" style="${thB}border-bottom:none;color:#15803d;border-left:2px solid var(--border2);">Leaders</th>
-                <th colspan="3" style="${thB}border-bottom:none;color:#b91c1c;border-left:2px solid var(--border2);">Laggards</th>
+                <th colspan="3" style="${thB}border-bottom:none;color:#15803d;border-left:2px solid #334155;">Leaders</th>
+                <th colspan="3" style="${thB}border-bottom:none;color:#b91c1c;border-left:2px solid #334155;">Laggards</th>
             </tr>
             <tr>
                 <th style="${thB}color:var(--up);">+${thresh}%</th><th style="${thB}color:var(--down);">-${thresh}%</th><th style="${thB}">Ratio</th>
-                <th style="${thB}color:var(--up);border-left:2px solid var(--border2);">+${thresh}%</th><th style="${thB}color:var(--down);">-${thresh}%</th><th style="${thB}">Ratio</th>
-                <th style="${thB}color:var(--up);border-left:2px solid var(--border2);">+${thresh}%</th><th style="${thB}color:var(--down);">-${thresh}%</th><th style="${thB}">Ratio</th>
+                <th style="${thB}color:var(--up);border-left:2px solid #334155;">+${thresh}%</th><th style="${thB}color:var(--down);">-${thresh}%</th><th style="${thB}">Ratio</th>
+                <th style="${thB}color:var(--up);border-left:2px solid #334155;">+${thresh}%</th><th style="${thB}color:var(--down);">-${thresh}%</th><th style="${thB}">Ratio</th>
             </tr>
           </thead><tbody>`;
 
@@ -4945,10 +4945,10 @@
                 <td style="${td}color:var(--up);">${r.aUp2}</td>
                 <td style="${td}color:var(--down);">${r.aDn2}</td>
                 <td style="${td}color:${r.rc(r.aUp2,r.aDn2)};font-weight:600;">${aRatio}</td>
-                <td style="${td}color:var(--up);border-left:2px solid var(--border2);">${r.lUp2}</td>
+                <td style="${td}color:var(--up);border-left:2px solid #334155;">${r.lUp2}</td>
                 <td style="${td}color:var(--down);">${r.lDn2}</td>
                 <td style="${td}color:${r.rc(r.lUp2,r.lDn2)};font-weight:600;">${lRatio}</td>
-                <td style="${td}color:var(--up);border-left:2px solid var(--border2);">${r.lagUp2}</td>
+                <td style="${td}color:var(--up);border-left:2px solid #334155;">${r.lagUp2}</td>
                 <td style="${td}color:var(--down);">${r.lagDn2}</td>
                 <td style="${td}color:${r.rc(r.lagUp2,r.lagDn2)};font-weight:600;">${lagRatio}</td>
             </tr>`;
