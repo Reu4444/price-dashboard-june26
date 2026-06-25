@@ -2156,8 +2156,8 @@
         <div class="tab-content" id="tab-daily">
             <div style="padding:0 0 12px;">
 
-                <!-- Controls bar -->
-                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px;background:var(--bg2);border:1px solid var(--border);margin-bottom:12px;">
+                <!-- Controls bar with stats on right -->
+                <div style="display:flex;align-items:center;gap:10px;padding:8px 16px;background:var(--bg2);border:1px solid var(--border);margin-bottom:12px;">
                     <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">DATE</span>
                     <input type="date" id="dailyDate" class="filter-input" style="width:150px;cursor:pointer;" onchange="renderDaily()">
                     <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
@@ -2169,34 +2169,34 @@
                     <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
                     <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">MOVE % ≥</span>
                     <input id="dailyMoveMin" class="filter-input" type="number" value="" placeholder="ex: 3" style="width:60px;" oninput="renderDaily()">
-                    <!-- Stats inline in controls bar -->
-                    <div id="dailyStatBar" style="display:none;margin-left:auto;font-family:'IBM Plex Mono',monospace;display:flex;flex-direction:column;gap:2px;align-items:flex-end;">
-                        <div style="white-space:nowrap;font-size:11px;">
-                            <span style="font-size:9px;color:var(--muted);font-weight:600;">ALL</span>
-                            <span id="dailyStatN" style="font-size:9px;color:var(--muted);margin-right:10px;"></span>
-                            <span style="font-size:9px;color:var(--muted);">ADV/DEC </span><span id="dailyStatRatio" style="font-size:13px;margin-right:12px;">—</span>
-                            <span style="font-size:9px;color:var(--muted);">±2% </span><span id="dailyStatRatio2" style="font-size:13px;margin-right:12px;">—</span>
-                            <span style="font-size:9px;color:var(--muted);">±4% </span><span id="dailyStatRatio4" style="font-size:13px;margin-right:16px;">—</span>
-                            <span id="dailyStatCountAll" style="font-size:11px;color:var(--muted);">—</span>
-                        </div>
-                        <div style="white-space:nowrap;font-size:11px;">
-                            <span style="font-size:9px;color:#15803d;font-weight:600;">LEADERS</span>
-                            <span id="dailyStatLN" style="font-size:9px;color:var(--muted);margin-right:10px;"></span>
-                            <span style="font-size:9px;color:var(--muted);">ADV/DEC </span><span id="dailyStatLRatio" style="font-size:13px;margin-right:12px;">—</span>
-                            <span style="font-size:9px;color:var(--muted);">±2% </span><span id="dailyStatLRatio2" style="font-size:13px;margin-right:12px;">—</span>
-                            <span style="font-size:9px;color:var(--muted);">±4% </span><span id="dailyStatLRatio4" style="font-size:13px;margin-right:16px;">—</span>
-                            <span id="dailyStatCountL" style="font-size:11px;color:var(--muted);">—</span>
-                        </div>
-                        <div style="white-space:nowrap;font-size:11px;">
-                            <span style="font-size:9px;color:#b91c1c;font-weight:600;">LAGGARDS</span>
-                            <span id="dailyStatLagN" style="font-size:9px;color:var(--muted);margin-right:10px;"></span>
-                            <span style="font-size:9px;color:var(--muted);">ADV/DEC </span><span id="dailyStatLagRatio" style="font-size:13px;margin-right:12px;">—</span>
-                            <span style="font-size:9px;color:var(--muted);">±2% </span><span id="dailyStatLagRatio2" style="font-size:13px;margin-right:12px;">—</span>
-                            <span style="font-size:9px;color:var(--muted);">±4% </span><span id="dailyStatLagRatio4" style="font-size:13px;margin-right:16px;">—</span>
-                            <span id="dailyStatCountLag" style="font-size:11px;color:var(--muted);">—</span>
-                        </div>
-                    </div>
                     <span id="dailyStatus" style="display:none;"></span>
+
+                    <!-- Stats table — right side of controls bar -->
+                    <div id="dailyStatBar" style="display:none;margin-left:auto;border-left:2px solid var(--border2);padding-left:16px;">
+                        <table style="border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.4;">
+                            <tr>
+                                <td style="padding:0 10px 0 0;font-size:9px;color:var(--muted);font-weight:700;white-space:nowrap;text-align:right;">ALL <span id="dailyStatN" style="font-weight:400;"></span></td>
+                                <td style="padding:0 8px;font-size:9px;color:var(--muted);text-align:right;">ADV/DEC</td><td style="padding:0 12px 0 2px;text-align:right;min-width:36px;" id="dailyStatRatio">—</td>
+                                <td style="padding:0 8px;font-size:9px;color:var(--muted);text-align:right;">±2%</td><td style="padding:0 12px 0 2px;text-align:right;min-width:36px;" id="dailyStatRatio2">—</td>
+                                <td style="padding:0 8px;font-size:9px;color:var(--muted);text-align:right;">±4%</td><td style="padding:0 12px 0 2px;text-align:right;min-width:36px;" id="dailyStatRatio4">—</td>
+                                <td style="padding:0 0 0 12px;border-left:1px solid var(--border);text-align:right;white-space:nowrap;" id="dailyStatCountAll">—</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:0 10px 0 0;font-size:9px;color:#15803d;font-weight:700;white-space:nowrap;text-align:right;">LEAD <span id="dailyStatLN" style="font-weight:400;color:var(--muted);"></span></td>
+                                <td style="padding:0 8px;font-size:9px;color:var(--muted);text-align:right;">ADV/DEC</td><td style="padding:0 12px 0 2px;text-align:right;" id="dailyStatLRatio">—</td>
+                                <td style="padding:0 8px;font-size:9px;color:var(--muted);text-align:right;">±2%</td><td style="padding:0 12px 0 2px;text-align:right;" id="dailyStatLRatio2">—</td>
+                                <td style="padding:0 8px;font-size:9px;color:var(--muted);text-align:right;">±4%</td><td style="padding:0 12px 0 2px;text-align:right;" id="dailyStatLRatio4">—</td>
+                                <td style="padding:0 0 0 12px;border-left:1px solid var(--border);text-align:right;white-space:nowrap;" id="dailyStatCountL">—</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:0 10px 0 0;font-size:9px;color:#b91c1c;font-weight:700;white-space:nowrap;text-align:right;">LAG <span id="dailyStatLagN" style="font-weight:400;color:var(--muted);"></span></td>
+                                <td style="padding:0 8px;font-size:9px;color:var(--muted);text-align:right;">ADV/DEC</td><td style="padding:0 12px 0 2px;text-align:right;" id="dailyStatLagRatio">—</td>
+                                <td style="padding:0 8px;font-size:9px;color:var(--muted);text-align:right;">±2%</td><td style="padding:0 12px 0 2px;text-align:right;" id="dailyStatLagRatio2">—</td>
+                                <td style="padding:0 8px;font-size:9px;color:var(--muted);text-align:right;">±4%</td><td style="padding:0 12px 0 2px;text-align:right;" id="dailyStatLagRatio4">—</td>
+                                <td style="padding:0 0 0 12px;border-left:1px solid var(--border);text-align:right;white-space:nowrap;" id="dailyStatCountLag">—</td>
+                            </tr>
+                        </table>
+                    </div>
                 </div>
 
                                 <!-- GROUPS/STOCKS toggle -->
@@ -4141,7 +4141,7 @@
         const breadthC = breadth >= 60 ? 'var(--up)' : breadth <= 40 ? 'var(--down)' : 'var(--text)';
 
         const sb = document.getElementById('dailyStatBar');
-        if (sb) sb.style.display = 'flex';
+        if (sb) sb.style.display = '';
         const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
 
         const ratioFmt = (a, b) => {
