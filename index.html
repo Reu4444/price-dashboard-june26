@@ -2169,47 +2169,40 @@
                     <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
                     <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">MOVE % ≥</span>
                     <input id="dailyMoveMin" class="filter-input" type="number" value="" placeholder="ex: 3" style="width:60px;" oninput="renderDaily()">
-                    <span id="dailyStatus" style="display:none;"></span>
-
-                    <!-- Stats table — right side of controls bar -->
-                    <div id="dailyStatBar" style="display:none;margin-left:auto;border-left:2px solid var(--border2);padding-left:16px;">
-                        <table style="border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.4;">
-                            <tr>
-                                <td style="padding:0 10px 0 0;font-size:9px;color:var(--muted);font-weight:700;white-space:nowrap;text-align:right;">ALL <span id="dailyStatN" style="font-weight:400;"></span></td>
-                                <td style="padding:0 8px;font-size:9px;color:var(--muted);text-align:right;">ADV/DEC</td><td style="padding:0 12px 0 2px;text-align:right;min-width:36px;" id="dailyStatRatio">—</td>
-                                <td style="padding:0 8px;font-size:9px;color:var(--muted);text-align:right;">±2%</td><td style="padding:0 12px 0 2px;text-align:right;min-width:36px;" id="dailyStatRatio2">—</td>
-                                <td style="padding:0 8px;font-size:9px;color:var(--muted);text-align:right;">±4%</td><td style="padding:0 12px 0 2px;text-align:right;min-width:36px;" id="dailyStatRatio4">—</td>
-                                <td style="padding:0 0 0 12px;border-left:1px solid var(--border);text-align:right;white-space:nowrap;" id="dailyStatCountAll">—</td>
-                            </tr>
-                            <tr>
-                                <td style="padding:0 10px 0 0;font-size:9px;color:#15803d;font-weight:700;white-space:nowrap;text-align:right;">LEAD <span id="dailyStatLN" style="font-weight:400;color:var(--muted);"></span></td>
-                                <td style="padding:0 8px;font-size:9px;color:var(--muted);text-align:right;">ADV/DEC</td><td style="padding:0 12px 0 2px;text-align:right;" id="dailyStatLRatio">—</td>
-                                <td style="padding:0 8px;font-size:9px;color:var(--muted);text-align:right;">±2%</td><td style="padding:0 12px 0 2px;text-align:right;" id="dailyStatLRatio2">—</td>
-                                <td style="padding:0 8px;font-size:9px;color:var(--muted);text-align:right;">±4%</td><td style="padding:0 12px 0 2px;text-align:right;" id="dailyStatLRatio4">—</td>
-                                <td style="padding:0 0 0 12px;border-left:1px solid var(--border);text-align:right;white-space:nowrap;" id="dailyStatCountL">—</td>
-                            </tr>
-                            <tr>
-                                <td style="padding:0 10px 0 0;font-size:9px;color:#b91c1c;font-weight:700;white-space:nowrap;text-align:right;">LAG <span id="dailyStatLagN" style="font-weight:400;color:var(--muted);"></span></td>
-                                <td style="padding:0 8px;font-size:9px;color:var(--muted);text-align:right;">ADV/DEC</td><td style="padding:0 12px 0 2px;text-align:right;" id="dailyStatLagRatio">—</td>
-                                <td style="padding:0 8px;font-size:9px;color:var(--muted);text-align:right;">±2%</td><td style="padding:0 12px 0 2px;text-align:right;" id="dailyStatLagRatio2">—</td>
-                                <td style="padding:0 8px;font-size:9px;color:var(--muted);text-align:right;">±4%</td><td style="padding:0 12px 0 2px;text-align:right;" id="dailyStatLagRatio4">—</td>
-                                <td style="padding:0 0 0 12px;border-left:1px solid var(--border);text-align:right;white-space:nowrap;" id="dailyStatCountLag">—</td>
-                            </tr>
-                        </table>
-                    </div>
+                    <span id="dailyStatus" style="font-size:10px;color:var(--muted);margin-left:auto;font-family:'IBM Plex Mono',monospace;"></span>
                 </div>
 
                                 <!-- GROUPS/STOCKS toggle -->
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
                     <div style="display:flex;gap:0;border:1px solid var(--border2);overflow:hidden;">
-                        <button id="dailyBtnGroups" onclick="setDailyView('groups')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 16px;background:var(--accent2);color:#fff;border:none;cursor:pointer;">GROUPS</button>
+                        <button id="dailyBtnStats" onclick="setDailyView('stats')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 16px;background:transparent;color:var(--muted);border:none;cursor:pointer;">STATS</button>
+                    <button id="dailyBtnGroups" onclick="setDailyView('groups')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 16px;background:var(--accent2);color:#fff;border:none;cursor:pointer;">GROUPS</button>
                         <button id="dailyBtnStocks" onclick="setDailyView('stocks')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 16px;background:transparent;color:var(--muted);border:none;cursor:pointer;">STOCKS</button>
-                        <button id="dailyBtnBreadth" onclick="setDailyView('breadth')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 16px;background:transparent;color:var(--muted);border:none;cursor:pointer;">BREADTH</button>
+    
                     </div>
                     <div id="dailyDrillBar" style="display:none;">
                         <button onclick="dailyClearDrill()" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 14px;background:transparent;color:var(--accent2);border:1px solid var(--accent2);cursor:pointer;">← GROUPS</button>
                         <span id="dailyDrillLabel" style="font-size:12px;color:var(--muted);margin-left:10px;"></span>
                     </div>
+                </div>
+
+                <!-- STATS VIEW -->
+                <div id="dailyStatsView" style="display:none;">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+                        <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">WINDOW</span>
+                        <select id="dailyStatsWindow" class="filter-select" style="width:90px;" onchange="renderDailyStats()">
+                            <option value="30">30 days</option>
+                            <option value="60" selected>60 days</option>
+                            <option value="90">90 days</option>
+                        </select>
+                        <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
+                        <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">THRESHOLD %</span>
+                        <input id="dailyStatsThresh" class="filter-input" type="number" value="2" min="1" max="10" step="0.5" style="width:52px;" onchange="renderDailyStats()">
+                        <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
+                        <span style="font-size:9px;color:var(--muted);letter-spacing:.1em;font-weight:700;">LEADERS PCT 6M ≥</span>
+                        <input id="dailyStatsPct" class="filter-input" type="number" value="70" style="width:52px;" onchange="renderDailyStats()">
+                    </div>
+                    <div id="dailyStatsContent"></div>
                 </div>
 
                 <!-- GROUPS VIEW -->
@@ -4256,8 +4249,8 @@
 
     function setDailyView(view) {
         _dailyView = view;
-        const btns = { groups: 'dailyBtnGroups', stocks: 'dailyBtnStocks', breadth: 'dailyBtnBreadth' };
-        const views = { groups: 'dailyGroupsView', stocks: 'dailyStocksView', breadth: 'dailyBreadthView' };
+        const btns  = { stats: 'dailyBtnStats', groups: 'dailyBtnGroups', stocks: 'dailyBtnStocks' };
+        const views = { stats: 'dailyStatsView', groups: 'dailyGroupsView', stocks: 'dailyStocksView' };
         Object.entries(btns).forEach(([k, id]) => {
             const el = document.getElementById(id);
             if (el) { el.style.background = k === view ? 'var(--accent2)' : 'transparent'; el.style.color = k === view ? '#fff' : 'var(--muted)'; }
@@ -4266,7 +4259,7 @@
             const el = document.getElementById(id);
             if (el) el.style.display = k === view ? '' : 'none';
         });
-        if (view === 'breadth') renderBreadthChart();
+        if (view === 'stats') renderDailyStats();
         else renderDaily();
     }
 
@@ -4865,6 +4858,104 @@
         ], { labels, yFmt: v=>v+'x', spyTops: spyTopAnnotations, tooltipFn: ctx=>`${ctx.dataset.label}: ${ctx.raw ?? '—'}` });
 
 
+    }
+
+    // ── DAILY STATS HISTORY ───────────────────────────────────────
+    function renderDailyStats() {
+        if (!allData.length || !Object.keys(rawPrices).length || !priceDates.length) return;
+
+        const window60 = parseInt(document.getElementById('dailyStatsWindow')?.value || 60);
+        const leaderPct = parseFloat(document.getElementById('dailyStatsPct')?.value || 70);
+        const thresh    = parseFloat(document.getElementById('dailyStatsThresh')?.value || 2);
+        const leaders  = new Set(allData.filter(d => (d.pct_6m ?? 0) >= leaderPct).map(d => d.ticker));
+        const laggards = new Set(allData.filter(d => (d.pct_6m ?? 0) < 30).map(d => d.ticker));
+
+        const rows = [];
+        for (let i = 0; i < Math.min(window60, priceDates.length - 1); i++) {
+            let aAdv=0, aDec=0, aUp2=0, aDn2=0, aUp4=0, aDn4=0, aTotal=0;
+            let lAdv=0, lDec=0, lUp2=0, lDn2=0, lUp4=0, lDn4=0, lTotal=0;
+            let lagAdv=0, lagDec=0, lagUp2=0, lagDn2=0, lagUp4=0, lagDn4=0, lagTotal=0;
+
+            allData.forEach(d => {
+                const p = rawPrices[d.ticker];
+                if (!p || p.length <= i + 1) return;
+                const c0 = p[i], c1 = p[i+1];
+                if (!c0 || !c1 || c1 === 0) return;
+                const mv = (c0/c1 - 1) * 100;
+                const up = mv > 0;
+
+                aTotal++;
+                if (up) aAdv++; else aDec++;
+                if (mv >=  thresh) aUp2++; if (mv <= -thresh) aDn2++;
+                if (mv >=  thresh*2) aUp4++; if (mv <= -thresh*2) aDn4++;
+
+                if (leaders.has(d.ticker)) {
+                    lTotal++;
+                    if (up) lAdv++; else lDec++;
+                    if (mv >=  thresh) lUp2++; if (mv <= -thresh) lDn2++;
+                    if (mv >=  thresh*2) lUp4++; if (mv <= -thresh*2) lDn4++;
+                }
+                if (laggards.has(d.ticker)) {
+                    lagTotal++;
+                    if (up) lagAdv++; else lagDec++;
+                    if (mv >=  thresh) lagUp2++; if (mv <= -thresh) lagDn2++;
+                    if (mv >=  thresh*2) lagUp4++; if (mv <= -thresh*2) lagDn4++;
+                }
+            });
+
+            const rf = (a,b) => b > 0 ? (a/b).toFixed(2) : '—';
+            const rc = (a,b) => b > 0 ? (a/b >= 1 ? 'var(--up)' : 'var(--down)') : 'var(--muted)';
+
+            rows.push({
+                date: priceDates[i],
+                aAdv, aDec, aUp2, aDn2, aUp4, aDn4,
+                lAdv, lDec, lUp2, lDn2, lUp4, lDn4,
+                lagAdv, lagDec, lagUp2, lagDn2, lagUp4, lagDn4,
+                rf, rc
+            });
+        }
+
+        const thB = 'padding:5px 10px;font-size:9px;font-weight:600;letter-spacing:.06em;color:var(--muted);border:1px solid var(--border);background:var(--bg3);text-align:center;';
+        const thL = 'padding:5px 10px;font-size:9px;font-weight:600;letter-spacing:.06em;color:var(--muted);border:1px solid var(--border);background:var(--bg3);text-align:left;';
+        const td  = 'padding:4px 10px;font-size:12px;border:1px solid var(--faint);text-align:center;';
+        const tdD = 'padding:4px 10px;font-size:11px;border:1px solid var(--faint);text-align:left;color:var(--muted);font-family:"IBM Plex Mono",monospace;';
+
+        let html = `<table style="border-collapse:collapse;width:100%;font-family:'IBM Plex Mono',monospace;">
+          <thead>
+            <tr>
+                <th rowspan="2" style="${thL}min-width:90px;">DATE</th>
+                <th colspan="3" style="${thB}border-bottom:none;">All Stocks</th>
+                <th colspan="3" style="${thB}border-bottom:none;color:#15803d;">Leaders</th>
+                <th colspan="3" style="${thB}border-bottom:none;color:#b91c1c;">Laggards</th>
+            </tr>
+            <tr>
+                <th style="${thB}color:var(--up);">+${thresh}%</th><th style="${thB}color:var(--down);">-${thresh}%</th><th style="${thB}">Ratio</th>
+                <th style="${thB}color:var(--up);">+${thresh}%</th><th style="${thB}color:var(--down);">-${thresh}%</th><th style="${thB}">Ratio</th>
+                <th style="${thB}color:var(--up);">+${thresh}%</th><th style="${thB}color:var(--down);">-${thresh}%</th><th style="${thB}">Ratio</th>
+            </tr>
+          </thead><tbody>`;
+
+        rows.forEach((r, idx) => {
+            const bg = idx % 2 === 0 ? '' : 'background:var(--bg2);';
+            const aRatio = r.rf(r.aUp2, r.aDn2);
+            const lRatio = r.rf(r.lUp2, r.lDn2);
+            const lagRatio = r.rf(r.lagUp2, r.lagDn2);
+            html += `<tr style="${bg}">
+                <td style="${tdD}">${r.date}</td>
+                <td style="${td}color:var(--up);">${r.aUp2}</td>
+                <td style="${td}color:var(--down);">${r.aDn2}</td>
+                <td style="${td}color:${r.rc(r.aUp2,r.aDn2)};font-weight:600;">${aRatio}</td>
+                <td style="${td}color:var(--up);">${r.lUp2}</td>
+                <td style="${td}color:var(--down);">${r.lDn2}</td>
+                <td style="${td}color:${r.rc(r.lUp2,r.lDn2)};font-weight:600;">${lRatio}</td>
+                <td style="${td}color:var(--up);">${r.lagUp2}</td>
+                <td style="${td}color:var(--down);">${r.lagDn2}</td>
+                <td style="${td}color:${r.rc(r.lagUp2,r.lagDn2)};font-weight:600;">${lagRatio}</td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        document.getElementById('dailyStatsContent').innerHTML = html;
     }
 
     // ── NARRATIVE / MARKET ANALYSIS ──────────────────────────────
