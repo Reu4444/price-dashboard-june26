@@ -2173,72 +2173,43 @@
                 </div>
 
                 <!-- Stat bar -->
-                <div id="dailyStatBar" style="display:none;margin-bottom:12px;font-family:'IBM Plex Mono',monospace;display:flex;gap:32px;align-items:flex-start;">
-
-                    <!-- Table 1: Ratios -->
-                    <table style="border-collapse:collapse;font-size:12px;">
-                        <thead>
-                            <tr style="background:var(--bg3);">
-                                <th style="padding:5px 12px;font-size:8px;color:var(--muted);letter-spacing:.08em;font-weight:600;border:1px solid var(--border);text-align:left;"></th>
-                                <th style="padding:5px 20px;font-size:8px;color:var(--muted);letter-spacing:.08em;font-weight:600;border:1px solid var(--border);text-align:center;white-space:nowrap;">ADV/DEC</th>
-                                <th style="padding:5px 20px;font-size:8px;color:var(--muted);letter-spacing:.08em;font-weight:600;border:1px solid var(--border);text-align:center;white-space:nowrap;">± 2%</th>
-                                <th style="padding:5px 20px;font-size:8px;color:var(--muted);letter-spacing:.08em;font-weight:600;border:1px solid var(--border);text-align:center;white-space:nowrap;">± 4%</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td style="padding:5px 12px;font-size:9px;color:var(--muted);font-weight:600;border:1px solid var(--border);white-space:nowrap;">All <span id="dailyStatN" style="font-weight:400;"></span></td>
-                                <td style="padding:5px 20px;font-size:15px;border:1px solid var(--border);text-align:center;" id="dailyStatRatio">—</td>
-                                <td style="padding:5px 20px;font-size:15px;border:1px solid var(--border);text-align:center;" id="dailyStatRatio2">—</td>
-                                <td style="padding:5px 20px;font-size:15px;border:1px solid var(--border);text-align:center;" id="dailyStatRatio4">—</td>
-                            </tr>
-                            <tr style="background:rgba(21,128,61,0.04);">
-                                <td style="padding:5px 12px;font-size:9px;color:#15803d;font-weight:600;border:1px solid var(--border);white-space:nowrap;">Leaders <span id="dailyStatLN" style="font-weight:400;color:var(--muted);"></span></td>
-                                <td style="padding:5px 20px;font-size:15px;border:1px solid var(--border);text-align:center;" id="dailyStatLRatio">—</td>
-                                <td style="padding:5px 20px;font-size:15px;border:1px solid var(--border);text-align:center;" id="dailyStatLRatio2">—</td>
-                                <td style="padding:5px 20px;font-size:15px;border:1px solid var(--border);text-align:center;" id="dailyStatLRatio4">—</td>
-                            </tr>
-                            <tr>
-                                <td style="padding:5px 12px;font-size:9px;color:#b91c1c;font-weight:600;border:1px solid var(--border);white-space:nowrap;">Laggards <span id="dailyStatLagN" style="font-weight:400;color:var(--muted);"></span></td>
-                                <td style="padding:5px 20px;font-size:15px;border:1px solid var(--border);text-align:center;" id="dailyStatLagRatio">—</td>
-                                <td style="padding:5px 20px;font-size:15px;border:1px solid var(--border);text-align:center;" id="dailyStatLagRatio2">—</td>
-                                <td style="padding:5px 20px;font-size:15px;border:1px solid var(--border);text-align:center;" id="dailyStatLagRatio4">—</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <!-- Table 2: Counts -->
-                    <table style="border-collapse:collapse;font-size:12px;">
-                        <thead>
-                            <tr style="background:var(--bg3);">
-                                <th style="padding:5px 12px;font-size:8px;color:var(--muted);letter-spacing:.08em;font-weight:600;border:1px solid var(--border);text-align:left;"></th>
-                                <th style="padding:5px 20px;font-size:8px;color:var(--muted);letter-spacing:.08em;font-weight:600;border:1px solid var(--border);text-align:center;white-space:nowrap;">ADV / DEC</th>
-                                <th style="padding:5px 20px;font-size:8px;color:var(--muted);letter-spacing:.08em;font-weight:600;border:1px solid var(--border);text-align:center;white-space:nowrap;">+2% / -2%</th>
-                                <th style="padding:5px 20px;font-size:8px;color:var(--muted);letter-spacing:.08em;font-weight:600;border:1px solid var(--border);text-align:center;white-space:nowrap;">+4% / -4%</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td style="padding:5px 12px;font-size:9px;color:var(--muted);font-weight:600;border:1px solid var(--border);">All</td>
-                                <td style="padding:5px 20px;font-size:13px;border:1px solid var(--border);text-align:center;" id="dailyStatCountAll">—</td>
-                                <td style="padding:5px 20px;font-size:13px;border:1px solid var(--border);text-align:center;" id="dailyStatCount2All">—</td>
-                                <td style="padding:5px 20px;font-size:13px;border:1px solid var(--border);text-align:center;" id="dailyStatCount4All">—</td>
-                            </tr>
-                            <tr style="background:rgba(21,128,61,0.04);">
-                                <td style="padding:5px 12px;font-size:9px;color:#15803d;font-weight:600;border:1px solid var(--border);">Leaders</td>
-                                <td style="padding:5px 20px;font-size:13px;border:1px solid var(--border);text-align:center;" id="dailyStatCountL">—</td>
-                                <td style="padding:5px 20px;font-size:13px;border:1px solid var(--border);text-align:center;" id="dailyStatCount2L">—</td>
-                                <td style="padding:5px 20px;font-size:13px;border:1px solid var(--border);text-align:center;" id="dailyStatCount4L">—</td>
-                            </tr>
-                            <tr>
-                                <td style="padding:5px 12px;font-size:9px;color:#b91c1c;font-weight:600;border:1px solid var(--border);">Laggards</td>
-                                <td style="padding:5px 20px;font-size:13px;border:1px solid var(--border);text-align:center;" id="dailyStatCountLag">—</td>
-                                <td style="padding:5px 20px;font-size:13px;border:1px solid var(--border);text-align:center;" id="dailyStatCount2Lag">—</td>
-                                <td style="padding:5px 20px;font-size:13px;border:1px solid var(--border);text-align:center;" id="dailyStatCount4Lag">—</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
+                <div id="dailyStatBar" style="display:none;margin-bottom:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text);display:flex;gap:32px;flex-wrap:wrap;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+                    <div>
+                        <span style="font-size:9px;color:var(--muted);letter-spacing:.08em;">ALL</span>
+                        <span id="dailyStatN" style="font-size:9px;color:var(--muted);margin-right:10px;"></span>
+                        <span style="font-size:9px;color:var(--muted);">ADV/DEC </span><span id="dailyStatRatio" style="font-size:13px;margin-right:10px;">—</span>
+                        <span style="font-size:9px;color:var(--muted);">±2% </span><span id="dailyStatRatio2" style="font-size:13px;margin-right:10px;">—</span>
+                        <span style="font-size:9px;color:var(--muted);">±4% </span><span id="dailyStatRatio4" style="font-size:13px;margin-right:16px;">—</span>
+                        <span style="font-size:9px;color:var(--muted);">(</span><span id="dailyStatCountAll" style="font-size:12px;">—</span>
+                        <span style="font-size:9px;color:var(--muted);margin-left:4px;">|</span>
+                        <span id="dailyStatCount2All" style="font-size:12px;margin-left:4px;">—</span>
+                        <span style="font-size:9px;color:var(--muted);margin-left:4px;">|</span>
+                        <span id="dailyStatCount4All" style="font-size:12px;margin-left:4px;">—</span><span style="font-size:9px;color:var(--muted);">)</span>
+                    </div>
+                    <div>
+                        <span style="font-size:9px;color:#15803d;letter-spacing:.08em;">LEADERS</span>
+                        <span id="dailyStatLN" style="font-size:9px;color:var(--muted);margin-right:10px;"></span>
+                        <span style="font-size:9px;color:var(--muted);">ADV/DEC </span><span id="dailyStatLRatio" style="font-size:13px;margin-right:10px;">—</span>
+                        <span style="font-size:9px;color:var(--muted);">±2% </span><span id="dailyStatLRatio2" style="font-size:13px;margin-right:10px;">—</span>
+                        <span style="font-size:9px;color:var(--muted);">±4% </span><span id="dailyStatLRatio4" style="font-size:13px;margin-right:16px;">—</span>
+                        <span style="font-size:9px;color:var(--muted);">(</span><span id="dailyStatCountL" style="font-size:12px;">—</span>
+                        <span style="font-size:9px;color:var(--muted);margin-left:4px;">|</span>
+                        <span id="dailyStatCount2L" style="font-size:12px;margin-left:4px;">—</span>
+                        <span style="font-size:9px;color:var(--muted);margin-left:4px;">|</span>
+                        <span id="dailyStatCount4L" style="font-size:12px;margin-left:4px;">—</span><span style="font-size:9px;color:var(--muted);">)</span>
+                    </div>
+                    <div>
+                        <span style="font-size:9px;color:#b91c1c;letter-spacing:.08em;">LAGGARDS</span>
+                        <span id="dailyStatLagN" style="font-size:9px;color:var(--muted);margin-right:10px;"></span>
+                        <span style="font-size:9px;color:var(--muted);">ADV/DEC </span><span id="dailyStatLagRatio" style="font-size:13px;margin-right:10px;">—</span>
+                        <span style="font-size:9px;color:var(--muted);">±2% </span><span id="dailyStatLagRatio2" style="font-size:13px;margin-right:10px;">—</span>
+                        <span style="font-size:9px;color:var(--muted);">±4% </span><span id="dailyStatLagRatio4" style="font-size:13px;margin-right:16px;">—</span>
+                        <span style="font-size:9px;color:var(--muted);">(</span><span id="dailyStatCountLag" style="font-size:12px;">—</span>
+                        <span style="font-size:9px;color:var(--muted);margin-left:4px;">|</span>
+                        <span id="dailyStatCount2Lag" style="font-size:12px;margin-left:4px;">—</span>
+                        <span style="font-size:9px;color:var(--muted);margin-left:4px;">|</span>
+                        <span id="dailyStatCount4Lag" style="font-size:12px;margin-left:4px;">—</span><span style="font-size:9px;color:var(--muted);">)</span>
+                    </div>
                 </div>
 
                                 <!-- GROUPS/STOCKS toggle -->
