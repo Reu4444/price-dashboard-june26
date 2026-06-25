@@ -105,8 +105,12 @@
         padding: 20px 24px;
     }
     /* Tabs outside .main need same padding */
-    #tab-narrative, #tab-method, #tab-daily, #tab-breadth, #tab-rrg, #tab-returns, #tab-compare, #tab-best, #tab-fund {
+    #tab-narrative, #tab-method, #tab-breadth, #tab-rrg, #tab-returns, #tab-compare, #tab-best, #tab-fund {
         padding: 20px 24px;
+        box-sizing: border-box;
+    }
+    #tab-daily {
+        padding: 8px 24px 20px;
         box-sizing: border-box;
     }/* Tabs */
     .tabs {
@@ -926,26 +930,22 @@
                 <div style="padding:6px 16px;margin-bottom:10px;font-size:11px;color:var(--muted);">
                     <span style="background:var(--bg2);border:1px solid var(--border);padding:3px 10px;">abs(Price / SMA<span id="bounceCritN">50</span> − 1) / σ20j ≤ <span id="bounceCritSigma">0.5</span>σ</span>
                 </div>
-                <!-- Explanation -->
-                <div style="padding:10px 16px 6px;font-size:12px;color:var(--muted);border-left:3px solid #f59e0b;margin-bottom:10px;line-height:1.7;">
-                    Filters stocks where <strong style="color:var(--text)">abs(Price / SMA − 1) / σ20</strong> is below the threshold — meaning the price is within N standard deviations of the selected moving average. No uptrend requirement: use RS IBD and PCT columns to assess the quality of the setup.
-                </div>
+                <!-- Explanation removed -->
                 <div class="table-wrap">
                     <div class="empty" id="emptyBounce" style="display:none"><div class="empty-icon">↗</div><div class="empty-title">No Bounces Found</div></div>
-                    <table id="bounceTable" style="display:none;table-layout:fixed;width:100%">
+                    <table id="bounceTable" style="display:none;width:100%">
                         <thead><tr>
                             <th class="sticky-0" style="width:22px;padding:4px 3px">★</th>
                             <th class="sticky-1" style="width:22px;padding:4px 3px">TV</th>
-                            <th class="sticky-2" style="cursor:pointer;width:65px" onclick="bounceSort('ticker')">TICKER</th>
-                            <th class="sticky-3" style="cursor:pointer;min-width:100px" onclick="bounceSort('name')">NAME</th>
-                            <th style="cursor:pointer;width:110px" onclick="bounceSort('sector')">SECTOR</th>
-                            <th style="cursor:pointer;width:120px" onclick="bounceSort('group')">GROUP</th>
-                            <th style="cursor:pointer;width:58px;text-align:center" class="th-pct" onclick="bounceSort('mktcap')">CAP</th>
-                            <th style="cursor:pointer;width:62px;text-align:center;border-left:2px solid var(--border2);color:#6d28d9" class="th-pct" onclick="bounceSort('rs_ibd')">RS IBD</th>
-                            <th style="cursor:pointer;width:62px;text-align:center" class="th-pct" onclick="bounceSort('pct_6m')">PCT 6M</th>
-                            <th style="cursor:pointer;width:62px;text-align:center" class="th-pct" onclick="bounceSort('pct_12m')">PCT 12M</th>
-                            <th style="cursor:pointer;width:72px;text-align:center;border-left:2px solid var(--border2);color:#f59e0b" class="th-pct" onclick="bounceSort('bounce_dist_s')">DIST (σ)</th>
-
+                            <th class="sticky-2" style="cursor:pointer;" onclick="bounceSort('ticker')">TICKER</th>
+                            <th class="sticky-3" style="cursor:pointer;" onclick="bounceSort('name')">NAME</th>
+                            <th style="cursor:pointer;" onclick="bounceSort('sector')">SECTOR</th>
+                            <th style="cursor:pointer;" onclick="bounceSort('group')">GROUP</th>
+                            <th class="th-pct" style="cursor:pointer;" onclick="bounceSort('mktcap')">MKT CAP</th>
+                            <th class="th-pct" style="cursor:pointer;border-left:2px solid var(--border2);color:#6d28d9;" onclick="bounceSort('rs_ibd')">RS IBD</th>
+                            <th class="th-pct" style="cursor:pointer;" onclick="bounceSort('pct_6m')">PCT 6M</th>
+                            <th class="th-pct" style="cursor:pointer;" onclick="bounceSort('pct_12m')">PCT 12M</th>
+                            <th class="th-pct" style="cursor:pointer;border-left:2px solid var(--border2);color:#f59e0b;" onclick="bounceSort('bounce_dist_s')">DIST (σ)</th>
                         </tr></thead>
                         <tbody id="bounceBody"></tbody>
                     </table>
@@ -3847,21 +3847,12 @@
         if (!tbody) return;
         tbody.innerHTML = '';
         rows.forEach(d => {
-            const inW = watchlist.includes(d.ticker);
-            const tr  = document.createElement('tr');
-            tr.innerHTML =
-                `<td class="sticky-0 watch-toggle" style="text-align:center;cursor:pointer;font-size:11px;width:22px;padding:4px 3px;color:${inW?'#06b6d4':'#475569'}" data-ticker="${d.ticker}">${inW?'★':'☆'}</td>
-                 <td class="sticky-1" style="text-align:center;width:22px;padding:4px 3px;"><a href="https://www.tradingview.com/chart/?symbol=${d.ticker}" target="_blank" style="color:#475569;font-size:8px;text-decoration:none;font-weight:600;" onmouseover="this.style.color='#06b6d4'" onmouseout="this.style.color='#475569'">TV</a></td>
-                 <td class="td-ticker sticky-2" style="cursor:pointer;color:var(--accent2);width:65px;" onclick="openNews('${d.ticker}')">${d.ticker}</td>
-                 <td class="td-name sticky-3">${d.name||''}</td>
-                 <td class="td-name" style="font-size:12px;">${d.sector||''}</td>
-                 <td class="td-name" style="font-size:12px;">${d.group||''}</td>
-                 <td class="td-pct">${fmktcap(d.mktcap)}</td>
-                 <td class="td-pct" style="border-left:2px solid var(--border2)">${pctCell(d.rs_ibd)}</td>
+            const tr = document.createElement('tr');
+            tr.innerHTML = infoTds(d) +
+                `<td class="td-pct" style="border-left:2px solid var(--border2)">${pctCell(d.rs_ibd)}</td>
                  <td class="td-pct">${pctCell(d.pct_6m)}</td>
                  <td class="td-pct">${pctCell(d.pct_12m)}</td>
-                 <td class="td-pct" style="border-left:2px solid var(--border2)">${distCell(d.bounce_dist_s)}</td>
-`;
+                 <td class="td-pct" style="border-left:2px solid var(--border2)">${distCell(d.bounce_dist_s)}</td>`;
             tbody.appendChild(tr);
         });
         const bt = document.getElementById('bounceTable');
@@ -5040,23 +5031,23 @@
             });
         }
 
-        const thB = 'padding:5px 10px;font-size:9px;font-weight:600;letter-spacing:.06em;color:var(--muted);border:1px solid var(--border);background:var(--bg3);text-align:center;';
-        const thL = 'padding:5px 10px;font-size:9px;font-weight:600;letter-spacing:.06em;color:var(--muted);border:1px solid var(--border);background:var(--bg3);text-align:left;';
-        const td  = 'padding:4px 10px;font-size:12px;border-top:1px solid var(--faint);border-bottom:1px solid var(--faint);border-left:1px solid transparent;border-right:1px solid transparent;text-align:center;';
-        const tdD = 'padding:4px 10px;font-size:11px;border-top:1px solid var(--faint);border-bottom:1px solid var(--faint);text-align:left;color:var(--muted);font-family:"IBM Plex Mono",monospace;';
+        const thB = 'padding:5px 12px;font-size:9px;font-weight:600;letter-spacing:.06em;color:var(--muted);border:1px solid var(--border);background:var(--bg3);text-align:center;';
+        const thL = 'padding:5px 12px;font-size:9px;font-weight:600;letter-spacing:.06em;color:var(--muted);border:1px solid var(--border);background:var(--bg3);text-align:left;';
+        const td  = 'padding:5px 12px;font-size:12px;text-align:center;';
+        const tdD = 'padding:5px 12px;font-size:11px;text-align:left;color:var(--muted);font-family:"IBM Plex Mono",monospace;';
 
-        let html = `<table style="border-collapse:collapse;width:100%;font-family:'IBM Plex Mono',monospace;">
+        let html = `<table style="border-collapse:collapse;width:100%;font-family:'IBM Plex Mono',monospace;border:1px solid var(--border);">
           <thead>
             <tr>
-                <th rowspan="2" style="${thL}min-width:90px;border-right:2px solid #64748b;">DATE</th>
+                <th rowspan="2" style="${thL}min-width:90px;border-right:2px solid #94a3b8;">DATE</th>
                 <th colspan="3" style="${thB}border-bottom:none;">All Stocks</th>
-                <th colspan="3" style="${thB}border-bottom:none;color:#15803d;border-left:2px solid #64748b;">Leaders</th>
-                <th colspan="3" style="${thB}border-bottom:none;color:#b91c1c;border-left:2px solid #64748b;">Laggards</th>
+                <th colspan="3" style="${thB}border-bottom:none;color:#15803d;border-left:2px solid #94a3b8;">Leaders</th>
+                <th colspan="3" style="${thB}border-bottom:none;color:#b91c1c;border-left:2px solid #94a3b8;">Laggards</th>
             </tr>
             <tr>
                 <th style="${thB}color:var(--up);">+${thresh}%</th><th style="${thB}color:var(--down);">-${thresh}%</th><th style="${thB}">Ratio</th>
-                <th style="${thB}color:var(--up);border-left:2px solid #64748b;">+${thresh}%</th><th style="${thB}color:var(--down);">-${thresh}%</th><th style="${thB}">Ratio</th>
-                <th style="${thB}color:var(--up);border-left:2px solid #64748b;">+${thresh}%</th><th style="${thB}color:var(--down);">-${thresh}%</th><th style="${thB}">Ratio</th>
+                <th style="${thB}color:var(--up);border-left:2px solid #94a3b8;">+${thresh}%</th><th style="${thB}color:var(--down);">-${thresh}%</th><th style="${thB}">Ratio</th>
+                <th style="${thB}color:var(--up);border-left:2px solid #94a3b8;">+${thresh}%</th><th style="${thB}color:var(--down);">-${thresh}%</th><th style="${thB}">Ratio</th>
             </tr>
           </thead><tbody>`;
 
@@ -5066,16 +5057,16 @@
             const lRatio = r.rf(r.lUp2, r.lDn2);
             const lagRatio = r.rf(r.lagUp2, r.lagDn2);
             html += `<tr style="${bg}">
-                <td style="${tdD};border-right:2px solid #64748b;">${r.date}</td>
+                <td style="${tdD};border-left:1px solid var(--border);border-right:2px solid #94a3b8;">${r.date}</td>
                 <td style="${td}color:var(--up);">${r.aUp2}</td>
                 <td style="${td}color:var(--down);">${r.aDn2}</td>
                 <td style="${td}color:${r.rc(r.aUp2,r.aDn2)};font-weight:600;">${aRatio}</td>
-                <td style="${td}color:var(--up);border-left:2px solid #64748b;">${r.lUp2}</td>
+                <td style="${td}color:var(--up);border-left:2px solid #94a3b8;">${r.lUp2}</td>
                 <td style="${td}color:var(--down);">${r.lDn2}</td>
                 <td style="${td}color:${r.rc(r.lUp2,r.lDn2)};font-weight:600;">${lRatio}</td>
-                <td style="${td}color:var(--up);border-left:2px solid #64748b;">${r.lagUp2}</td>
+                <td style="${td}color:var(--up);border-left:2px solid #94a3b8;">${r.lagUp2}</td>
                 <td style="${td}color:var(--down);">${r.lagDn2}</td>
-                <td style="${td}color:${r.rc(r.lagUp2,r.lagDn2)};font-weight:600;">${lagRatio}</td>
+                <td style="${td}color:${r.rc(r.lagUp2,r.lagDn2)};font-weight:600;border-right:1px solid var(--border);">${lagRatio}</td>
             </tr>`;
         });
 
