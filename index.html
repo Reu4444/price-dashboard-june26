@@ -1256,32 +1256,28 @@
                     <span style="background:var(--bg2);border:1px solid var(--border);padding:3px 10px;">EMA10 &gt; EMA20</span>
                     <span style="background:var(--bg2);border:1px solid var(--border);padding:3px 10px;">min(dist EMA10, dist EMA20) / σ ≤ <b id="pbCritSigma">0.5</b></span>
                 </div>
-                <!-- Explanation -->
-                <div style="padding:8px 16px 6px;font-size:11px;color:var(--muted);border-left:3px solid var(--accent2);margin-bottom:10px;">
-                    Uptrend structure intact (EMA cascade) + price pulling back within <strong style="color:var(--text)">N σ</strong> of EMA10 or EMA20 — σ normalised per stock so distance is comparable across all names.
-                </div>
                 <!-- Table -->
                 <div class="table-wrap">
                     <div class="empty" id="emptyMa" style="display:none">
                         <div class="empty-icon">📉</div>
                         <div class="empty-title">No Pullbacks Found</div>
                     </div>
-                    <table id="maTable" style="display:none;table-layout:fixed;width:100%">
+                    <table id="maTable" style="display:none;width:100%">
                         <thead>
                             <tr>
                                 <th class="sticky-0" style="width:22px;padding:4px 3px">★</th>
                                 <th class="sticky-1" style="width:22px;padding:4px 3px">TV</th>
-                                <th class="sticky-2" style="cursor:pointer;width:65px" onclick="maSort('ticker')">TICKER</th>
-                                <th class="sticky-3" style="cursor:pointer;min-width:100px" onclick="maSort('name')">NAME</th>
-                                <th style="cursor:pointer;width:110px" onclick="maSort('sector')">SECTOR</th>
-                                <th style="cursor:pointer;width:120px" onclick="maSort('group')">GROUP</th>
-                                <th style="cursor:pointer;width:58px;text-align:center" class="th-pct" onclick="maSort('mktcap')">CAP</th>
-                                <th style="cursor:pointer;width:60px;text-align:center;border-left:2px solid var(--border2)" class="th-pct" onclick="maSort('pct_4w')">PCT 4W</th>
-                                <th style="cursor:pointer;width:60px;text-align:center" class="th-pct" onclick="maSort('pct_6m')">PCT 6M</th>
-                                <th style="cursor:pointer;width:60px;text-align:center" class="th-pct" onclick="maSort('pct_12m')">PCT 12M</th>
-                                <th style="cursor:pointer;width:62px;text-align:center;border-left:2px solid var(--border2);color:#6d28d9" class="th-pct" onclick="maSort('rs_ibd')">RS IBD</th>
-                                <th style="cursor:pointer;width:72px;text-align:center;border-left:2px solid var(--border2);color:#0ea5e9" class="th-pct" onclick="maSort('pb_dist10_s')">EMA10 (σ)</th>
-                                <th style="cursor:pointer;width:72px;text-align:center;color:#10b981" class="th-pct" onclick="maSort('pb_dist20_s')">EMA20 (σ)</th>
+                                <th class="sticky-2" style="cursor:pointer;" onclick="maSort('ticker')">TICKER</th>
+                                <th class="sticky-3" style="cursor:pointer;" onclick="maSort('name')">NAME</th>
+                                <th style="cursor:pointer;" onclick="maSort('sector')">SECTOR</th>
+                                <th style="cursor:pointer;" onclick="maSort('group')">GROUP</th>
+                                <th class="th-pct" style="cursor:pointer;" onclick="maSort('mktcap')">MKT CAP</th>
+                                <th class="th-pct" style="cursor:pointer;border-left:2px solid var(--border2);" onclick="maSort('pct_4w')">PCT 4W</th>
+                                <th class="th-pct" style="cursor:pointer;" onclick="maSort('pct_6m')">PCT 6M</th>
+                                <th class="th-pct" style="cursor:pointer;" onclick="maSort('pct_12m')">PCT 12M</th>
+                                <th class="th-pct" style="cursor:pointer;border-left:2px solid var(--border2);color:#6d28d9;" onclick="maSort('rs_ibd')">RS IBD</th>
+                                <th class="th-pct" style="cursor:pointer;border-left:2px solid var(--border2);color:#0ea5e9;" onclick="maSort('pb_dist10_s')">EMA10 (σ)</th>
+                                <th class="th-pct" style="cursor:pointer;color:#10b981;" onclick="maSort('pb_dist20_s')">EMA20 (σ)</th>
                             </tr>
                         </thead>
                         <tbody id="maBody"></tbody>
@@ -3766,25 +3762,17 @@
         };
 
         body.innerHTML = rows.slice(0, 300).map(d => {
-            const inWatch = watchlist.includes(d.ticker);
-            const starC   = inWatch ? 'color:var(--accent2)' : 'color:var(--muted)';
-            const pct4wC  = (d.pct_4w??0) >= pctMin ? 'var(--up)' : 'var(--down)';
-            const pct6mC  = (d.pct_6m??0) >= pctMin ? 'var(--up)' : 'var(--down)';
+            const pct4wC  = (d.pct_4w??0)  >= pctMin ? 'var(--up)' : 'var(--down)';
+            const pct6mC  = (d.pct_6m??0)  >= pctMin ? 'var(--up)' : 'var(--down)';
             const pct12mC = (d.pct_12m??0) >= pctMin ? 'var(--up)' : 'var(--down)';
             return `<tr>
-                <td class="sticky-0"><span class="watch-toggle" data-ticker="${d.ticker}" style="${starC};cursor:pointer;">★</span></td>
-                <td class="sticky-1"><a href="https://www.tradingview.com/chart/?symbol=${d.ticker}" target="_blank" style="color:var(--muted);font-size:10px;text-decoration:none;">TV</a></td>
-                <td class="sticky-2" style="font-weight:700;color:var(--accent2);cursor:pointer;" onclick="openNews('${d.ticker}')">${d.ticker}</td>
-                <td class="sticky-3" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.name||''}</td>
-                <td style="color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.sector||''}</td>
-                <td style="color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.group||''}</td>
-                <td style="text-align:center;color:var(--muted)">${formatCap(d.mktcap)}</td>
-                <td style="text-align:center;color:${pct4wC};border-left:2px solid var(--border2)">${d.pct_4w??'—'}</td>
-                <td style="text-align:center;color:${pct6mC}">${d.pct_6m??'—'}</td>
-                <td style="text-align:center;color:${pct12mC}">${d.pct_12m??'—'}</td>
-                <td style="text-align:center;color:#6d28d9;border-left:2px solid var(--border2)">${d.rs_ibd??'—'}</td>
-                <td style="text-align:center;color:#0ea5e9;border-left:2px solid var(--border2)">${d.pb_dist10_s}</td>
-                <td style="text-align:center;color:#10b981">${d.pb_dist20_s}</td>
+                ${infoTds(d)}
+                <td class="td-pct" style="border-left:2px solid var(--border2);color:${pct4wC}">${d.pct_4w??'—'}</td>
+                <td class="td-pct" style="color:${pct6mC}">${d.pct_6m??'—'}</td>
+                <td class="td-pct" style="color:${pct12mC}">${d.pct_12m??'—'}</td>
+                <td class="td-pct" style="border-left:2px solid var(--border2);color:#6d28d9">${d.rs_ibd??'—'}</td>
+                <td class="td-pct" style="border-left:2px solid var(--border2);color:#0ea5e9">${d.pb_dist10_s}</td>
+                <td class="td-pct" style="color:#10b981">${d.pb_dist20_s}</td>
             </tr>`;
         }).join('');
     }
