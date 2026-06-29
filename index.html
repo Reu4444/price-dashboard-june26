@@ -105,9 +105,12 @@
         padding: 20px 24px;
     }
     /* Tabs outside .main need same padding */
-    #tab-narrative, #tab-method, #tab-breadth, #tab-rrg, #tab-returns, #tab-compare, #tab-best, #tab-fund {
+    #tab-narrative, #tab-method, #tab-breadth, #tab-rrg, #tab-returns, #tab-compare, #tab-best, #tab-fund, #tab-mktenv {
         padding: 20px 24px;
         box-sizing: border-box;
+    }
+    #tab-mktenv {
+        padding: 0 !important;
     }
     #tab-daily {
         padding: 8px 24px 20px;
@@ -799,6 +802,7 @@
             <button class="tab" onclick="switchTab('compare')">COMPARE</button>
             <button class="tab" onclick="switchTab('narrative')">NARRATIVE</button>
             <button class="tab" onclick="switchTab('method')">METHOD</button>
+            <button class="tab" onclick="switchTab('mktenv')">MARKET ENV</button>
         </div>
 
         <!-- TAB: PRICE -->
@@ -2386,6 +2390,23 @@
             </div>
             </div><!-- end grid -->
         </div>
+    </div>
+
+    <!-- TAB: MARKET ENV -->
+    <div class="tab-content" id="tab-mktenv" style="padding:0;box-sizing:border-box;">
+        <div style="padding:16px 24px 8px;display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border-bottom:1px solid var(--border);">
+            <div>
+                <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.15em;color:var(--accent2);">MARKET ENVIRONMENT</span>
+                <span style="font-size:11px;color:var(--muted);margin-left:16px;">Short-Term Market Environment — QQQ</span>
+            </div>
+            <button onclick="document.getElementById('mktenvFrame').src=document.getElementById('mktenvFrame').src" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.12em;padding:6px 14px;background:transparent;border:1px solid var(--accent2);color:var(--accent2);cursor:pointer;">↺ REFRESH</button>
+        </div>
+        <iframe
+            id="mktenvFrame"
+            src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQOBwVpGrCTGQ5013Bq28Plyat-4ecxnoIegyamAqhDjbJyyJsG-xw8pclDsCV6rT6b_TmtZ5n362Kn/pubhtml?gid=1654471021&single=true"
+            style="width:100%;height:calc(100vh - 110px);border:none;display:block;"
+            frameborder="0"
+        ></iframe>
     </div>
 
 
