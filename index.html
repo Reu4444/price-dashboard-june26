@@ -109,7 +109,7 @@
         padding: 20px 24px;
         box-sizing: border-box;
     }
-    #tab-mktenv {
+    #tab-mktenv, #tab-dailyrs {
         padding: 0 !important;
     }
     #tab-daily {
@@ -803,6 +803,7 @@
             <button class="tab" onclick="switchTab('narrative')">NARRATIVE</button>
             <button class="tab" onclick="switchTab('method')">METHOD</button>
             <button class="tab" onclick="switchTab('mktenv')">MARKET ENV</button>
+            <button class="tab" onclick="switchTab('dailyrs')">DAILY RS</button>
         </div>
 
         <!-- TAB: PRICE -->
@@ -2411,6 +2412,23 @@
 
 
 
+
+    <!-- TAB: DAILY RS -->
+    <div class="tab-content" id="tab-dailyrs" style="padding:0;box-sizing:border-box;">
+        <div style="padding:16px 24px 8px;display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border-bottom:1px solid var(--border);">
+            <div>
+                <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.15em;color:var(--accent2);">DAILY RS</span>
+                <span style="font-size:11px;color:var(--muted);margin-left:16px;">Relative Strength — Daily View</span>
+            </div>
+            <button onclick="document.getElementById('dailyrsFrame').src=document.getElementById('dailyrsFrame').src" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.12em;padding:6px 14px;background:transparent;border:1px solid var(--accent2);color:var(--accent2);cursor:pointer;">↺ REFRESH</button>
+        </div>
+        <iframe
+            id="dailyrsFrame"
+            src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQOBwVpGrCTGQ5013Bq28Plyat-4ecxnoIegyamAqhDjbJyyJsG-xw8pclDsCV6rT6b_TmtZ5n362Kn/pubhtml?gid=931560271&single=true"
+            style="width:100%;height:calc(100vh - 110px);border:none;display:block;"
+            frameborder="0"
+        ></iframe>
+    </div>
 
     <script>
     const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRZbp_T7BQ8Yz9Ijf8ef7gW1UCscNlpFcqoz4tHj5NU7xk2gpkeYIfFvnEG6L0esIKdWhJvE-rWuJ3q/pub?gid=0&single=true&output=csv';
