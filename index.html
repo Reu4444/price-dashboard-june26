@@ -792,6 +792,7 @@
 
         <!-- TABS -->
         <div class="tabs">
+            <button class="tab" onclick="switchTab('mktenv')">MARKET ENV</button>
             <button class="tab active" onclick="switchTab('price')">REL. STRENGTH</button>
             <button class="tab" onclick="switchTab('daily')">DAILY MOVES</button>
             <button class="tab" onclick="switchTab('breadth')">BREADTH</button>
@@ -2400,7 +2401,7 @@
                 <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.15em;color:var(--accent2);">MARKET ENVIRONMENT</span>
                 <span style="font-size:11px;color:var(--muted);margin-left:16px;">Short-Term Market Environment — QQQ</span>
             </div>
-            <button onclick="document.getElementById('mktenvFrame').src=document.getElementById('mktenvFrame').src" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.12em;padding:6px 14px;background:transparent;border:1px solid var(--accent2);color:var(--accent2);cursor:pointer;">↺ REFRESH</button>
+            <button onclick="document.getElementById('mktenvFrame').src='https://docs.google.com/spreadsheets/d/e/2PACX-1vQOBwVpGrCTGQ5013Bq28Plyat-4ecxnoIegyamAqhDjbJyyJsG-xw8pclDsCV6rT6b_TmtZ5n362Kn/pubhtml?gid=1654471021&single=true&t='+Date.now()" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.12em;padding:6px 14px;background:transparent;border:1px solid var(--accent2);color:var(--accent2);cursor:pointer;">↺ REFRESH</button>
         </div>
         <iframe
             id="mktenvFrame"
@@ -2420,7 +2421,7 @@
                 <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.15em;color:var(--accent2);">DAILY RS</span>
                 <span style="font-size:11px;color:var(--muted);margin-left:16px;">Relative Strength — Daily View</span>
             </div>
-            <button onclick="document.getElementById('dailyrsFrame').src=document.getElementById('dailyrsFrame').src" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.12em;padding:6px 14px;background:transparent;border:1px solid var(--accent2);color:var(--accent2);cursor:pointer;">↺ REFRESH</button>
+            <button onclick="document.getElementById('dailyrsFrame').src='https://docs.google.com/spreadsheets/d/e/2PACX-1vQOBwVpGrCTGQ5013Bq28Plyat-4ecxnoIegyamAqhDjbJyyJsG-xw8pclDsCV6rT6b_TmtZ5n362Kn/pubhtml?gid=931560271&single=true&t='+Date.now()" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.12em;padding:6px 14px;background:transparent;border:1px solid var(--accent2);color:var(--accent2);cursor:pointer;">↺ REFRESH</button>
         </div>
         <iframe
             id="dailyrsFrame"
@@ -5512,6 +5513,77 @@ Write a thorough 7-section market analysis.`;
           <td class="td-name">${d.sector || ''}</td>
           <td class="td-name">${d.group || ''}</td>
           <td class="td-pct">${fmktcap(d.mktcap)}</td>`;
+    }
+
+    // ── RENDER ROW ───────────────────────────────────────────────
+    function rowSort(col) {
+        if (rowSortCol === col) {
+            rowSortDir = rowSortDir === 'desc' ? 'asc' : 'desc';
+        } else {
+            rowSortCol = col;
+            rowSortDir = 'desc';
+        }
+        renderRoW();
+    }
+
+    function renderRoW() {
+        const search = document.getElementById('searchInput') ? document.getElementById('searchInput').value.toLowerCase().trim() : '';
+        const countryFilter = document.getElementById('rowCountryFilter') ? document.getElementById('rowCountryFilter').value : 'all';
+        const currencyFilter = document.getElementById('rowCurrencyFilter') ? document.getElementById('rowCurrencyFilter').value : 'all';
+
+        let rows = allDataRoW.slice();
+
+        if (search) rows = rows.filter(d => d.ticker.toLowerCase().includes(search) || (d.name || '').toLowerCase().includes(search));
+        if (countryFilter !== 'all') rows = rows.filter(d => d.country === countryFilter);
+        if (currencyFilter !== 'all') rows = rows.filter(d => d.currency === currencyFilter);
+
+        rows.sort((a, b) => {
+            let av = a[rowSortCol], bv = b[rowSortCol];
+            if (av == null) return rowSortDir === 'desc' ? 1 : -1;
+            if (bv == null) return rowSortDir === 'desc' ? -1 : 1;
+            if (typeof av === 'string') return rowSortDir === 'desc' ? bv.localeCompare(av) : av.localeCompare(bv);
+            return rowSortDir === 'desc' ? bv - av : av - bv;
+        });
+
+        const tbody = document.getElementById('rowBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        const fmcEur = v => {
+            const n = parseFloat(v);
+            if (isNaN(n) || n === 0) return '<span style="color:var(--muted)">—</span>';
+            if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+            if (n >= 1e6) return (n / 1e6).toFixed(0) + 'M';
+            return n.toFixed(0);
+        };
+
+        const LIMIT = 500;
+        rows.slice(0, LIMIT).forEach(d => {
+            const inW = watchlist.includes(d.ticker);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="sticky-0 watch-toggle" style="text-align:center;cursor:pointer;font-size:11px;width:22px;padding:4px 3px;color:${inW ? '#06b6d4' : '#475569'}" data-ticker="${d.ticker}">${inW ? '★' : '☆'}</td>
+                <td class="sticky-1" style="text-align:center;width:22px;padding:4px 3px;"><a href="https://www.tradingview.com/chart/?symbol=${d.ticker}" target="_blank" style="color:#475569;font-size:8px;text-decoration:none;font-weight:600;" onmouseover="this.style.color='#06b6d4'" onmouseout="this.style.color='#475569'">TV</a></td>
+                <td class="td-ticker sticky-2" style="cursor:pointer;color:var(--accent2);min-width:44px;" onclick="openNews('${d.ticker}','${(d.name || '').replace(/'/g, "\\'")}')">${d.ticker}</td>
+                <td class="td-name sticky-3" style="min-width:100px;">${d.name || ''}</td>
+                <td class="td-name">${d.country || ''}</td>
+                <td class="td-name">${d.currency || ''}</td>
+                <td class="td-name">${d.sector || ''}</td>
+                <td class="td-pct">${fmcEur(d.mktcap_eur)}</td>
+                <td class="td-pct" style="border-left:1px solid var(--border2)">${pctCell(d.pct_1w)}</td>
+                <td class="td-pct">${pctCell(d.pct_4w)}</td>
+                <td class="td-pct">${pctCell(d.pct_6m)}</td>
+                <td class="td-pct">${pctCell(d.pct_12m)}</td>
+                <td class="td-pct" style="border-left:1px solid var(--border2);color:#6d28d9">${pctCell(d.rs_ibd)}</td>
+                <td class="td-pct" style="color:#10b981">${distCell(d.ma20_dist)}</td>
+                <td class="td-pct" style="color:#f59e0b">${distCell52w(d.high52_dist)}</td>`;
+            tbody.appendChild(tr);
+        });
+
+        const table = document.getElementById('rowTable');
+        const empty = document.getElementById('emptyRoW');
+        if (table) table.style.display = rows.length ? 'table' : 'none';
+        if (empty) empty.style.display = rows.length ? 'none' : '';
     }
 
     // ── RENDER PRICE ─────────────────────────────────────────────
