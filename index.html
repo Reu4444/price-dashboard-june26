@@ -1599,7 +1599,7 @@
             <div style="font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:14px;border-left:2px solid var(--accent2);padding-left:10px;">
                 Trajectoire chronologique des percentiles moyens par groupe : <b style="color:var(--text)">M3 → M2 → W4 → W3 → W2 → W1</b> (segments non-chevauchants, du plus ancien au plus récent).
                 <b style="color:var(--text)">Δ MOMENTUM = avg(W1,W2) − avg(M2,M3)</b> : déplacement de la force relative récente vs il y a 1-2 mois.
-                Le statut établi est ancré sur <b style="color:var(--text)">6M EST = avg(M2…M7)</b> (jours 21-147, exclut le mois en cours — la baseline ne peut pas être contaminée par le décrochage immédiat) avec rattrapage rapide : ROLLING OVER = (6M EST ≥ 60 <i>ou</i> M2-M3 ≥ 70) et Δ ≤ −seuil. EMERGING = 6M EST ≤ 50 et M2-M3 ≤ 55 et Δ ≥ +seuil. LEADER = 6M EST ≥ 60 et W1-W2 ≥ 60.
+                Le statut établi est ancré sur <b style="color:var(--text)">6M EST = 0.25×M2+0.20×M3+0.15×M4+0.15×M5+0.15×M6+0.10×M7</b> (poids décroissants, exclut le mois en cours — la baseline ne peut pas être contaminée par le décrochage immédiat) avec rattrapage rapide : ROLLING OVER = (6M EST ≥ 60 <i>ou</i> M2-M3 ≥ 70) et Δ ≤ −seuil. EMERGING = 6M EST ≤ 50 et M2-M3 ≤ 55 et Δ ≥ +seuil. LEADER = 6M EST ≥ 60 et W1-W2 ≥ 60.
             </div>
 
             <!-- Alert panels -->
@@ -1642,7 +1642,7 @@
                             <th style="cursor:pointer;width:70px;text-align:center" class="th-pct" onclick="rotSort('w2')">W2</th>
                             <th style="cursor:pointer;width:70px;text-align:center" class="th-pct" onclick="rotSort('w1')">W1</th>
                             <th style="cursor:pointer;width:86px;text-align:center;border-left:1px solid var(--border2);color:var(--accent2)" class="th-pct" onclick="rotSort('delta')">Δ MOM</th>
-                            <th style="cursor:pointer;width:76px;text-align:center" class="th-pct" onclick="rotSort('base_est')" title="Force établie : avg des percentiles M2 à M7 (jours 21-147), exclut le mois en cours">6M EST</th>
+                            <th style="cursor:pointer;width:76px;text-align:center" class="th-pct" onclick="rotSort('base_est')" title="Force établie : moyenne pondérée M2→M7 (0.25/0.20/0.15/0.15/0.15/0.10), exclut le mois en cours">6M EST</th>
                             <th style="cursor:pointer;width:110px;text-align:center;border-left:1px solid var(--border2)" onclick="rotSort('phase')">PHASE</th>
                         </tr>
                     </thead>
@@ -7918,7 +7918,7 @@ Write a thorough 7-section market analysis.`;
     }
 
     // Classify group phase.
-    // Force établie = base_est (avg M2..M7, jours 21-147) → exclut M1, fraîche mais non contaminée par le mouvement immédiat.
+    // Force établie = base_est (moyenne pondérée M2..M7, 0.25/0.20/0.15/0.15/0.15/0.10) → exclut M1, fraîche mais non contaminée.
     // Rattrapage cycle rapide : M2-M3 ≥ 70 (thèmes jeunes, < 8 mois d'historique de leadership).
     // delta = avg(W1,W2) − avg(M2,M3) → déplacement récent du momentum.
     function rotClassify(g, deltaThresh) {
@@ -7957,6 +7957,15 @@ Write a thorough 7-section market analysis.`;
             const v = arr.filter(x => x != null);
             return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null;
         };
+        // Moyenne pondérée par ticker (poids décroissants M2→M7), renormalisée si valeur manquante
+        const weightedAvg = (vals, weights) => {
+            let s = 0, wSum = 0;
+            for (let i = 0; i < vals.length; i++) {
+                if (vals[i] != null) { s += vals[i] * weights[i]; wSum += weights[i]; }
+            }
+            return wSum > 0 ? s / wSum : null;
+        };
+        const W_BASE_EST = [0.25, 0.20, 0.15, 0.15, 0.15, 0.10]; // M2, M3, M4, M5, M6, M7
 
         let rows = Object.entries(buckets)
             .filter(([, members]) => members.length >= minMembers)
@@ -7980,11 +7989,11 @@ Write a thorough 7-section market analysis.`;
                     recent: recent != null ? Math.round(recent) : null,
                     delta,
                     pct_6m: (() => { const v = seg(d => d.pct_6m); return v != null ? Math.round(v) : null; })(),
-                    // Force établie ex-récent : avg des rangs M2..M7 (jours 21-147) par membre, puis moyenne groupe.
-                    // Exclut M1 (le mois en cours, rolling) → la baseline n'est pas contaminée par le mouvement immédiat,
-                    // tout en restant fraîche (se termine il y a ~1 mois).
+                    // Force établie ex-récent : moyenne pondérée des rangs M2..M7 (jours 21-147) par membre,
+                    // poids décroissants 0.25/0.20/0.15/0.15/0.15/0.10 (M2→M7), puis moyenne groupe.
+                    // Exclut M1 (le mois en cours, rolling) → non contaminée par le mouvement immédiat, fraîche (~1 mois).
                     base_est: (() => {
-                        const v = seg(d => avg([d.pct_m2, d.pct_m3, d.pct_m4, d.pct_m5, d.pct_m6, d.pct_m7]));
+                        const v = seg(d => weightedAvg([d.pct_m2, d.pct_m3, d.pct_m4, d.pct_m5, d.pct_m6, d.pct_m7], W_BASE_EST));
                         return v != null ? Math.round(v) : null;
                     })()
                 };
