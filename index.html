@@ -105,7 +105,7 @@
         padding: 20px 24px;
     }
     /* Tabs outside .main need same padding */
-    #tab-narrative, #tab-method, #tab-breadth, #tab-returns, #tab-compare, #tab-best, #tab-fund {
+    #tab-narrative, #tab-method, #tab-breadth, #tab-returns, #tab-compare, #tab-best, #tab-fund, #tab-rotation {
         padding: 20px 24px;
         box-sizing: border-box;
     }
@@ -792,6 +792,7 @@
             <button class="tab active" onclick="switchTab('price')">REL. STRENGTH</button>
             <button class="tab" onclick="switchTab('daily')">DAILY MOVES</button>
             <button class="tab" onclick="switchTab('breadth')">BREADTH</button>
+            <button class="tab" onclick="switchTab('rotation')">ROTATION</button>
             <button class="tab" onclick="switchTab('returns')">% RETURNS</button>
             <button class="tab" onclick="switchTab('fund')">FUNDAMENTALS</button>
             <button class="tab" onclick="switchTab('best')">SCREENING</button>
@@ -1574,6 +1575,79 @@
                         <tbody id="retRowBody"></tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+
+        <!-- TAB: ROTATION (dynamic momentum shifts) -->
+        <div class="tab-content" id="tab-rotation">
+            <!-- Controls -->
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;margin-top:4px;flex-wrap:wrap;">
+                <select id="rotView" class="filter-select" onchange="renderRotation()">
+                    <option value="groups">Groups</option>
+                    <option value="sectors">Sectors</option>
+                </select>
+                <span style="font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">MIN MEMBERS</span>
+                <input id="rotMinMembers" class="filter-input" type="number" value="3" min="1" max="20" style="width:46px;" oninput="debounce(renderRotation,80)()">
+                <span style="font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">MKT CAP ≥ ($B)</span>
+                <input id="rotMktcap" class="filter-input" type="number" placeholder="0" style="width:56px;" oninput="debounce(renderRotation,80)()">
+                <span style="font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">Δ SEUIL</span>
+                <input id="rotDeltaThresh" class="filter-input" type="number" value="15" min="5" max="50" style="width:46px;" oninput="debounce(renderRotation,80)()" title="Amplitude minimale du delta momentum pour classer Rolling Over / Emerging">
+                <span style="font-size:10px;color:var(--muted);margin-left:auto" id="rotCount"></span>
+            </div>
+
+            <!-- Explainer -->
+            <div style="font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:14px;border-left:2px solid var(--accent2);padding-left:10px;">
+                Trajectoire chronologique des percentiles moyens par groupe : <b style="color:var(--text)">M3 → M2 → W4 → W3 → W2 → W1</b> (segments non-chevauchants, du plus ancien au plus récent).
+                <b style="color:var(--text)">Δ MOMENTUM = avg(W1,W2) − avg(M2,M3)</b> : mesure le déplacement de la force relative récente vs il y a 1-2 mois.
+                Un leader (6M élevé) avec Δ fortement négatif = rotation sortante en cours. Un laggard avec Δ fortement positif = rotation entrante potentielle.
+            </div>
+
+            <!-- Alert panels -->
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px;">
+                <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid #b91c1c;">
+                    <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:#b91c1c;padding:8px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
+                        <span>⚠ ROLLING OVER — leaders qui décrochent</span>
+                        <span id="rotRollCount" style="font-size:10px;font-weight:400"></span>
+                    </div>
+                    <div id="rotRollList" style="max-height:340px;overflow-y:auto;"></div>
+                </div>
+                <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid #3b82f6;">
+                    <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:#3b82f6;padding:8px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
+                        <span>↗ EMERGING — rotation entrante</span>
+                        <span id="rotEmergCount" style="font-size:10px;font-weight:400"></span>
+                    </div>
+                    <div id="rotEmergList" style="max-height:340px;overflow-y:auto;"></div>
+                </div>
+                <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid #15803d;">
+                    <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:#15803d;padding:8px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
+                        <span>★ CONFIRMED LEADERS — force soutenue</span>
+                        <span id="rotLeadCount" style="font-size:10px;font-weight:400"></span>
+                    </div>
+                    <div id="rotLeadList" style="max-height:340px;overflow-y:auto;"></div>
+                </div>
+            </div>
+
+            <!-- Master table -->
+            <div class="table-wrap">
+                <table id="rotTable" style="width:100%;">
+                    <thead>
+                        <tr>
+                            <th style="cursor:pointer;text-align:left" onclick="rotSort('label')">GROUP</th>
+                            <th style="width:52px;text-align:center" class="th-pct">N</th>
+                            <th style="width:150px;text-align:center">TREND M3 → W1</th>
+                            <th style="cursor:pointer;width:70px;text-align:center;border-left:1px solid var(--border2)" class="th-pct" onclick="rotSort('m3')">M3</th>
+                            <th style="cursor:pointer;width:70px;text-align:center" class="th-pct" onclick="rotSort('m2')">M2</th>
+                            <th style="cursor:pointer;width:70px;text-align:center" class="th-pct" onclick="rotSort('w4')">W4</th>
+                            <th style="cursor:pointer;width:70px;text-align:center" class="th-pct" onclick="rotSort('w3')">W3</th>
+                            <th style="cursor:pointer;width:70px;text-align:center" class="th-pct" onclick="rotSort('w2')">W2</th>
+                            <th style="cursor:pointer;width:70px;text-align:center" class="th-pct" onclick="rotSort('w1')">W1</th>
+                            <th style="cursor:pointer;width:86px;text-align:center;border-left:1px solid var(--border2);color:var(--accent2)" class="th-pct" onclick="rotSort('delta')">Δ MOM</th>
+                            <th style="cursor:pointer;width:76px;text-align:center" class="th-pct" onclick="rotSort('pct_6m')">PCT 6M</th>
+                            <th style="cursor:pointer;width:110px;text-align:center;border-left:1px solid var(--border2)" onclick="rotSort('phase')">PHASE</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rotBody"></tbody>
+                </table>
             </div>
         </div>
 
@@ -3410,6 +3484,8 @@
             else if (retData && retData.length)
                 renderRetTickers();
         }
+        else if (activeTab === 'rotation')
+            renderRotation();
         else
             renderGroups();
     }
@@ -7795,6 +7871,241 @@ Write a thorough 7-section market analysis.`;
         });
         document.getElementById('retRowTable').style.display = rows.length ? 'table' : 'none';
         document.getElementById('emptyRetRow').style.display = rows.length ? 'none' : '';
+    }
+
+    // ── ROTATION TAB (dynamic momentum shifts) ────────────────────
+    let rotSortCol = 'delta', rotSortDir = 'asc';
+    let rotDrillOpen = null;
+
+    function rotSort(col) {
+        if (rotSortCol === col)
+            rotSortDir = rotSortDir === 'asc' ? 'desc' : 'asc';
+        else {
+            rotSortCol = col;
+            rotSortDir = (col === 'label' || col === 'phase') ? 'asc' : 'desc';
+        }
+        renderRotation();
+    }
+
+    // Small inline SVG sparkline of the percentile trajectory (0-100 scale)
+    function rotSparkline(series, color) {
+        const W = 130, H = 30, PAD = 3;
+        const pts = series.map((v, i) => {
+            const x = PAD + i * ((W - 2 * PAD) / (series.length - 1));
+            const y = H - PAD - ((v ?? 50) / 100) * (H - 2 * PAD);
+            return `${x.toFixed(1)},${y.toFixed(1)}`;
+        }).join(' ');
+        // 50-line reference
+        const midY = H - PAD - 0.5 * (H - 2 * PAD);
+        const last = series[series.length - 1] ?? 50;
+        const lastX = W - PAD, lastY = H - PAD - (last / 100) * (H - 2 * PAD);
+        return `<svg width="${W}" height="${H}" style="display:block;margin:0 auto;">
+            <line x1="${PAD}" y1="${midY}" x2="${W - PAD}" y2="${midY}" stroke="var(--border2)" stroke-width="1" stroke-dasharray="2,3"/>
+            <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.6"/>
+            <circle cx="${lastX}" cy="${lastY}" r="2.4" fill="${color}"/>
+        </svg>`;
+    }
+
+    // Classify group phase from its trajectory
+    function rotClassify(g, deltaThresh) {
+        const past = g.past;     // avg(M2, M3)  — force il y a 1-2 mois
+        const recent = g.recent; // avg(W1, W2)  — force sur les 2 dernières semaines
+        const d = g.delta;
+        if (past == null || recent == null) return { name: 'N/A', color: '#94a3b8', order: 5 };
+        if (past >= 60 && d <= -deltaThresh)  return { name: 'ROLLING OVER', color: '#b91c1c', order: 0 };
+        if (past <= 50 && d >= deltaThresh)   return { name: 'EMERGING',     color: '#3b82f6', order: 1 };
+        if (recent >= 60 && past >= 60)       return { name: 'LEADER',       color: '#15803d', order: 2 };
+        if (recent <= 40 && past <= 40)       return { name: 'LAGGARD',      color: '#6b7280', order: 4 };
+        return { name: 'NEUTRAL', color: '#94a3b8', order: 3 };
+    }
+
+    function renderRotation() {
+        if (!allData.length) return;
+        const view = document.getElementById('rotView')?.value || 'groups';
+        const key = view === 'sectors' ? 'sector' : 'group';
+        const minMembers = parseInt(document.getElementById('rotMinMembers')?.value) || 3;
+        const mktcapMin = parseFloat(document.getElementById('rotMktcap')?.value) || 0;
+        const deltaThresh = parseFloat(document.getElementById('rotDeltaThresh')?.value) || 15;
+
+        // Aggregate per group: mean of member percentile ranks per non-overlapping segment
+        const buckets = {};
+        allData.forEach(d => {
+            const label = d[key];
+            if (!label) return;
+            if (mktcapMin > 0 && (parseFloat(d.mktcap) || 0) < mktcapMin) return;
+            (buckets[label] = buckets[label] || []).push(d);
+        });
+
+        const avg = arr => {
+            const v = arr.filter(x => x != null);
+            return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null;
+        };
+
+        let rows = Object.entries(buckets)
+            .filter(([, members]) => members.length >= minMembers)
+            .map(([label, members]) => {
+                const seg = f => avg(members.map(f));
+                const m3 = seg(d => d.pct_m3), m2 = seg(d => d.pct_m2);
+                const w4 = seg(d => d.pct_w4), w3 = seg(d => d.pct_w3);
+                const w2 = seg(d => d.pct_w2), w1 = seg(d => d.pct_w1);
+                const past = avg([m2, m3]);
+                const recent = avg([w1, w2]);
+                const delta = (past != null && recent != null) ? Math.round(recent - past) : null;
+                return {
+                    label, n: members.length, members,
+                    m3: m3 != null ? Math.round(m3) : null,
+                    m2: m2 != null ? Math.round(m2) : null,
+                    w4: w4 != null ? Math.round(w4) : null,
+                    w3: w3 != null ? Math.round(w3) : null,
+                    w2: w2 != null ? Math.round(w2) : null,
+                    w1: w1 != null ? Math.round(w1) : null,
+                    past: past != null ? Math.round(past) : null,
+                    recent: recent != null ? Math.round(recent) : null,
+                    delta,
+                    pct_6m: (() => { const v = seg(d => d.pct_6m); return v != null ? Math.round(v) : null; })()
+                };
+            });
+
+        rows.forEach(g => {
+            g.phaseObj = rotClassify(g, deltaThresh);
+            g.phase = g.phaseObj.order;
+        });
+
+        // ── Alert panels ──
+        const roll  = rows.filter(g => g.phaseObj.name === 'ROLLING OVER').sort((a, b) => (a.delta ?? 0) - (b.delta ?? 0));
+        const emerg = rows.filter(g => g.phaseObj.name === 'EMERGING').sort((a, b) => (b.delta ?? 0) - (a.delta ?? 0));
+        const lead  = rows.filter(g => g.phaseObj.name === 'LEADER').sort((a, b) => (b.recent ?? 0) - (a.recent ?? 0));
+
+        const miniRow = (g, accent) => `
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 12px;border-bottom:1px solid var(--faint);cursor:pointer;" onclick="rotOpenDrill('${g.label.replace(/'/g, "\\'")}')" title="Cliquer pour voir les membres">
+                <div style="min-width:0;">
+                    <div style="font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${g.label}</div>
+                    <div style="font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;">M2-M3: ${g.past ?? '—'} → W1-W2: ${g.recent ?? '—'} · ${g.n} tickers</div>
+                </div>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:${accent};white-space:nowrap;margin-left:10px;">${g.delta > 0 ? '+' : ''}${g.delta ?? '—'}</span>
+            </div>`;
+
+        document.getElementById('rotRollList').innerHTML  = roll.length  ? roll.map(g => miniRow(g, '#b91c1c')).join('')  : '<div style="padding:14px 12px;font-size:11px;color:var(--muted);">Aucun leader en décrochage au seuil actuel.</div>';
+        document.getElementById('rotEmergList').innerHTML = emerg.length ? emerg.map(g => miniRow(g, '#3b82f6')).join('') : '<div style="padding:14px 12px;font-size:11px;color:var(--muted);">Aucune rotation entrante au seuil actuel.</div>';
+        document.getElementById('rotLeadList').innerHTML  = lead.length  ? lead.map(g => miniRow(g, '#15803d')).join('')  : '<div style="padding:14px 12px;font-size:11px;color:var(--muted);">Aucun leader confirmé.</div>';
+        document.getElementById('rotRollCount').textContent  = roll.length  || '';
+        document.getElementById('rotEmergCount').textContent = emerg.length || '';
+        document.getElementById('rotLeadCount').textContent  = lead.length  || '';
+
+        // ── Master table ──
+        rows.sort((a, b) => {
+            let av = a[rotSortCol], bv = b[rotSortCol];
+            if (rotSortCol === 'label') return rotSortDir === 'asc' ? a.label.localeCompare(b.label) : b.label.localeCompare(a.label);
+            if (av == null) return 1;
+            if (bv == null) return -1;
+            return rotSortDir === 'desc' ? bv - av : av - bv;
+        });
+
+        const tbody = document.getElementById('rotBody');
+        tbody.innerHTML = '';
+        rows.forEach(g => {
+            const series = [g.m3, g.m2, g.w4, g.w3, g.w2, g.w1];
+            const tr = document.createElement('tr');
+            tr.style.cursor = 'pointer';
+            tr.dataset.rotLabel = g.label;
+            tr.onclick = () => rotToggleDrill(tr, g);
+            const dColor = g.delta == null ? 'var(--muted)' : g.delta <= -deltaThresh ? '#b91c1c' : g.delta >= deltaThresh ? '#15803d' : 'var(--muted)';
+            tr.innerHTML = `
+                <td style="font-weight:700;font-size:12px;color:var(--text);padding:5px 10px;">${g.label}</td>
+                <td class="td-pct" style="color:var(--muted)">${g.n}</td>
+                <td>${rotSparkline(series, g.phaseObj.color)}</td>
+                <td class="td-pct" style="border-left:1px solid var(--border2)">${pctCell(g.m3)}</td>
+                <td class="td-pct">${pctCell(g.m2)}</td>
+                <td class="td-pct">${pctCell(g.w4)}</td>
+                <td class="td-pct">${pctCell(g.w3)}</td>
+                <td class="td-pct">${pctCell(g.w2)}</td>
+                <td class="td-pct">${pctCell(g.w1)}</td>
+                <td class="td-pct" style="border-left:1px solid var(--border2);font-weight:700;color:${dColor};font-family:'IBM Plex Mono',monospace;">${g.delta != null ? (g.delta > 0 ? '+' : '') + g.delta : '—'}</td>
+                <td class="td-pct">${pctCell(g.pct_6m)}</td>
+                <td style="text-align:center;border-left:1px solid var(--border2)"><span style="background:${g.phaseObj.color}18;color:${g.phaseObj.color};border:1px solid ${g.phaseObj.color}66;font-size:9px;font-weight:700;letter-spacing:.08em;padding:2px 7px;white-space:nowrap;">${g.phaseObj.name}</span></td>`;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('rotCount').textContent = `${rows.length} ${view}`;
+        window._rotRows = rows;
+    }
+
+    // Open drill from alert panel (find row in master table or render standalone)
+    function rotOpenDrill(label) {
+        const g = (window._rotRows || []).find(r => r.label === label);
+        if (!g) return;
+        const tr = document.querySelector(`#rotBody tr[data-rot-label="${CSS.escape(label)}"]`);
+        if (tr) {
+            rotToggleDrill(tr, g);
+            tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    function rotToggleDrill(groupTr, g) {
+        const existing = document.querySelector('.rot-drill-row');
+        const wasOpen = rotDrillOpen === g.label;
+        if (existing) existing.remove();
+        document.querySelectorAll('#rotBody tr').forEach(r => r.style.background = '');
+        rotDrillOpen = null;
+        if (wasOpen) return;
+
+        // Members with their own delta, sorted by delta ascending for ROLLING OVER context, else desc
+        const members = g.members.map(d => {
+            const past = ((d.pct_m2 ?? null) != null || (d.pct_m3 ?? null) != null)
+                ? ((d.pct_m2 ?? d.pct_m3) + (d.pct_m3 ?? d.pct_m2)) / 2 : null;
+            const recent = ((d.pct_w1 ?? null) != null || (d.pct_w2 ?? null) != null)
+                ? ((d.pct_w1 ?? d.pct_w2) + (d.pct_w2 ?? d.pct_w1)) / 2 : null;
+            const delta = (past != null && recent != null) ? Math.round(recent - past) : null;
+            return { ...d, _delta: delta };
+        }).sort((a, b) => (b._delta ?? -999) - (a._delta ?? -999));
+
+        const innerRows = members.map(d => {
+            const inW = watchlist.includes(d.ticker);
+            const nameSafe = (d.name || '').replace(/'/g, "\\'");
+            const dc = d._delta == null ? 'var(--muted)' : d._delta < 0 ? '#b91c1c' : '#15803d';
+            return `<tr style="border-bottom:1px solid var(--faint)">
+                <td style="padding:4px 8px;white-space:nowrap;">
+                    <span style="cursor:pointer;font-size:11px;color:${inW ? '#06b6d4' : '#475569'};margin-right:4px" class="watch-toggle" data-ticker="${d.ticker}">${inW ? '★' : '☆'}</span>
+                    <a href="https://www.tradingview.com/chart/?symbol=${d.ticker}" target="_blank" style="color:#475569;font-size:8px;text-decoration:none;font-weight:600;margin-right:6px">TV</a>
+                    <span style="font-weight:700;font-size:12px;color:var(--accent2);cursor:pointer;" onclick="openNews('${d.ticker}','${nameSafe}')">${d.ticker}</span>
+                </td>
+                <td style="padding:4px 8px;font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.name || ''}</td>
+                <td class="td-pct" style="color:var(--muted)">${fmktcap(d.mktcap)}</td>
+                <td class="td-pct" style="border-left:1px solid var(--border2)">${pctCell(d.pct_1w)}</td>
+                <td class="td-pct">${pctCell(d.pct_4w)}</td>
+                <td class="td-pct">${pctCell(d.pct_6m)}</td>
+                <td class="td-pct">${pctCell(d.pct_12m)}</td>
+                <td class="td-pct" style="border-left:1px solid var(--border2);font-weight:700;font-family:'IBM Plex Mono',monospace;color:${dc}">${d._delta != null ? (d._delta > 0 ? '+' : '') + d._delta : '—'}</td>
+                <td class="td-pct">${pctCell(d.rs_ibd)}</td>
+            </tr>`;
+        }).join('');
+
+        const drillTr = document.createElement('tr');
+        drillTr.className = 'rot-drill-row';
+        drillTr.innerHTML = `<td colspan="12" style="padding:0;background:var(--bg3);border-bottom:1px solid var(--accent2)">
+            <div style="padding:6px 12px 4px;display:flex;align-items:center;justify-content:space-between">
+                <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;color:var(--accent2)">${g.label} — ${members.length} tickers (triés par Δ momentum individuel)</span>
+                <button onclick="event.stopPropagation();this.closest('tr').remove();rotDrillOpen=null;" style="font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;letter-spacing:.1em;padding:2px 10px;background:transparent;border:1px solid var(--border2);color:var(--muted);cursor:pointer">✕ CLOSE</button>
+            </div>
+            <table style="width:100%;border-collapse:collapse;table-layout:fixed">
+                <colgroup><col style="width:130px"><col><col style="width:70px"><col style="width:64px"><col style="width:64px"><col style="width:64px"><col style="width:64px"><col style="width:70px"><col style="width:64px"></colgroup>
+                <thead><tr style="background:var(--bg2)">
+                    <th style="font-size:8px;letter-spacing:.12em;color:var(--muted);padding:4px 8px;text-align:left">★ TV TICKER</th>
+                    <th style="font-size:8px;letter-spacing:.12em;color:var(--muted);padding:4px 8px;text-align:left">NAME</th>
+                    <th style="font-size:8px;letter-spacing:.12em;color:var(--muted);padding:4px 8px;text-align:center">CAP</th>
+                    <th style="font-size:8px;letter-spacing:.12em;color:var(--muted);padding:4px 8px;text-align:center;border-left:1px solid var(--border2)">PCT 1W</th>
+                    <th style="font-size:8px;letter-spacing:.12em;color:var(--muted);padding:4px 8px;text-align:center">PCT 4W</th>
+                    <th style="font-size:8px;letter-spacing:.12em;color:var(--muted);padding:4px 8px;text-align:center">PCT 6M</th>
+                    <th style="font-size:8px;letter-spacing:.12em;color:var(--muted);padding:4px 8px;text-align:center">PCT 12M</th>
+                    <th style="font-size:8px;letter-spacing:.12em;color:var(--accent2);padding:4px 8px;text-align:center;border-left:1px solid var(--border2)">Δ MOM</th>
+                    <th style="font-size:8px;letter-spacing:.12em;color:#6d28d9;padding:4px 8px;text-align:center">RS IBD</th>
+                </tr></thead>
+                <tbody>${innerRows}</tbody>
+            </table>
+        </td>`;
+        groupTr.after(drillTr);
+        groupTr.style.background = 'rgba(3,105,161,0.07)';
+        rotDrillOpen = g.label;
     }
 
     function getTickerQuadrantRRG(x, y) {
