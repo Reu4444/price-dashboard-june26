@@ -8076,7 +8076,6 @@ Write a thorough 7-section market analysis.`;
                     past: past != null ? Math.round(past) : null,
                     recent: recent != null ? Math.round(recent) : null,
                     delta,
-                    pct_6m: (() => { const v = seg(d => d.pct_6m); return v != null ? Math.round(v) : null; })(),
                     // Force établie ex-récent : moyenne pondérée des rangs M2..M7 (jours 21-147) par membre,
                     // poids décroissants 0.25/0.20/0.15/0.15/0.15/0.10 (M2→M7), puis moyenne groupe.
                     // Exclut M1 (le mois en cours, rolling) → non contaminée par le mouvement immédiat, fraîche (~1 mois).
@@ -8261,9 +8260,13 @@ Write a thorough 7-section market analysis.`;
     // Verticalité : move % ÷ (vol journalière AVANT le move × √durée), en nb de sigmas.
     // σ_pré 1W = vol des jours 5-25 (les 20j précédant le move 0-5).
     // σ_pré 4W = vol des jours 21-41 (les 20j précédant le move 0-21).
+    let _vertComputedFor = 0; // nb de tickers avec prix au dernier calcul (invalide le cache si rawPrices se remplit après coup)
     function computeVerticality() {
+        const nPrices = Object.keys(rawPrices).length;
+        if (nPrices === 0) return;               // prix pas encore chargés : ne rien cacher
+        const force = nPrices !== _vertComputedFor; // rawPrices a changé → recalcul complet
         allData.forEach(d => {
-            if (d.vert_1w !== undefined) return; // déjà calculé (cache)
+            if (!force && d.vert_1w !== undefined) return;
             d.vert_1w = null; d.vert_4w = null;
             const p = rawPrices[d.ticker];
             if (!p || p.length < 45) return;
@@ -8284,6 +8287,7 @@ Write a thorough 7-section market analysis.`;
             if (w1 != null && sigPre1w) d.vert_1w = Math.round(w1 / (sigPre1w * Math.sqrt(5)) * 10) / 10;
             if (m1 != null && sigPre4w) d.vert_4w = Math.round(m1 / (sigPre4w * Math.sqrt(21)) * 10) / 10;
         });
+        _vertComputedFor = nPrices;
     }
 
     // Zone : 0 = BUYABLE, 1 = IN TREND, 2 = EXTENDED
@@ -8371,15 +8375,10 @@ Write a thorough 7-section market analysis.`;
             return leadSortDir === 'desc' ? bv - av : av - bv;
         });
 
-        const sigCell = (v, warnHi) => {
+        const sigCellL = (v, warnHi) => {
             if (v == null) return '<span style="color:var(--muted)">—</span>';
             const c = v >= warnHi ? '#b91c1c' : v <= 0.5 ? '#15803d' : 'var(--text)';
             return `<span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:${c}">${v.toFixed(1)}</span>`;
-        };
-        const retCell = v => {
-            if (v == null) return '<span style="color:var(--muted)">—</span>';
-            const c = v > 0 ? '#15803d' : v < 0 ? '#b91c1c' : 'var(--muted)';
-            return `<span style="font-family:'IBM Plex Mono',monospace;color:${c}">${v > 0 ? '+' : ''}${v.toFixed(1)}%</span>`;
         };
 
         const tbody = document.getElementById('leadBody');
@@ -8402,9 +8401,9 @@ Write a thorough 7-section market analysis.`;
                 <td class="td-pct">${pctCell(d.pct_6m)}</td>
                 <td class="td-pct">${pctCell(d.pct_sales_cq)}</td>
                 <td class="td-pct" style="border-left:1px solid var(--border2);color:#10b981">${distCell(d.ma20_dist)}</td>
-                <td class="td-pct">${sigCell(d.ma20_sigma, cfg.extSigma)}</td>
-                <td class="td-pct" style="border-left:1px solid var(--border2)">${sigCell(d.vert_1w, cfg.vertThresh)}</td>
-                <td class="td-pct">${sigCell(d.vert_4w, cfg.vertThresh)}</td>
+                <td class="td-pct">${sigCellL(d.ma20_sigma, cfg.extSigma)}</td>
+                <td class="td-pct" style="border-left:1px solid var(--border2)">${sigCellL(d.vert_1w, cfg.vertThresh)}</td>
+                <td class="td-pct">${sigCellL(d.vert_4w, cfg.vertThresh)}</td>
                 <td class="td-pct" style="border-left:1px solid var(--border2)">${retCell(d.w1)}</td>
                 <td class="td-pct">${retCell(d.m1)}</td>
                 <td class="td-pct" style="color:#f59e0b">${distCell52w(d.high52_dist)}</td>
