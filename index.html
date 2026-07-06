@@ -823,9 +823,28 @@
             </div>
 
             <!-- STOCKS toggle (shared between US and ROW) -->
-            <div id="stocksToggleBar" style="display:flex;gap:0;border:1px solid var(--border2);overflow:hidden;margin-bottom:10px;width:fit-content;">
-                <button id="stocksUniUS" onclick="setStocksUni('us')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 18px;background:var(--accent2);color:#fff;border:none;cursor:pointer;letter-spacing:.06em;">US</button>
-                <button id="stocksUniRoW" onclick="setStocksUni('row')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 18px;background:transparent;color:var(--muted);border:none;cursor:pointer;letter-spacing:.06em;">ROW</button>
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
+                <div id="stocksToggleBar" style="display:flex;gap:0;border:1px solid var(--border2);overflow:hidden;width:fit-content;">
+                    <button id="stocksUniUS" onclick="setStocksUni('us')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 18px;background:var(--accent2);color:#fff;border:none;cursor:pointer;letter-spacing:.06em;">US</button>
+                    <button id="stocksUniRoW" onclick="setStocksUni('row')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 18px;background:transparent;color:var(--muted);border:none;cursor:pointer;letter-spacing:.06em;">ROW</button>
+                </div>
+                <button id="screeningToggleBtn" onclick="toggleScreeningPanel()" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 18px;background:transparent;color:var(--accent2);border:1px solid var(--accent2);cursor:pointer;letter-spacing:.06em;">SCREENING ▾</button>
+            </div>
+
+            <!-- SCREENING panel: individual percentile thresholds -->
+            <div id="screeningPanel" style="display:none;gap:14px;align-items:center;flex-wrap:wrap;padding:10px 14px;background:var(--bg2);border:1px solid var(--border2);border-left:2px solid var(--accent2);margin-bottom:10px;">
+                <span style="font-size:9px;letter-spacing:.12em;color:var(--muted);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;">Percentile Screening —</span>
+                <span style="font-size:10px;color:var(--accent2);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">PCT 1W ≥</span>
+                <input class="filter-input" id="pct1wFilter" placeholder="ex: 80" oninput="renderActiveDebounced()" style="width:52px;">
+                <span style="font-size:10px;color:var(--accent2);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">PCT 4W ≥</span>
+                <input class="filter-input" id="pct4wFilter" placeholder="ex: 80" oninput="renderActiveDebounced()" style="width:52px;">
+                <span style="font-size:10px;color:var(--accent2);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">PCT 6M ≥</span>
+                <input class="filter-input" id="pct6mFilter" placeholder="ex: 80" oninput="renderActiveDebounced()" style="width:52px;">
+                <span style="font-size:10px;color:var(--accent2);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">PCT 12M ≥</span>
+                <input class="filter-input" id="pct12mFilter" placeholder="ex: 80" oninput="renderActiveDebounced()" style="width:52px;">
+                <span style="font-size:10px;color:#6d28d9;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">RS IBD ≥</span>
+                <input class="filter-input" id="rsIbdFilter" placeholder="ex: 80" oninput="renderActiveDebounced()" style="width:52px;">
+                <button onclick="clearScreeningFilters()" style="font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;padding:4px 10px;background:transparent;color:var(--muted);border:1px solid var(--border);cursor:pointer;letter-spacing:.06em;">CLEAR</button>
             </div>
 
             <!-- TICKERS panel -->
@@ -2276,7 +2295,8 @@
                     <div style="margin-bottom:1px;">  PCT 6M  = avg(rank_m1 … rank_m6)</div>
                     <div style="margin-bottom:1px;">  PCT 12M = EWM-weighted avg(rank_m1 … rank_m12, factor=0.90)</div>
                     <div style="height:5px;"></div>
-                    <div style="margin-bottom:1px;">RS IBD = percentile of  (0.4×rank_3m + 0.2×rank_6m + 0.2×rank_9m + 0.4×rank_12m)</div>
+                    <div style="margin-bottom:1px;">RS IBD = percentile of  (0.4×ret_3m + 0.2×ret_6m + 0.2×ret_9m + 0.2×ret_12m)</div>
+                    <div style="margin-bottom:1px;">  ret_Xm = cumulative % return from day 0 to day X (overlapping windows, not isolated quarters)</div>
                 </div>
             </div>
             <div style="margin-bottom:18px;background:var(--bg2);border:1px solid var(--border);border-top:1px solid #0ea5e9;padding:14px 18px;">
@@ -3145,7 +3165,7 @@
             document.getElementById('progressPct').textContent = '100%';
 
             // Show controls
-            ['searchInput', 'groupFilter', 'sortDir', 'csvBtn', 'mktcapFilter', 'rsFilter', 'epsFilter', 'salesFilter', 'ma20Filter', 'high52Filter'].forEach(id => {
+            ['searchInput', 'groupFilter', 'sortDir', 'csvBtn', 'mktcapFilter', 'rsFilter', 'pct1wFilter', 'pct4wFilter', 'pct6mFilter', 'pct12mFilter', 'rsIbdFilter', 'epsFilter', 'salesFilter', 'ma20Filter', 'high52Filter'].forEach(id => {
                 document.getElementById(id).style.display = '';
             });
             document.getElementById('sectorExcludeWrap').style.display = '';
@@ -3446,6 +3466,25 @@
         document.getElementById('priceRoWPanel').style.display     = uni === 'row' ? '' : 'none';
         if (uni === 'us')  renderPrice();
         if (uni === 'row') renderRoW();
+    }
+
+    // ── SCREENING PANEL (percentile thresholds) ───────────────────
+    function toggleScreeningPanel() {
+        const panel = document.getElementById('screeningPanel');
+        const btn = document.getElementById('screeningToggleBtn');
+        const isOpen = panel.style.display === 'flex';
+        panel.style.display = isOpen ? 'none' : 'flex';
+        btn.style.background = isOpen ? 'transparent' : 'var(--accent2)';
+        btn.style.color = isOpen ? 'var(--accent2)' : '#fff';
+        btn.textContent = isOpen ? 'SCREENING ▾' : 'SCREENING ▴';
+    }
+
+    function clearScreeningFilters() {
+        ['pct1wFilter', 'pct4wFilter', 'pct6mFilter', 'pct12mFilter', 'rsIbdFilter'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        renderActive();
     }
 
     // ── DEBOUNCE HELPER ──────────────────────────────────────────
@@ -5448,6 +5487,12 @@ Write a thorough 7-section market analysis.`;
         const rsMin = parseFloat(document.getElementById('rsFilter').value) || 0;
         const epsMin = parseFloat(document.getElementById('epsFilter')?.value) || 0;
         const salesMin = parseFloat(document.getElementById('salesFilter')?.value) || 0;
+        // Individual percentile screening (Rel-Strength): chaque seuil est indépendant, laisser vide = pas de filtre
+        const pct1wMin  = parseFloat(document.getElementById('pct1wFilter')?.value);
+        const pct4wMin  = parseFloat(document.getElementById('pct4wFilter')?.value);
+        const pct6mMin  = parseFloat(document.getElementById('pct6mFilter')?.value);
+        const pct12mMin = parseFloat(document.getElementById('pct12mFilter')?.value);
+        const rsIbdMin  = parseFloat(document.getElementById('rsIbdFilter')?.value);
 
         let rows = allData.filter(d => {
             if (search && !d.ticker.toLowerCase().includes(search) && !(d.name || '').toLowerCase().includes(search))
@@ -5468,6 +5513,17 @@ Write a thorough 7-section market analysis.`;
             (d.pct_6m ?? -1) >= rsMin &&
             (d.pct_12m ?? -1) >= rsMin
             ))
+                return false;
+            // Individual PCT screening filters (Rel-Strength)
+            if (!isNaN(pct1wMin)  && (d.pct_1w  ?? -1) < pct1wMin)
+                return false;
+            if (!isNaN(pct4wMin)  && (d.pct_4w  ?? -1) < pct4wMin)
+                return false;
+            if (!isNaN(pct6mMin)  && (d.pct_6m  ?? -1) < pct6mMin)
+                return false;
+            if (!isNaN(pct12mMin) && (d.pct_12m ?? -1) < pct12mMin)
+                return false;
+            if (!isNaN(rsIbdMin)  && (d.rs_ibd  ?? -1) < rsIbdMin)
                 return false;
             // EPS filter
             if (epsMin > 0 && (d.eps_cq ?? -999) < epsMin)
@@ -7110,7 +7166,7 @@ Write a thorough 7-section market analysis.`;
                             sEl.innerHTML = '<option value="all">All Sectors</option>';
                             sectors.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sEl.appendChild(o); });
                         }
-                        ['searchInput','groupFilter','sortDir','csvBtn','mktcapFilter','rsFilter','epsFilter','salesFilter','ma20Filter','high52Filter'].forEach(id => {
+                        ['searchInput','groupFilter','sortDir','csvBtn','mktcapFilter','rsFilter','pct1wFilter','pct4wFilter','pct6mFilter','pct12mFilter','rsIbdFilter','epsFilter','salesFilter','ma20Filter','high52Filter'].forEach(id => {
                             const el = document.getElementById(id); if (el) el.style.display = '';
                         });
                         const sew = document.getElementById('sectorExcludeWrap'); if (sew) sew.style.display = '';
