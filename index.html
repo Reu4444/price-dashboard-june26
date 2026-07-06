@@ -1598,8 +1598,8 @@
             <!-- Explainer -->
             <div style="font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:14px;border-left:2px solid var(--accent2);padding-left:10px;">
                 Trajectoire chronologique des percentiles moyens par groupe : <b style="color:var(--text)">M3 → M2 → W4 → W3 → W2 → W1</b> (segments non-chevauchants, du plus ancien au plus récent).
-                <b style="color:var(--text)">Δ MOMENTUM = avg(W1,W2) − avg(M2,M3)</b> : mesure le déplacement de la force relative récente vs il y a 1-2 mois.
-                Un leader (6M élevé) avec Δ fortement négatif = rotation sortante en cours. Un laggard avec Δ fortement positif = rotation entrante potentielle.
+                <b style="color:var(--text)">Δ MOMENTUM = avg(W1,W2) − avg(M2,M3)</b> : déplacement de la force relative récente vs il y a 1-2 mois.
+                Le statut établi est ancré sur <b style="color:var(--text)">6M EST = avg(M2…M7)</b> (jours 21-147, exclut le mois en cours — la baseline ne peut pas être contaminée par le décrochage immédiat) avec rattrapage rapide : ROLLING OVER = (6M EST ≥ 60 <i>ou</i> M2-M3 ≥ 70) et Δ ≤ −seuil. EMERGING = 6M EST ≤ 50 et M2-M3 ≤ 55 et Δ ≥ +seuil. LEADER = 6M EST ≥ 60 et W1-W2 ≥ 60.
             </div>
 
             <!-- Alert panels -->
@@ -1609,21 +1609,21 @@
                         <span>⚠ ROLLING OVER — leaders qui décrochent</span>
                         <span id="rotRollCount" style="font-size:10px;font-weight:400"></span>
                     </div>
-                    <div id="rotRollList" style="max-height:340px;overflow-y:auto;"></div>
+                    <div id="rotRollList" style="max-height:520px;overflow-y:auto;"></div>
                 </div>
                 <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid #3b82f6;">
                     <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:#3b82f6;padding:8px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
                         <span>↗ EMERGING — rotation entrante</span>
                         <span id="rotEmergCount" style="font-size:10px;font-weight:400"></span>
                     </div>
-                    <div id="rotEmergList" style="max-height:340px;overflow-y:auto;"></div>
+                    <div id="rotEmergList" style="max-height:520px;overflow-y:auto;"></div>
                 </div>
                 <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid #15803d;">
                     <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:#15803d;padding:8px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
                         <span>★ CONFIRMED LEADERS — force soutenue</span>
                         <span id="rotLeadCount" style="font-size:10px;font-weight:400"></span>
                     </div>
-                    <div id="rotLeadList" style="max-height:340px;overflow-y:auto;"></div>
+                    <div id="rotLeadList" style="max-height:520px;overflow-y:auto;"></div>
                 </div>
             </div>
 
@@ -1642,7 +1642,7 @@
                             <th style="cursor:pointer;width:70px;text-align:center" class="th-pct" onclick="rotSort('w2')">W2</th>
                             <th style="cursor:pointer;width:70px;text-align:center" class="th-pct" onclick="rotSort('w1')">W1</th>
                             <th style="cursor:pointer;width:86px;text-align:center;border-left:1px solid var(--border2);color:var(--accent2)" class="th-pct" onclick="rotSort('delta')">Δ MOM</th>
-                            <th style="cursor:pointer;width:76px;text-align:center" class="th-pct" onclick="rotSort('pct_6m')">PCT 6M</th>
+                            <th style="cursor:pointer;width:76px;text-align:center" class="th-pct" onclick="rotSort('base_est')" title="Force établie : avg des percentiles M2 à M7 (jours 21-147), exclut le mois en cours">6M EST</th>
                             <th style="cursor:pointer;width:110px;text-align:center;border-left:1px solid var(--border2)" onclick="rotSort('phase')">PHASE</th>
                         </tr>
                     </thead>
@@ -7906,16 +7906,22 @@ Write a thorough 7-section market analysis.`;
         </svg>`;
     }
 
-    // Classify group phase from its trajectory
+    // Classify group phase.
+    // Force établie = base_est (avg M2..M7, jours 21-147) → exclut M1, fraîche mais non contaminée par le mouvement immédiat.
+    // Rattrapage cycle rapide : M2-M3 ≥ 70 (thèmes jeunes, < 8 mois d'historique de leadership).
+    // delta = avg(W1,W2) − avg(M2,M3) → déplacement récent du momentum.
     function rotClassify(g, deltaThresh) {
-        const past = g.past;     // avg(M2, M3)  — force il y a 1-2 mois
-        const recent = g.recent; // avg(W1, W2)  — force sur les 2 dernières semaines
+        const base = g.base_est; // force établie M2..M7
+        const past = g.past;     // avg(M2, M3)
+        const recent = g.recent; // avg(W1, W2)
         const d = g.delta;
-        if (past == null || recent == null) return { name: 'N/A', color: '#94a3b8', order: 5 };
-        if (past >= 60 && d <= -deltaThresh)  return { name: 'ROLLING OVER', color: '#b91c1c', order: 0 };
-        if (past <= 50 && d >= deltaThresh)   return { name: 'EMERGING',     color: '#3b82f6', order: 1 };
-        if (recent >= 60 && past >= 60)       return { name: 'LEADER',       color: '#15803d', order: 2 };
-        if (recent <= 40 && past <= 40)       return { name: 'LAGGARD',      color: '#6b7280', order: 4 };
+        if (recent == null || d == null) return { name: 'N/A', color: '#94a3b8', order: 5 };
+        const wasLeader  = (base != null && base >= 60) || (past != null && past >= 70);
+        const wasLaggard = (base == null || base <= 50) && (past == null || past <= 55);
+        if (wasLeader && d <= -deltaThresh)                         return { name: 'ROLLING OVER', color: '#b91c1c', order: 0 };
+        if (wasLaggard && d >= deltaThresh)                         return { name: 'EMERGING',     color: '#3b82f6', order: 1 };
+        if (base != null && base >= 60 && recent >= 60)             return { name: 'LEADER',       color: '#15803d', order: 2 };
+        if (base != null && base <= 40 && recent <= 40)             return { name: 'LAGGARD',      color: '#6b7280', order: 4 };
         return { name: 'NEUTRAL', color: '#94a3b8', order: 3 };
     }
 
@@ -7962,7 +7968,14 @@ Write a thorough 7-section market analysis.`;
                     past: past != null ? Math.round(past) : null,
                     recent: recent != null ? Math.round(recent) : null,
                     delta,
-                    pct_6m: (() => { const v = seg(d => d.pct_6m); return v != null ? Math.round(v) : null; })()
+                    pct_6m: (() => { const v = seg(d => d.pct_6m); return v != null ? Math.round(v) : null; })(),
+                    // Force établie ex-récent : avg des rangs M2..M7 (jours 21-147) par membre, puis moyenne groupe.
+                    // Exclut M1 (le mois en cours, rolling) → la baseline n'est pas contaminée par le mouvement immédiat,
+                    // tout en restant fraîche (se termine il y a ~1 mois).
+                    base_est: (() => {
+                        const v = seg(d => avg([d.pct_m2, d.pct_m3, d.pct_m4, d.pct_m5, d.pct_m6, d.pct_m7]));
+                        return v != null ? Math.round(v) : null;
+                    })()
                 };
             });
 
@@ -7976,14 +7989,30 @@ Write a thorough 7-section market analysis.`;
         const emerg = rows.filter(g => g.phaseObj.name === 'EMERGING').sort((a, b) => (b.delta ?? 0) - (a.delta ?? 0));
         const lead  = rows.filter(g => g.phaseObj.name === 'LEADER').sort((a, b) => (b.recent ?? 0) - (a.recent ?? 0));
 
-        const miniRow = (g, accent) => `
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 12px;border-bottom:1px solid var(--faint);cursor:pointer;" onclick="rotOpenDrill('${g.label.replace(/'/g, "\\'")}')" title="Cliquer pour voir les membres">
-                <div style="min-width:0;">
-                    <div style="font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${g.label}</div>
-                    <div style="font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;">M2-M3: ${g.past ?? '—'} → W1-W2: ${g.recent ?? '—'} · ${g.n} tickers</div>
+        const miniRow = (g, accent) => {
+            // Members sorted by individual momentum delta (worst first for rolling over context handled by panel order)
+            const mems = g.members.map(d => {
+                const past = avg([d.pct_m2, d.pct_m3]);
+                const recent = avg([d.pct_w1, d.pct_w2]);
+                return { t: d.ticker, name: (d.name || '').replace(/'/g, "\\'"), delta: (past != null && recent != null) ? Math.round(recent - past) : null };
+            }).sort((a, b) => (a.delta ?? 999) - (b.delta ?? 999));
+            const chips = mems.map(m => {
+                const dc = m.delta == null ? 'var(--muted)' : m.delta < 0 ? '#b91c1c' : '#15803d';
+                return `<span style="display:inline-flex;align-items:baseline;gap:4px;background:var(--bg3);border:1px solid var(--border2);padding:3px 8px;margin:2px 3px 2px 0;white-space:nowrap;">
+                    <span style="font-weight:700;font-size:12px;color:var(--accent2);cursor:pointer;font-family:'IBM Plex Mono',monospace;" onclick="event.stopPropagation();openNews('${m.t}','${m.name}')">${m.t}</span>
+                    <span style="font-size:10px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:${dc};">${m.delta != null ? (m.delta > 0 ? '+' : '') + m.delta : ''}</span>
+                </span>`;
+            }).join('');
+            return `
+            <div style="padding:9px 12px;border-bottom:1px solid var(--faint);cursor:pointer;" onclick="rotOpenDrill('${g.label.replace(/'/g, "\\'")}')" title="Cliquer pour ouvrir le détail complet dans la table">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+                    <span style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${g.label}</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:${accent};white-space:nowrap;margin-left:10px;">${g.delta > 0 ? '+' : ''}${g.delta ?? '—'}</span>
                 </div>
-                <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:${accent};white-space:nowrap;margin-left:10px;">${g.delta > 0 ? '+' : ''}${g.delta ?? '—'}</span>
+                <div style="font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-bottom:5px;">EST M2-M7: ${g.base_est ?? '—'} · M2-M3: ${g.past ?? '—'} → W1-W2: ${g.recent ?? '—'} · ${g.n} tickers</div>
+                <div style="display:flex;flex-wrap:wrap;">${chips}</div>
             </div>`;
+        };
 
         document.getElementById('rotRollList').innerHTML  = roll.length  ? roll.map(g => miniRow(g, '#b91c1c')).join('')  : '<div style="padding:14px 12px;font-size:11px;color:var(--muted);">Aucun leader en décrochage au seuil actuel.</div>';
         document.getElementById('rotEmergList').innerHTML = emerg.length ? emerg.map(g => miniRow(g, '#3b82f6')).join('') : '<div style="padding:14px 12px;font-size:11px;color:var(--muted);">Aucune rotation entrante au seuil actuel.</div>';
@@ -8021,7 +8050,7 @@ Write a thorough 7-section market analysis.`;
                 <td class="td-pct">${pctCell(g.w2)}</td>
                 <td class="td-pct">${pctCell(g.w1)}</td>
                 <td class="td-pct" style="border-left:1px solid var(--border2);font-weight:700;color:${dColor};font-family:'IBM Plex Mono',monospace;">${g.delta != null ? (g.delta > 0 ? '+' : '') + g.delta : '—'}</td>
-                <td class="td-pct">${pctCell(g.pct_6m)}</td>
+                <td class="td-pct">${pctCell(g.base_est)}</td>
                 <td style="text-align:center;border-left:1px solid var(--border2)"><span style="background:${g.phaseObj.color}18;color:${g.phaseObj.color};border:1px solid ${g.phaseObj.color}66;font-size:9px;font-weight:700;letter-spacing:.08em;padding:2px 7px;white-space:nowrap;">${g.phaseObj.name}</span></td>`;
             tbody.appendChild(tr);
         });
