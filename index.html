@@ -2261,7 +2261,7 @@
                     <div style="margin-bottom:1px;">Composite scores:</div>
                     <div style="margin-bottom:1px;">  PCT 1W  = rank(w1)</div>
                     <div style="margin-bottom:1px;">  PCT 4W  = avg(rank_w1, rank_w2, rank_w3, rank_w4)</div>
-                    <div style="margin-bottom:1px;">  PCT 6M  = avg(rank_m1 … rank_m6)</div>
+                    <div style="margin-bottom:1px;">  PCT 6M  = 0.25×rank_m1 + 0.20×rank_m2 + 0.15×rank_m3 + 0.15×rank_m4 + 0.15×rank_m5 + 0.10×rank_m6</div>
                     <div style="margin-bottom:1px;">  PCT 12M = EWM-weighted avg(rank_m1 … rank_m12, factor=0.90)</div>
                     <div style="height:5px;"></div>
                     <div style="margin-bottom:1px;">RS IBD = percentile of  (0.4×ret_3m + 0.2×ret_6m + 0.2×ret_9m + 0.2×ret_12m)</div>
@@ -2771,6 +2771,17 @@
             return vals.length ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : null;
         }
 
+        // Moyenne pondérée : poids décroissants du plus récent au plus ancien.
+        // Si une valeur manque, son poids est simplement exclu et les poids restants sont renormalisés.
+        function weightedPct(vals, weights) {
+            let s = 0, wSum = 0;
+            for (let i = 0; i < vals.length; i++) {
+                if (vals[i] != null) { s += vals[i] * weights[i]; wSum += weights[i]; }
+            }
+            return wSum > 0 ? Math.round(s / wSum) : null;
+        }
+        const W_PCT_6M = [0.25, 0.20, 0.15, 0.15, 0.15, 0.10]; // M1 → M6
+
         data.forEach(d => {
             // Compute individual pcts
             for (let i = 1; i <= 4; i++)
@@ -2784,8 +2795,8 @@
             d.pct_4w = avgPct([d.pct_w1, d.pct_w2, d.pct_w3, d.pct_w4]);
             // Pct 3M = avg of pct_m1..m3
             d.pct_3m = avgPct([d.pct_m1, d.pct_m2, d.pct_m3]);
-            // Pct 6M = avg of pct_m1..m6
-            d.pct_6m = avgPct([d.pct_m1, d.pct_m2, d.pct_m3, d.pct_m4, d.pct_m5, d.pct_m6]);
+            // Pct 6M = moyenne pondérée 0.25×M1 + 0.20×M2 + 0.15×M3 + 0.15×M4 + 0.15×M5 + 0.10×M6
+            d.pct_6m = weightedPct([d.pct_m1, d.pct_m2, d.pct_m3, d.pct_m4, d.pct_m5, d.pct_m6], W_PCT_6M);
             // Pct 12M = exponential weighted avg of pct_m1..m12
             const mPcts = [];
             for (let i = 1; i <= 12; i++)
