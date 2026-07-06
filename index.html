@@ -1681,12 +1681,20 @@
             <!-- Explainer -->
             <div style="font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:14px;border-left:2px solid var(--accent2);padding-left:10px;">
                 Leaders = RS IBD et PCT 6M élevés, structure intacte (&gt; MA50). L'extension est mesurée en <b style="color:var(--text)">unités de volatilité du titre</b> :
-                <b style="color:var(--text)">σ-EXT</b> = distance à la MA20 ÷ vol 20j. <b style="color:var(--text)">VERT 1W/4W</b> = move % ÷ (vol journalière <i>d'avant le move</i> × √durée) — un +12% en 1 semaine est vertical pour un titre calme, normal pour un titre volatil.
-                🟢 BUYABLE = leader proche/sous MA20 (pullback). 🟡 IN TREND = laisser courir, ne pas ajouter. 🔴 EXTENDED = σ-EXT ou verticalité au-dessus du seuil : ne pas chasser.
+                <b style="color:var(--text)">σ-EXT</b> = distance à la MA20 ÷ vol 20j. <b style="color:var(--text)">VERT 1W/4W</b> = move % ÷ (vol journalière <i>d'avant le move</i> × √durée).
+                <b style="color:var(--text)">vs PIVOT</b> = % au-dessus du plus haut des ~6 mois (hors 10 dernières séances) — un breakout depuis une base serrée paraît "vertical" mais n'est PAS étendu tant qu'il reste proche du pivot.
+                🔵 BREAKOUT = −2% à +5% du pivot : cassure fraîche, achetable (O'Neil). 🟢 BUYABLE = pullback vers MA20. 🟡 IN TREND = laisser courir. 🔴 EXTENDED = trop loin du pivot ET σ/verticalité au-dessus du seuil : ne pas chasser.
             </div>
 
             <!-- Zone panels -->
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px;">
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;">
+                <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid #3b82f6;">
+                    <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:#3b82f6;padding:8px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
+                        <span>🔵 BREAKOUT — cassure fraîche du pivot</span>
+                        <span id="leadBkoCount" style="font-size:10px;font-weight:400"></span>
+                    </div>
+                    <div id="leadBkoList" style="max-height:520px;overflow-y:auto;"></div>
+                </div>
                 <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid #15803d;">
                     <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:#15803d;padding:8px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
                         <span>🟢 BUYABLE — leaders en pullback</span>
@@ -1729,6 +1737,7 @@
                             <th style="cursor:pointer;width:62px;text-align:center;border-left:1px solid var(--border2)" class="th-pct" onclick="leadSort('w1')">RET 1W</th>
                             <th style="cursor:pointer;width:62px;text-align:center" class="th-pct" onclick="leadSort('m1')">RET 4W</th>
                             <th style="cursor:pointer;width:64px;text-align:center;color:#f59e0b" class="th-pct" onclick="leadSort('high52_dist')">vs 52WH</th>
+                            <th style="cursor:pointer;width:64px;text-align:center;color:#3b82f6" class="th-pct" onclick="leadSort('bko_ext')" title="% au-dessus du plus haut des ~6 derniers mois (hors 10 dernières séances). 0-5% = breakout frais achetable.">vs PIVOT</th>
                             <th style="cursor:pointer;width:96px;text-align:center;border-left:1px solid var(--border2)" onclick="leadSort('zone')">ZONE</th>
                         </tr>
                     </thead>
@@ -8267,7 +8276,7 @@ Write a thorough 7-section market analysis.`;
         const force = nPrices !== _vertComputedFor; // rawPrices a changé → recalcul complet
         allData.forEach(d => {
             if (!force && d.vert_1w !== undefined) return;
-            d.vert_1w = null; d.vert_4w = null;
+            d.vert_1w = null; d.vert_4w = null; d.bko_ext = null;
             const p = rawPrices[d.ticker];
             if (!p || p.length < 45) return;
             const ret = (a, b) => (p[a] > 0 && p[b] > 0) ? (p[a] - p[b]) / p[b] * 100 : null;
@@ -8286,23 +8295,39 @@ Write a thorough 7-section market analysis.`;
             const sigPre4w = sigmaOver(21, 20);
             if (w1 != null && sigPre1w) d.vert_1w = Math.round(w1 / (sigPre1w * Math.sqrt(5)) * 10) / 10;
             if (m1 != null && sigPre4w) d.vert_4w = Math.round(m1 / (sigPre4w * Math.sqrt(21)) * 10) / 10;
+            // Distance au pivot : % au-dessus du plus haut des jours 10-130 (~6 mois, en excluant les 10 dernières séances).
+            // ≈ 0-5% → breakout frais au-dessus de la base (achetable) ; largement > 5% → vraiment étendu au-dessus du pivot.
+            d.bko_ext = null;
+            const lookEnd = Math.min(130, p.length - 1);
+            if (lookEnd > 15 && p[0] > 0) {
+                let priorHigh = 0;
+                for (let i = 10; i <= lookEnd; i++) if (p[i] > priorHigh) priorHigh = p[i];
+                if (priorHigh > 0) d.bko_ext = Math.round((p[0] / priorHigh - 1) * 1000) / 10;
+            }
         });
         _vertComputedFor = nPrices;
     }
 
-    // Zone : 0 = BUYABLE, 1 = IN TREND, 2 = EXTENDED
+    // Zones : 0 = BREAKOUT (cassure fraîche), 1 = BUYABLE (pullback MA20), 2 = IN TREND, 3 = EXTENDED
+    // Règle clé : un breakout depuis une base serrée paraît "vertical" (vol pré-move basse) mais n'est PAS étendu
+    // tant que le prix reste ≤ ~5% au-dessus du pivot (plus haut des ~6 mois hors 10 dernières séances). Esprit O'Neil/Minervini.
     function leadClassify(d, cfg) {
         const sig = d.ma20_sigma;
         const vert1 = d.vert_1w, vert4 = d.vert_4w;
+        const bko = d.bko_ext;
+        // Breakout frais : vient de dépasser les anciens plus hauts, encore dans la zone achetable (−2% à +5% du pivot)
+        if (bko != null && bko >= -2 && bko <= 5)
+            return { zone: 0, name: 'BREAKOUT', color: '#3b82f6', reason: `pivot ${bko > 0 ? '+' : ''}${bko.toFixed(1)}%` };
         const reasons = [];
         if (sig != null && sig >= cfg.extSigma) reasons.push(`σ ${sig.toFixed(1)}`);
         if (vert1 != null && vert1 >= cfg.vertThresh) reasons.push(`V1W ${vert1.toFixed(1)}`);
         if (vert4 != null && vert4 >= cfg.vertThresh) reasons.push(`V4W ${vert4.toFixed(1)}`);
+        if (bko != null && bko > 5) reasons.forEach((r, i) => { if (i === 0) reasons[i] = `pivot +${bko.toFixed(1)}% · ` + r; });
         if (reasons.length)
-            return { zone: 2, name: 'EXTENDED', color: '#b91c1c', reason: reasons.join(' · ') };
+            return { zone: 3, name: 'EXTENDED', color: '#b91c1c', reason: reasons.join(' · ') };
         if (sig != null && sig <= cfg.buySigma && sig >= -2)
-            return { zone: 0, name: 'BUYABLE', color: '#15803d', reason: `σ ${sig.toFixed(1)}` };
-        return { zone: 1, name: 'IN TREND', color: '#d97706', reason: sig != null ? `σ ${sig.toFixed(1)}` : '' };
+            return { zone: 1, name: 'BUYABLE', color: '#15803d', reason: `σ ${sig.toFixed(1)}` };
+        return { zone: 2, name: 'IN TREND', color: '#d97706', reason: sig != null ? `σ ${sig.toFixed(1)}` : '' };
     }
 
     function renderLeaders() {
@@ -8334,9 +8359,10 @@ Write a thorough 7-section market analysis.`;
         }).map(d => ({ d, z: leadClassify(d, cfg) }));
 
         // Panels
-        const buy   = rows.filter(r => r.z.zone === 0).sort((a, b) => (b.d.rs_ibd ?? 0) - (a.d.rs_ibd ?? 0));
-        const trend = rows.filter(r => r.z.zone === 1).sort((a, b) => (b.d.rs_ibd ?? 0) - (a.d.rs_ibd ?? 0));
-        const ext   = rows.filter(r => r.z.zone === 2).sort((a, b) => (b.d.ma20_sigma ?? 0) - (a.d.ma20_sigma ?? 0));
+        const bkout = rows.filter(r => r.z.zone === 0).sort((a, b) => (b.d.rs_ibd ?? 0) - (a.d.rs_ibd ?? 0));
+        const buy   = rows.filter(r => r.z.zone === 1).sort((a, b) => (b.d.rs_ibd ?? 0) - (a.d.rs_ibd ?? 0));
+        const trend = rows.filter(r => r.z.zone === 2).sort((a, b) => (b.d.rs_ibd ?? 0) - (a.d.rs_ibd ?? 0));
+        const ext   = rows.filter(r => r.z.zone === 3).sort((a, b) => (b.d.ma20_sigma ?? 0) - (a.d.ma20_sigma ?? 0));
 
         const panelRow = (r, accent) => {
             const d = r.d;
@@ -8355,9 +8381,11 @@ Write a thorough 7-section market analysis.`;
             </div>`;
         };
 
+        document.getElementById('leadBkoList').innerHTML   = bkout.length ? bkout.map(r => panelRow(r, '#3b82f6')).join('') : '<div style="padding:14px 12px;font-size:11px;color:var(--muted);">Aucune cassure fraîche de pivot.</div>';
         document.getElementById('leadBuyList').innerHTML   = buy.length   ? buy.map(r => panelRow(r, '#15803d')).join('')   : '<div style="padding:14px 12px;font-size:11px;color:var(--muted);">Aucun leader en zone d\'achat aux seuils actuels.</div>';
         document.getElementById('leadTrendList').innerHTML = trend.length ? trend.map(r => panelRow(r, '#d97706')).join('') : '<div style="padding:14px 12px;font-size:11px;color:var(--muted);">—</div>';
         document.getElementById('leadExtList').innerHTML   = ext.length   ? ext.map(r => panelRow(r, '#b91c1c')).join('')   : '<div style="padding:14px 12px;font-size:11px;color:var(--muted);">Aucun leader en surextension.</div>';
+        document.getElementById('leadBkoCount').textContent   = bkout.length || '';
         document.getElementById('leadBuyCount').textContent   = buy.length   || '';
         document.getElementById('leadTrendCount').textContent = trend.length || '';
         document.getElementById('leadExtCount').textContent   = ext.length   || '';
@@ -8407,11 +8435,12 @@ Write a thorough 7-section market analysis.`;
                 <td class="td-pct" style="border-left:1px solid var(--border2)">${retCell(d.w1)}</td>
                 <td class="td-pct">${retCell(d.m1)}</td>
                 <td class="td-pct" style="color:#f59e0b">${distCell52w(d.high52_dist)}</td>
+                <td class="td-pct" style="color:#3b82f6;font-family:'IBM Plex Mono',monospace;">${d.bko_ext != null ? (d.bko_ext > 0 ? '+' : '') + d.bko_ext.toFixed(1) + '%' : '—'}</td>
                 <td style="text-align:center;border-left:1px solid var(--border2)"><span style="background:${r.z.color}18;color:${r.z.color};border:1px solid ${r.z.color}66;font-size:9px;font-weight:700;letter-spacing:.08em;padding:2px 7px;white-space:nowrap;">${r.z.name}</span></td>`;
             tbody.appendChild(tr);
         });
 
-        document.getElementById('leadCount').textContent = `${rows.length} leaders (${buy.length} buyable · ${trend.length} in trend · ${ext.length} extended)`;
+        document.getElementById('leadCount').textContent = `${rows.length} leaders (${bkout.length} breakout · ${buy.length} buyable · ${trend.length} in trend · ${ext.length} extended)`;
     }
 
     function getTickerQuadrantRRG(x, y) {
