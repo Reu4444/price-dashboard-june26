@@ -8533,28 +8533,54 @@ Write a thorough 7-section market analysis.`;
         monthsCalc.forEach(m => {
             const mi = monthIdx[m];
             if (!mi) return;
-            const rets = [], groupB = {};
+            const rets = [], groupB = {}, sectorB = {};
             const leaders = [];
+            let newHighs = 0;
+            // demi-mois : sessions du mois = indices lastIdx..baseIdx-1 (contigus, 0 = récent)
+            const midIdx = Math.floor((mi.lastIdx + mi.baseIdx - 1) / 2);
+            const retsH1 = [], retsH2 = [];
             allData.forEach(d => {
-                const r = tickRet(rawPrices[d.ticker], mi);
+                const p = rawPrices[d.ticker];
+                const r = tickRet(p, mi);
                 if (r == null) return;
                 rets.push(r);
                 if (d.group) (groupB[d.group] = groupB[d.group] || []).push(r);
+                if (d.sector) (sectorB[d.sector] = sectorB[d.sector] || []).push(r);
                 if ((parseFloat(d.mktcap) || 0) >= capMin) leaders.push({ t: d.ticker, name: d.name, r });
+                // H1 = début du mois → milieu ; H2 = milieu → fin
+                if (p && p[midIdx] > 0) {
+                    if (p[mi.baseIdx] > 0) retsH1.push((p[midIdx] / p[mi.baseIdx] - 1) * 100);
+                    if (p[mi.lastIdx] > 0) retsH2.push((p[mi.lastIdx] / p[midIdx] - 1) * 100);
+                }
+                // Nouveau plus haut ~6M pendant le mois : max du mois > max des ~100 séances précédentes
+                if (p && p.length > mi.baseIdx + 100) {
+                    let mHi = 0;
+                    for (let i = mi.lastIdx; i < mi.baseIdx; i++) if (p[i] > mHi) mHi = p[i];
+                    let pHi = 0;
+                    for (let i = mi.baseIdx; i < mi.baseIdx + 100; i++) if (p[i] > pHi) pHi = p[i];
+                    if (mHi > 0 && pHi > 0 && mHi > pHi) newHighs++;
+                }
             });
             if (!rets.length) return;
             rets.sort((a, b) => a - b);
-            const median = rets[Math.floor(rets.length / 2)];
+            const q = f => rets[Math.min(rets.length - 1, Math.floor(rets.length * f))];
+            const median = q(0.5), p90 = q(0.9), p10 = q(0.1);
             const pctUp = rets.filter(r => r > 0).length / rets.length * 100;
-            const groups = Object.entries(groupB)
+            const pctBigUp = rets.filter(r => r > 5).length / rets.length * 100;
+            const pctBigDn = rets.filter(r => r < -5).length / rets.length * 100;
+            const medOf = arr => { if (!arr.length) return null; const s = [...arr].sort((a, b) => a - b); return s[Math.floor(s.length / 2)]; };
+            const medH1 = medOf(retsH1), medH2 = medOf(retsH2);
+            const aggB = B => Object.entries(B)
                 .filter(([, arr]) => arr.length >= minMembers)
                 .map(([g, arr]) => ({ g, n: arr.length, ret: arr.reduce((s, x) => s + x, 0) / arr.length }))
                 .sort((a, b) => b.ret - a.ret);
+            const groups = aggB(groupB), sectors = aggB(sectorB);
             // rang percentile de chaque groupe ce mois (pour la rotation M/M)
             const rankMap = {};
             groups.forEach((x, i) => { rankMap[x.g] = Math.round((1 - i / Math.max(1, groups.length - 1)) * 100); });
             leaders.sort((a, b) => b.r - a.r);
-            stats[m] = { median, pctUp, n: rets.length, groups, rankMap, top: leaders.slice(0, 8), bottom: leaders.slice(-4).reverse() };
+            stats[m] = { median, pctUp, pctBigUp, pctBigDn, p90, p10, medH1, medH2, newHighs, n: rets.length,
+                         groups, sectors, rankMap, top: leaders.slice(0, 8), bottom: leaders.slice(-4).reverse() };
         });
 
         // Narratif auto-généré (EN, style desk note)
@@ -8562,10 +8588,35 @@ Write a thorough 7-section market analysis.`;
         const buildNarrative = (m, s, prev) => {
             const parts = [];
             const tone = s.median >= 3 ? 'Strong broad advance' : s.median >= 1 ? 'Constructive tape' : s.median >= -1 ? 'Mixed, range-bound tape' : s.median >= -3 ? 'Corrective month' : 'Sharp broad decline';
-            parts.push(`${tone}: median stock ${fmtR(s.median)}, ${s.pctUp.toFixed(0)}% of the universe closed higher (${s.n} names).`);
+            parts.push(`${tone}: median stock ${fmtR(s.median)}, ${s.pctUp.toFixed(0)}% of the universe closed higher (${s.n} names); ${s.pctBigUp.toFixed(0)}% gained more than 5%, ${s.pctBigDn.toFixed(0)}% lost more than 5%.`);
+            // Forme intra-mois
+            if (s.medH1 != null && s.medH2 != null && Math.abs(s.medH1 - s.medH2) >= 2) {
+                if (s.medH1 > s.medH2)
+                    parts.push(`Front-loaded month: median ${fmtR(s.medH1)} in the first half vs ${fmtR(s.medH2)} in the back half — momentum faded into month-end.`);
+                else
+                    parts.push(`Back-loaded month: median ${fmtR(s.medH1)} in the first half vs ${fmtR(s.medH2)} in the back half — buyers stepped in as the month progressed.`);
+            }
+            // Dispersion
+            const disp = s.p90 - s.p10;
+            if (disp >= 30)
+                parts.push(`Wide dispersion (top decile ${fmtR(s.p90)} vs bottom ${fmtR(s.p10)}): a rotation-heavy, stock-picker's tape where group selection drove outcomes.`);
+            else if (disp <= 15)
+                parts.push(`Tight dispersion (${fmtR(s.p10)} to ${fmtR(s.p90)} across deciles): a beta-driven tape with limited differentiation.`);
+            // Nouveaux plus hauts
+            if (s.newHighs > 0)
+                parts.push(`${s.newHighs} names printed fresh ~6-month highs during the month.`);
             const tg = s.groups.slice(0, 3), bg = s.groups.slice(-3).reverse();
             if (tg.length) parts.push(`Leadership: ${tg.map(x => `${x.g} (${fmtR(x.ret)})`).join(', ')}.`);
             if (bg.length) parts.push(`Laggards: ${bg.map(x => `${x.g} (${fmtR(x.ret)})`).join(', ')}.`);
+            // Continuité du leadership vs mois précédent
+            if (prev && prev.groups.length >= 5 && s.groups.length >= 5) {
+                const prevTop5 = new Set(prev.groups.slice(0, 5).map(x => x.g));
+                const repeat = s.groups.slice(0, 5).filter(x => prevTop5.has(x.g));
+                if (repeat.length >= 3)
+                    parts.push(`Leadership persistence: ${repeat.length} of last month's top-5 groups repeated (${repeat.map(x => x.g).join(', ')}) — trend continuation.`);
+                else if (repeat.length <= 1)
+                    parts.push(`Leadership churn: ${repeat.length === 0 ? 'none' : 'only ' + repeat[0].g} of last month's top-5 groups repeated — a genuine changing of the guard.`);
+            }
             if (prev) {
                 const moves = s.groups
                     .filter(x => prev.rankMap[x.g] != null)
@@ -8582,6 +8633,8 @@ Write a thorough 7-section market analysis.`;
                 }
             }
             if (s.top.length) parts.push(`Standout movers: ${s.top.slice(0, 5).map(x => `${x.t} ${fmtR(x.r)}`).join(', ')}.`);
+            const worst = s.bottom.filter(x => x.r < -10).slice(0, 3);
+            if (worst.length) parts.push(`Notable casualties: ${worst.map(x => `${x.t} ${fmtR(x.r)}`).join(', ')}.`);
             return parts.join(' ');
         };
 
@@ -8616,9 +8669,17 @@ Write a thorough 7-section market analysis.`;
                     <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.1em;color:var(--text);">${monthNames[mm]} ${yy}${isMtd ? ' <span style="font-size:12px;color:var(--muted);">(MTD)</span>' : ''}</span>
                     <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:${medColor};font-weight:700;">MEDIAN ${fmtR(s.median)}</span>
                     <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);">BREADTH ${s.pctUp.toFixed(0)}% UP</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#15803d;">▲>5%: ${s.pctBigUp.toFixed(0)}%</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#b91c1c;">▼<−5%: ${s.pctBigDn.toFixed(0)}%</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);" title="Écart décile 90 − décile 10 des retours">DISP ${(s.p90 - s.p10).toFixed(0)}pts</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#3b82f6;" title="Titres ayant inscrit un nouveau plus haut ~6M pendant le mois">NEW HIGHS ${s.newHighs}</span>
                     <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);">${s.n} tickers</span>
                 </div>
                 <div style="padding:12px 16px;font-size:12px;line-height:1.8;color:var(--text);border-bottom:1px solid var(--border);">${buildNarrative(m, s, prev)}</div>
+                ${s.sectors.length ? `<div style="padding:8px 16px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;">
+                    <span style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:.12em;color:var(--text);margin-right:8px;">SECTORS</span>
+                    ${s.sectors.map(x => `<span style="margin-right:12px;white-space:nowrap;">${x.g} <span style="font-weight:700;color:${x.ret > 0 ? '#15803d' : x.ret < 0 ? '#b91c1c' : 'var(--muted)'};">${fmtR(x.ret)}</span></span>`).join('')}
+                </div>` : ''}
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;padding:12px 16px;">
                     <div>
                         <div style="font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:.12em;color:#15803d;margin-bottom:6px;">TOP GROUPS</div>
