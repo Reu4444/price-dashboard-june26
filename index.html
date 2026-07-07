@@ -1656,6 +1656,10 @@
         <div class="tab-content" id="tab-leaders">
             <!-- Controls -->
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;margin-top:4px;flex-wrap:wrap;">
+                <div style="display:flex;gap:0;border:1px solid var(--border2);overflow:hidden;">
+                    <button id="leadViewZones" onclick="setLeadView('zones')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 14px;background:var(--accent2);color:#fff;border:none;cursor:pointer;letter-spacing:.06em;">ZONES</button>
+                    <button id="leadViewMatrix" onclick="setLeadView('matrix')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 14px;background:transparent;color:var(--muted);border:none;cursor:pointer;letter-spacing:.06em;">MA MATRIX</button>
+                </div>
                 <span style="font-size:9px;color:#6d28d9;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">RS IBD ≥</span>
                 <input id="leadRsIbd" class="filter-input" type="number" value="80" min="0" max="99" style="width:46px;" oninput="debounce(renderLeaders,80)()">
                 <span style="font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">PCT 6M ≥</span>
@@ -1686,6 +1690,8 @@
                 🔵 BREAKOUT = −2% à +5% du pivot : cassure fraîche, achetable (O'Neil). 🟢 BUYABLE = pullback vers MA20. 🟡 IN TREND = laisser courir. 🔴 EXTENDED = trop loin du pivot ET σ/verticalité au-dessus du seuil : ne pas chasser.
             </div>
 
+            <!-- ZONES VIEW -->
+            <div id="leadZonesView">
             <!-- Zone panels -->
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;">
                 <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid #3b82f6;">
@@ -1743,6 +1749,30 @@
                     </thead>
                     <tbody id="leadBody"></tbody>
                 </table>
+            </div>
+            </div><!-- /leadZonesView -->
+
+            <!-- MA MATRIX VIEW -->
+            <div id="leadMatrixView" style="display:none;">
+                <div class="table-wrap">
+                    <table id="leadMatrixTable" style="width:100%;">
+                        <thead>
+                            <tr>
+                                <th style="text-align:left">★ TV TICKER</th>
+                                <th style="text-align:left">NAME</th>
+                                <th style="text-align:left">GROUP</th>
+                                <th style="width:62px;text-align:center" class="th-pct">CAP</th>
+                                <th style="width:64px;text-align:center;border-left:1px solid var(--border2)" class="th-pct">PCT 6M</th>
+                                <th style="width:64px;text-align:center;color:#6d28d9" class="th-pct">RS IBD</th>
+                                <th style="width:78px;text-align:center;color:#f59e0b" class="th-pct" title="Croissance Sales YoY du trimestre courant (%)">SALES GR</th>
+                                <th style="width:92px;text-align:center;border-left:1px solid var(--border2);color:#10b981" class="th-pct">&gt; 20 MA</th>
+                                <th style="width:92px;text-align:center;color:#0369a1" class="th-pct">&gt; 50 MA</th>
+                                <th style="width:92px;text-align:center;color:#f59e0b" class="th-pct">&gt; 200 MA</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leadMatrixBody"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -8255,6 +8285,18 @@ Write a thorough 7-section market analysis.`;
 
     // ── LEADERS TAB (leaders qualifiés + score d'extension) ──────
     let leadSortCol = 'rs_ibd', leadSortDir = 'desc';
+    let leadView = 'zones';
+
+    function setLeadView(v) {
+        leadView = v;
+        const bz = document.getElementById('leadViewZones');
+        const bm = document.getElementById('leadViewMatrix');
+        if (bz) { bz.style.background = v === 'zones' ? 'var(--accent2)' : 'transparent'; bz.style.color = v === 'zones' ? '#fff' : 'var(--muted)'; }
+        if (bm) { bm.style.background = v === 'matrix' ? 'var(--accent2)' : 'transparent'; bm.style.color = v === 'matrix' ? '#fff' : 'var(--muted)'; }
+        document.getElementById('leadZonesView').style.display  = v === 'zones'  ? '' : 'none';
+        document.getElementById('leadMatrixView').style.display = v === 'matrix' ? '' : 'none';
+        renderLeaders();
+    }
 
     function leadSort(col) {
         if (leadSortCol === col)
@@ -8304,6 +8346,13 @@ Write a thorough 7-section market analysis.`;
                 for (let i = 10; i <= lookEnd; i++) if (p[i] > priorHigh) priorHigh = p[i];
                 if (priorHigh > 0) d.bko_ext = Math.round((p[0] / priorHigh - 1) * 1000) / 10;
             }
+            // Distance MA200 (si historique suffisant)
+            d.ma200_dist = d.ma200_dist ?? null;
+            if (p.length >= 200 && p[0] > 0) {
+                let s = 0, n = 0;
+                for (let i = 0; i < 200; i++) { if (p[i] > 0) { s += p[i]; n++; } }
+                if (n >= 180) d.ma200_dist = Math.round((p[0] / (s / n) - 1) * 1000) / 10;
+            }
         });
         _vertComputedFor = nPrices;
     }
@@ -8333,6 +8382,7 @@ Write a thorough 7-section market analysis.`;
     function renderLeaders() {
         if (!allData.length) return;
         computeVerticality();
+        if (leadView === 'matrix') { renderLeadersMatrix(); return; }
 
         const cfg = {
             rsIbdMin:  parseFloat(document.getElementById('leadRsIbd')?.value)  || 0,
@@ -8441,6 +8491,91 @@ Write a thorough 7-section market analysis.`;
         });
 
         document.getElementById('leadCount').textContent = `${rows.length} leaders (${bkout.length} breakout · ${buy.length} buyable · ${trend.length} in trend · ${ext.length} extended)`;
+    }
+
+    // MA MATRIX : leaders regroupés par statut vs MA20/MA50/MA200, format ✓/✗ lisible.
+    // Le filtre "> MA50" est ignoré ici : le but est justement de voir qui est passé dessous.
+    function renderLeadersMatrix() {
+        const cfg = {
+            rsIbdMin:  parseFloat(document.getElementById('leadRsIbd')?.value)  || 0,
+            pct6mMin:  parseFloat(document.getElementById('leadPct6m')?.value)  || 0,
+            salesConf: document.getElementById('leadSalesConf')?.checked ?? false,
+            mktcapMin: parseFloat(document.getElementById('leadMktcap')?.value) || 0
+        };
+        let rows = allData.filter(d => {
+            if ((d.rs_ibd ?? -1) < cfg.rsIbdMin) return false;
+            if ((d.pct_6m ?? -1) < cfg.pct6mMin) return false;
+            if (cfg.salesConf && (d.pct_sales_cq ?? -1) < 60) return false;
+            if (cfg.mktcapMin > 0 && (parseFloat(d.mktcap) || 0) < cfg.mktcapMin) return false;
+            return true;
+        });
+
+        // Tier = position vs les 3 MAs, ordonné par solidité (les MAs longues pèsent plus lourd)
+        const above = v => v != null && v >= 0;
+        rows.forEach(d => {
+            d._a20 = above(d.ma20_dist); d._a50 = above(d.ma50_dist); d._a200 = above(d.ma200_dist);
+            d._tier = (d._a200 ? 4 : 0) + (d._a50 ? 2 : 0) + (d._a20 ? 1 : 0);
+        });
+        rows.sort((a, b) => (b._tier - a._tier) || ((b.rs_ibd ?? 0) - (a.rs_ibd ?? 0)));
+
+        const tierLabel = d => {
+            const parts = [];
+            parts.push(d._a20 ? '✓ 20MA' : '✗ 20MA');
+            parts.push(d._a50 ? '✓ 50MA' : '✗ 50MA');
+            parts.push(d._a200 ? '✓ 200MA' : '✗ 200MA');
+            return parts.join('   ·   ');
+        };
+        const tierColor = t => t === 7 ? '#15803d' : t >= 6 ? '#0369a1' : t >= 4 ? '#d97706' : '#b91c1c';
+
+        const maCell = (dist, isAbove, extraStyle) => {
+            if (dist == null) return `<td class="td-pct" style="color:var(--muted);${extraStyle || ''}">—</td>`;
+            const c = isAbove ? '#15803d' : '#b91c1c';
+            const mark = isAbove ? '✓' : '✗';
+            return `<td class="td-pct" style="white-space:nowrap;${extraStyle || ''}">
+                <span style="color:${c};font-weight:700;font-size:13px;">${mark}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:${c};margin-left:4px;">${dist > 0 ? '+' : ''}${dist.toFixed(1)}%</span>
+            </td>`;
+        };
+
+        const tbody = document.getElementById('leadMatrixBody');
+        tbody.innerHTML = '';
+        let lastTier = null;
+        rows.forEach(d => {
+            if (d._tier !== lastTier) {
+                lastTier = d._tier;
+                const n = rows.filter(r => r._tier === d._tier).length;
+                const sep = document.createElement('tr');
+                sep.innerHTML = `<td colspan="10" style="background:var(--bg3);border-top:2px solid ${tierColor(d._tier)};border-bottom:1px solid var(--border);padding:6px 12px;">
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.1em;color:${tierColor(d._tier)};">${tierLabel(d)}</span>
+                    <span style="font-size:10px;color:var(--muted);margin-left:12px;">${n} titres</span>
+                </td>`;
+                tbody.appendChild(sep);
+            }
+            const nameSafe = (d.name || '').replace(/'/g, "\\'");
+            const inW = watchlist.includes(d.ticker);
+            const sg = d.sales_cq;
+            const sgColor = sg == null ? 'var(--muted)' : sg >= 20 ? '#15803d' : sg >= 0 ? 'var(--text)' : '#b91c1c';
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="padding:5px 8px;white-space:nowrap;">
+                    <span style="cursor:pointer;font-size:11px;color:${inW ? '#06b6d4' : '#475569'};margin-right:4px" class="watch-toggle" data-ticker="${d.ticker}">${inW ? '★' : '☆'}</span>
+                    <a href="https://www.tradingview.com/chart/?symbol=${d.ticker}" target="_blank" style="color:#475569;font-size:8px;text-decoration:none;font-weight:600;margin-right:6px">TV</a>
+                    <span style="font-weight:700;font-size:13px;color:var(--accent2);cursor:pointer;" onclick="openNews('${d.ticker}','${nameSafe}')">${d.ticker}</span>
+                </td>
+                <td style="font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">${d.name || ''}</td>
+                <td style="font-size:10px;color:var(--muted);white-space:nowrap;">${d.group || ''}</td>
+                <td class="td-pct" style="color:var(--muted)">${fmktcap(d.mktcap)}</td>
+                <td class="td-pct" style="border-left:1px solid var(--border2)">${pctCell(d.pct_6m)}</td>
+                <td class="td-pct">${pctCell(d.rs_ibd)}</td>
+                <td class="td-pct" style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:${sgColor}">${sg != null ? (sg > 0 ? '+' : '') + sg.toFixed(1) + '%' : '—'}</td>
+                ${maCell(d.ma20_dist, d._a20, 'border-left:1px solid var(--border2);')}
+                ${maCell(d.ma50_dist, d._a50)}
+                ${maCell(d.ma200_dist, d._a200)}`;
+            tbody.appendChild(tr);
+        });
+
+        const nAbove = rows.filter(r => r._tier === 7).length;
+        document.getElementById('leadCount').textContent = `${rows.length} leaders · ${nAbove} au-dessus des 3 MAs`;
     }
 
     function getTickerQuadrantRRG(x, y) {
