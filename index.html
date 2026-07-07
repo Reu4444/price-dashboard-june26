@@ -105,7 +105,7 @@
         padding: 20px 24px;
     }
     /* Tabs outside .main need same padding */
-    #tab-narrative, #tab-method, #tab-breadth, #tab-returns, #tab-compare, #tab-best, #tab-fund, #tab-rotation, #tab-leaders {
+    #tab-narrative, #tab-method, #tab-breadth, #tab-returns, #tab-compare, #tab-best, #tab-fund, #tab-rotation, #tab-leaders, #tab-recap {
         padding: 20px 24px;
         box-sizing: border-box;
     }
@@ -794,6 +794,7 @@
             <button class="tab" onclick="switchTab('breadth')">BREADTH</button>
             <button class="tab" onclick="switchTab('rotation')">ROTATION</button>
             <button class="tab" onclick="switchTab('leaders')">LEADERS</button>
+            <button class="tab" onclick="switchTab('recap')">MONTHLY RECAP</button>
             <button class="tab" onclick="switchTab('returns')">% RETURNS</button>
             <button class="tab" onclick="switchTab('fund')">FUNDAMENTALS</button>
             <button class="tab" onclick="switchTab('best')">SCREENING</button>
@@ -1774,6 +1775,24 @@
                     </table>
                 </div>
             </div>
+        </div>
+
+        <!-- TAB: MONTHLY RECAP (dynamique mensuelle calculée depuis les prix) -->
+        <div class="tab-content" id="tab-recap">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;margin-top:4px;flex-wrap:wrap;">
+                <span style="font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">FROM</span>
+                <input id="recapFrom" class="filter-input" type="month" value="2026-03" style="width:120px;" onchange="renderRecap()">
+                <span style="font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">LEADERS CAP ≥ ($B)</span>
+                <input id="recapMktcap" class="filter-input" type="number" value="2" style="width:52px;" oninput="debounce(renderRecap,120)()">
+                <span style="font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">MIN MEMBERS</span>
+                <input id="recapMinMembers" class="filter-input" type="number" value="3" min="1" style="width:46px;" oninput="debounce(renderRecap,120)()">
+                <span style="font-size:10px;color:var(--muted);margin-left:auto" id="recapInfo"></span>
+            </div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:14px;border-left:2px solid var(--accent2);padding-left:10px;">
+                Recap auto-généré depuis les prix réels : retours par <b style="color:var(--text)">mois calendaire</b> (clôture fin de mois vs clôture fin de mois précédent), agrégés par groupe.
+                <b style="color:var(--text)">Rotation</b> = variation du rang percentile du groupe vs le mois précédent. Breadth = % de titres en hausse dans l'univers. Mois en cours = month-to-date.
+            </div>
+            <div id="recapContainer"></div>
         </div>
 
         <!-- TAB: WATCHLIST -->
@@ -3624,6 +3643,8 @@
             renderRotation();
         else if (activeTab === 'leaders')
             renderLeaders();
+        else if (activeTab === 'recap')
+            renderRecap();
         else
             renderGroups();
     }
@@ -8576,6 +8597,162 @@ Write a thorough 7-section market analysis.`;
 
         const nAbove = rows.filter(r => r._tier === 7).length;
         document.getElementById('leadCount').textContent = `${rows.length} leaders · ${nAbove} au-dessus des 3 MAs`;
+    }
+
+    // ── MONTHLY RECAP (dynamique mensuelle depuis les prix réels) ─
+    function renderRecap() {
+        const container = document.getElementById('recapContainer');
+        if (!allData.length || !Object.keys(rawPrices).length || !priceDates.length) {
+            container.innerHTML = '<div style="padding:20px;color:var(--muted);font-size:12px;">Prix pas encore chargés — recharge ou attends la fin du chargement.</div>';
+            return;
+        }
+        const fromStr = document.getElementById('recapFrom')?.value || '2026-03';
+        const capMin = parseFloat(document.getElementById('recapMktcap')?.value) || 0;
+        const minMembers = parseInt(document.getElementById('recapMinMembers')?.value) || 3;
+
+        // Mois disponibles dans priceDates ≥ fromStr, chronologique + le mois précédant le premier (pour la rotation)
+        const monthsAll = [...new Set(priceDates.map(dt => dt.slice(0, 7)))].sort();
+        const months = monthsAll.filter(m => m >= fromStr);
+        const prevOfFirst = monthsAll.filter(m => m < fromStr).pop() || null;
+        const monthsCalc = prevOfFirst ? [prevOfFirst, ...months] : [...months];
+
+        // Index de fin (dernière séance) et base (clôture du dernier jour du mois PRÉCÉDENT) par mois.
+        // priceDates est trié du plus récent (0) au plus ancien.
+        const monthIdx = {};
+        monthsCalc.forEach(m => {
+            let lastIdx = null, firstIdx = null;
+            for (let i = 0; i < priceDates.length; i++) {
+                if (priceDates[i].slice(0, 7) === m) {
+                    if (lastIdx === null) lastIdx = i;   // premier rencontré = plus récent du mois
+                    firstIdx = i;                        // dernier rencontré = plus ancien du mois
+                }
+            }
+            if (lastIdx != null) monthIdx[m] = { lastIdx, baseIdx: firstIdx + 1 }; // base = séance précédant le 1er jour du mois
+        });
+
+        // Retour % d'un ticker sur un mois
+        const tickRet = (p, mi) => {
+            if (!p || mi.baseIdx >= p.length) return null;
+            const a = p[mi.lastIdx], b = p[mi.baseIdx];
+            return (a > 0 && b > 0) ? (a / b - 1) * 100 : null;
+        };
+
+        // Stats par mois : marché, groupes, leaders
+        const monthNames = { '01':'January','02':'February','03':'March','04':'April','05':'May','06':'June','07':'July','08':'August','09':'September','10':'October','11':'November','12':'December' };
+        const stats = {};
+        monthsCalc.forEach(m => {
+            const mi = monthIdx[m];
+            if (!mi) return;
+            const rets = [], groupB = {};
+            const leaders = [];
+            allData.forEach(d => {
+                const r = tickRet(rawPrices[d.ticker], mi);
+                if (r == null) return;
+                rets.push(r);
+                if (d.group) (groupB[d.group] = groupB[d.group] || []).push(r);
+                if ((parseFloat(d.mktcap) || 0) >= capMin) leaders.push({ t: d.ticker, name: d.name, r });
+            });
+            if (!rets.length) return;
+            rets.sort((a, b) => a - b);
+            const median = rets[Math.floor(rets.length / 2)];
+            const pctUp = rets.filter(r => r > 0).length / rets.length * 100;
+            const groups = Object.entries(groupB)
+                .filter(([, arr]) => arr.length >= minMembers)
+                .map(([g, arr]) => ({ g, n: arr.length, ret: arr.reduce((s, x) => s + x, 0) / arr.length }))
+                .sort((a, b) => b.ret - a.ret);
+            // rang percentile de chaque groupe ce mois (pour la rotation M/M)
+            const rankMap = {};
+            groups.forEach((x, i) => { rankMap[x.g] = Math.round((1 - i / Math.max(1, groups.length - 1)) * 100); });
+            leaders.sort((a, b) => b.r - a.r);
+            stats[m] = { median, pctUp, n: rets.length, groups, rankMap, top: leaders.slice(0, 8), bottom: leaders.slice(-4).reverse() };
+        });
+
+        // Narratif auto-généré (EN, style desk note)
+        const fmtR = v => (v > 0 ? '+' : '') + v.toFixed(1) + '%';
+        const buildNarrative = (m, s, prev) => {
+            const parts = [];
+            const tone = s.median >= 3 ? 'Strong broad advance' : s.median >= 1 ? 'Constructive tape' : s.median >= -1 ? 'Mixed, range-bound tape' : s.median >= -3 ? 'Corrective month' : 'Sharp broad decline';
+            parts.push(`${tone}: median stock ${fmtR(s.median)}, ${s.pctUp.toFixed(0)}% of the universe closed higher (${s.n} names).`);
+            const tg = s.groups.slice(0, 3), bg = s.groups.slice(-3).reverse();
+            if (tg.length) parts.push(`Leadership: ${tg.map(x => `${x.g} (${fmtR(x.ret)})`).join(', ')}.`);
+            if (bg.length) parts.push(`Laggards: ${bg.map(x => `${x.g} (${fmtR(x.ret)})`).join(', ')}.`);
+            if (prev) {
+                const moves = s.groups
+                    .filter(x => prev.rankMap[x.g] != null)
+                    .map(x => ({ g: x.g, d: s.rankMap[x.g] - prev.rankMap[x.g] }))
+                    .sort((a, b) => b.d - a.d);
+                const inMoves = moves.filter(x => x.d >= 25).slice(0, 3);
+                const outMoves = moves.filter(x => x.d <= -25).slice(-3).reverse();
+                if (inMoves.length || outMoves.length) {
+                    let rotTxt = 'Rotation: ';
+                    if (inMoves.length) rotTxt += `money moved INTO ${inMoves.map(x => `${x.g} (rank +${x.d})`).join(', ')}`;
+                    if (inMoves.length && outMoves.length) rotTxt += '; ';
+                    if (outMoves.length) rotTxt += `OUT OF ${outMoves.map(x => `${x.g} (${x.d})`).join(', ')}`;
+                    parts.push(rotTxt + '.');
+                }
+            }
+            if (s.top.length) parts.push(`Standout movers: ${s.top.slice(0, 5).map(x => `${x.t} ${fmtR(x.r)}`).join(', ')}.`);
+            return parts.join(' ');
+        };
+
+        // Rendu : cartes, mois le plus récent en premier
+        const curMonth = priceDates[0].slice(0, 7);
+        let html = '';
+        [...months].reverse().forEach((m, idx) => {
+            const s = stats[m];
+            if (!s) return;
+            const prevM = monthsCalc[monthsCalc.indexOf(m) - 1];
+            const prev = prevM ? stats[prevM] : null;
+            const isMtd = m === curMonth;
+            const [yy, mm] = m.split('-');
+            const medColor = s.median > 0 ? '#15803d' : s.median < 0 ? '#b91c1c' : 'var(--muted)';
+            const rotMoves = prev ? s.groups
+                .filter(x => prev.rankMap[x.g] != null)
+                .map(x => ({ g: x.g, d: s.rankMap[x.g] - prev.rankMap[x.g], ret: x.ret }))
+                .sort((a, b) => b.d - a.d) : [];
+            const rotIn = rotMoves.filter(x => x.d >= 25).slice(0, 4);
+            const rotOut = rotMoves.filter(x => x.d <= -25).slice(-4).reverse();
+
+            const gRow = (x, color) => `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--faint);font-size:11px;">
+                <span style="color:var(--text);">${x.g} <span style="color:var(--muted);font-size:9px;">(${x.n})</span></span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:${color};">${fmtR(x.ret)}</span></div>`;
+            const rotRow = x => `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--faint);font-size:11px;">
+                <span style="color:var(--text);">${x.g}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:${x.d > 0 ? '#3b82f6' : '#b91c1c'};">${x.d > 0 ? '+' : ''}${x.d}</span></div>`;
+
+            html += `
+            <div style="background:var(--bg2);border:1px solid var(--border);border-left:3px solid ${medColor};margin-bottom:18px;">
+                <div style="display:flex;align-items:baseline;gap:16px;padding:12px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;">
+                    <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.1em;color:var(--text);">${monthNames[mm]} ${yy}${isMtd ? ' <span style="font-size:12px;color:var(--muted);">(MTD)</span>' : ''}</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:${medColor};font-weight:700;">MEDIAN ${fmtR(s.median)}</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);">BREADTH ${s.pctUp.toFixed(0)}% UP</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);">${s.n} tickers</span>
+                </div>
+                <div style="padding:12px 16px;font-size:12px;line-height:1.8;color:var(--text);border-bottom:1px solid var(--border);">${buildNarrative(m, s, prev)}</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;padding:12px 16px;">
+                    <div>
+                        <div style="font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:.12em;color:#15803d;margin-bottom:6px;">TOP GROUPS</div>
+                        ${s.groups.slice(0, 6).map(x => gRow(x, '#15803d')).join('')}
+                    </div>
+                    <div>
+                        <div style="font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:.12em;color:#b91c1c;margin-bottom:6px;">BOTTOM GROUPS</div>
+                        ${s.groups.slice(-6).reverse().map(x => gRow(x, x.ret >= 0 ? 'var(--muted)' : '#b91c1c')).join('')}
+                    </div>
+                    <div>
+                        <div style="font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:.12em;color:#3b82f6;margin-bottom:6px;">ROTATION vs PRIOR MONTH <span style="color:var(--muted);font-size:9px;font-family:'IBM Plex Mono',monospace;">Δ rank</span></div>
+                        ${(rotIn.length || rotOut.length) ? rotIn.map(rotRow).join('') + rotOut.map(rotRow).join('') : '<div style="font-size:11px;color:var(--muted);padding:3px 0;">No major rank shifts (±25).</div>'}
+                    </div>
+                </div>
+                <div style="padding:10px 16px 14px;border-top:1px solid var(--border);">
+                    <span style="font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:.12em;color:var(--accent2);margin-right:10px;">MOVERS</span>
+                    ${s.top.map(x => `<span style="display:inline-block;background:var(--bg3);border:1px solid var(--border2);padding:3px 8px;margin:2px 3px 2px 0;font-size:11px;"><span style="font-weight:700;color:var(--accent2);font-family:'IBM Plex Mono',monospace;cursor:pointer;" onclick="openNews('${x.t}','${(x.name || '').replace(/'/g, "\\'")}')">${x.t}</span> <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:#15803d;">${fmtR(x.r)}</span></span>`).join('')}
+                    ${s.bottom.filter(x => x.r < 0).map(x => `<span style="display:inline-block;background:var(--bg3);border:1px solid var(--border2);padding:3px 8px;margin:2px 3px 2px 0;font-size:11px;"><span style="font-weight:700;color:var(--accent2);font-family:'IBM Plex Mono',monospace;cursor:pointer;" onclick="openNews('${x.t}','${(x.name || '').replace(/'/g, "\\'")}')">${x.t}</span> <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:#b91c1c;">${fmtR(x.r)}</span></span>`).join('')}
+                </div>
+            </div>`;
+        });
+
+        container.innerHTML = html || '<div style="padding:20px;color:var(--muted);font-size:12px;">Aucun mois disponible depuis cette date.</div>';
+        document.getElementById('recapInfo').textContent = `${months.length} mois · données jusqu'au ${priceDates[0]}`;
     }
 
     function getTickerQuadrantRRG(x, y) {
