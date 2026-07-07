@@ -1658,99 +1658,44 @@
             <!-- Controls -->
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;margin-top:4px;flex-wrap:wrap;">
                 <div style="display:flex;gap:0;border:1px solid var(--border2);overflow:hidden;">
-                    <button id="leadViewZones" onclick="setLeadView('zones')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 14px;background:var(--accent2);color:#fff;border:none;cursor:pointer;letter-spacing:.06em;">ZONES</button>
+                    <button id="leadViewZones" onclick="setLeadView('zones')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 14px;background:var(--accent2);color:#fff;border:none;cursor:pointer;letter-spacing:.06em;">SIMPLE</button>
                     <button id="leadViewMatrix" onclick="setLeadView('matrix')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 14px;background:transparent;color:var(--muted);border:none;cursor:pointer;letter-spacing:.06em;">MA MATRIX</button>
                 </div>
                 <span style="font-size:9px;color:#6d28d9;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">RS IBD ≥</span>
                 <input id="leadRsIbd" class="filter-input" type="number" value="80" min="0" max="99" style="width:46px;" oninput="debounce(renderLeaders,80)()">
                 <span style="font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">PCT 6M ≥</span>
                 <input id="leadPct6m" class="filter-input" type="number" value="70" min="0" max="99" style="width:46px;" oninput="debounce(renderLeaders,80)()">
-                <label style="font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;display:flex;align-items:center;gap:4px;cursor:pointer;">
-                    <input type="checkbox" id="leadAboveMa50" checked onchange="renderLeaders()"> &gt; MA50
-                </label>
                 <label style="font-size:9px;color:#f59e0b;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;display:flex;align-items:center;gap:4px;cursor:pointer;" title="Confirmation fondamentale : percentile Sales trimestre courant ≥ 60">
                     <input type="checkbox" id="leadSalesConf" onchange="renderLeaders()"> SALES ≥ 60
                 </label>
                 <span style="font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">CAP ≥ ($B)</span>
                 <input id="leadMktcap" class="filter-input" type="number" placeholder="0" style="width:52px;" oninput="debounce(renderLeaders,80)()">
-                <span style="border-left:1px solid var(--border2);height:18px;"></span>
-                <span style="font-size:9px;color:#15803d;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;" title="Zone BUYABLE : distance MA20 en sigmas ≤ ce seuil (et ≥ −2σ)">σ BUY ≤</span>
-                <input id="leadBuySigma" class="filter-input" type="number" value="0.5" step="0.1" style="width:46px;" oninput="debounce(renderLeaders,80)()">
-                <span style="font-size:9px;color:#b91c1c;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;" title="Zone EXTENDED : distance MA20 en sigmas ≥ ce seuil">σ EXT ≥</span>
-                <input id="leadExtSigma" class="filter-input" type="number" value="2" step="0.1" style="width:46px;" oninput="debounce(renderLeaders,80)()">
-                <span style="font-size:9px;color:#b91c1c;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;" title="Verticalité : move 1W ou 4W ≥ ce nombre de sigmas de la vol PASSÉE du titre (mesurée avant le move)">VERT ≥</span>
-                <input id="leadVertThresh" class="filter-input" type="number" value="2" step="0.1" style="width:46px;" oninput="debounce(renderLeaders,80)()">
                 <span style="font-size:10px;color:var(--muted);margin-left:auto" id="leadCount"></span>
             </div>
 
-            <!-- Explainer -->
-            <div style="font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:14px;border-left:2px solid var(--accent2);padding-left:10px;">
-                Leaders = RS IBD et PCT 6M élevés, structure intacte (&gt; MA50). L'extension est mesurée en <b style="color:var(--text)">unités de volatilité du titre</b> :
-                <b style="color:var(--text)">σ-EXT</b> = distance à la MA20 ÷ vol 20j. <b style="color:var(--text)">VERT 1W/4W</b> = move % ÷ (vol journalière <i>d'avant le move</i> × √durée).
-                <b style="color:var(--text)">vs PIVOT</b> = % au-dessus du plus haut des ~6 mois (hors 10 dernières séances) — un breakout depuis une base serrée paraît "vertical" mais n'est PAS étendu tant qu'il reste proche du pivot.
-                🔵 BREAKOUT = −2% à +5% du pivot : cassure fraîche, achetable (O'Neil). 🟢 BUYABLE = pullback vers MA20. 🟡 IN TREND = laisser courir. 🔴 EXTENDED = trop loin du pivot ET σ/verticalité au-dessus du seuil : ne pas chasser.
-            </div>
-
-            <!-- ZONES VIEW -->
+            <!-- SIMPLE VIEW (format Excel : feu tricolore) -->
             <div id="leadZonesView">
-            <!-- Zone panels -->
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;">
-                <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid #3b82f6;">
-                    <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:#3b82f6;padding:8px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
-                        <span>🔵 BREAKOUT — cassure fraîche du pivot</span>
-                        <span id="leadBkoCount" style="font-size:10px;font-weight:400"></span>
-                    </div>
-                    <div id="leadBkoList" style="max-height:520px;overflow-y:auto;"></div>
+                <div class="table-wrap">
+                    <table id="leadSimpleTable" style="width:100%;border-collapse:collapse;">
+                        <thead>
+                            <tr>
+                                <th rowspan="2" style="text-align:left;vertical-align:bottom;padding:6px 10px;">★ TV TICKER</th>
+                                <th colspan="4" style="text-align:center;padding:6px;border-left:2px solid var(--border2);border-bottom:1px solid var(--border);font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.14em;color:var(--text);">MEDIUM-TERM</th>
+                                <th colspan="3" style="text-align:center;padding:6px;border-left:2px solid var(--border2);border-bottom:1px solid var(--border);font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.14em;color:var(--text);">SHORT-TERM</th>
+                            </tr>
+                            <tr>
+                                <th style="cursor:pointer;width:92px;text-align:center;border-left:2px solid var(--border2)" class="th-pct" onclick="leadSort('ma50_dist')">ABOVE 50MA</th>
+                                <th style="cursor:pointer;width:76px;text-align:center" class="th-pct" onclick="leadSort('pct_6m')">PCT 6M</th>
+                                <th style="cursor:pointer;width:76px;text-align:center" class="th-pct" onclick="leadSort('rs_ibd')">RS IBD</th>
+                                <th style="cursor:pointer;width:92px;text-align:center" class="th-pct" onclick="leadSort('ny_yoy_s')" title="Croissance Sales estimée année fiscale suivante (%)">SALES NY</th>
+                                <th style="cursor:pointer;width:76px;text-align:center;border-left:2px solid var(--border2)" class="th-pct" onclick="leadSort('pct_4w')">PCT 4W</th>
+                                <th style="cursor:pointer;width:100px;text-align:center" class="th-pct" onclick="leadSort('dd_1m')" title="Drawdown depuis le plus haut du dernier mois (21 séances)">1M DRAWDOWN</th>
+                                <th style="cursor:pointer;width:92px;text-align:center" class="th-pct" onclick="leadSort('ma20_dist')">ABOVE 20MA</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leadSimpleBody"></tbody>
+                    </table>
                 </div>
-                <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid #15803d;">
-                    <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:#15803d;padding:8px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
-                        <span>🟢 BUYABLE — leaders en pullback</span>
-                        <span id="leadBuyCount" style="font-size:10px;font-weight:400"></span>
-                    </div>
-                    <div id="leadBuyList" style="max-height:520px;overflow-y:auto;"></div>
-                </div>
-                <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid #d97706;">
-                    <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:#d97706;padding:8px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
-                        <span>🟡 IN TREND — laisser courir</span>
-                        <span id="leadTrendCount" style="font-size:10px;font-weight:400"></span>
-                    </div>
-                    <div id="leadTrendList" style="max-height:520px;overflow-y:auto;"></div>
-                </div>
-                <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid #b91c1c;">
-                    <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:#b91c1c;padding:8px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
-                        <span>🔴 EXTENDED — ne pas chasser</span>
-                        <span id="leadExtCount" style="font-size:10px;font-weight:400"></span>
-                    </div>
-                    <div id="leadExtList" style="max-height:520px;overflow-y:auto;"></div>
-                </div>
-            </div>
-
-            <!-- Master table -->
-            <div class="table-wrap">
-                <table id="leadTable" style="width:100%;">
-                    <thead>
-                        <tr>
-                            <th style="cursor:pointer;text-align:left" onclick="leadSort('ticker')">★ TV TICKER</th>
-                            <th style="text-align:left">NAME</th>
-                            <th style="cursor:pointer;text-align:left" onclick="leadSort('group')">GROUP</th>
-                            <th style="cursor:pointer;width:62px;text-align:center" class="th-pct" onclick="leadSort('mktcap')">CAP</th>
-                            <th style="cursor:pointer;width:60px;text-align:center;border-left:1px solid var(--border2);color:#6d28d9" class="th-pct" onclick="leadSort('rs_ibd')">RS IBD</th>
-                            <th style="cursor:pointer;width:60px;text-align:center" class="th-pct" onclick="leadSort('pct_6m')">PCT 6M</th>
-                            <th style="cursor:pointer;width:60px;text-align:center;color:#f59e0b" class="th-pct" onclick="leadSort('pct_sales_cq')">SALES</th>
-                            <th style="cursor:pointer;width:66px;text-align:center;border-left:1px solid var(--border2);color:#10b981" class="th-pct" onclick="leadSort('ma20_dist')">vs MA20</th>
-                            <th style="cursor:pointer;width:60px;text-align:center;color:#10b981" class="th-pct" onclick="leadSort('ma20_sigma')">σ-EXT</th>
-                            <th style="cursor:pointer;width:64px;text-align:center;border-left:1px solid var(--border2)" class="th-pct" onclick="leadSort('vert_1w')">VERT 1W</th>
-                            <th style="cursor:pointer;width:64px;text-align:center" class="th-pct" onclick="leadSort('vert_4w')">VERT 4W</th>
-                            <th style="cursor:pointer;width:62px;text-align:center;border-left:1px solid var(--border2)" class="th-pct" onclick="leadSort('w1')">RET 1W</th>
-                            <th style="cursor:pointer;width:62px;text-align:center" class="th-pct" onclick="leadSort('m1')">RET 4W</th>
-                            <th style="cursor:pointer;width:64px;text-align:center;color:#f59e0b" class="th-pct" onclick="leadSort('high52_dist')">vs 52WH</th>
-                            <th style="cursor:pointer;width:64px;text-align:center;color:#3b82f6" class="th-pct" onclick="leadSort('bko_ext')" title="% au-dessus du plus haut des ~6 derniers mois (hors 10 dernières séances). 0-5% = breakout frais achetable.">vs PIVOT</th>
-                            <th style="cursor:pointer;width:96px;text-align:center;border-left:1px solid var(--border2)" onclick="leadSort('zone')">ZONE</th>
-                        </tr>
-                    </thead>
-                    <tbody id="leadBody"></tbody>
-                </table>
-            </div>
             </div><!-- /leadZonesView -->
 
             <!-- MA MATRIX VIEW -->
@@ -8374,31 +8319,17 @@ Write a thorough 7-section market analysis.`;
                 for (let i = 0; i < 200; i++) { if (p[i] > 0) { s += p[i]; n++; } }
                 if (n >= 180) d.ma200_dist = Math.round((p[0] / (s / n) - 1) * 1000) / 10;
             }
+            // Drawdown 1M : % depuis le plus haut des 21 dernières séances
+            d.dd_1m = null;
+            if (p[0] > 0) {
+                let hi = 0;
+                for (let i = 0; i < Math.min(21, p.length); i++) if (p[i] > hi) hi = p[i];
+                if (hi > 0) d.dd_1m = Math.round((p[0] / hi - 1) * 1000) / 10;
+            }
         });
         _vertComputedFor = nPrices;
     }
 
-    // Zones : 0 = BREAKOUT (cassure fraîche), 1 = BUYABLE (pullback MA20), 2 = IN TREND, 3 = EXTENDED
-    // Règle clé : un breakout depuis une base serrée paraît "vertical" (vol pré-move basse) mais n'est PAS étendu
-    // tant que le prix reste ≤ ~5% au-dessus du pivot (plus haut des ~6 mois hors 10 dernières séances). Esprit O'Neil/Minervini.
-    function leadClassify(d, cfg) {
-        const sig = d.ma20_sigma;
-        const vert1 = d.vert_1w, vert4 = d.vert_4w;
-        const bko = d.bko_ext;
-        // Breakout frais : vient de dépasser les anciens plus hauts, encore dans la zone achetable (−2% à +5% du pivot)
-        if (bko != null && bko >= -2 && bko <= 5)
-            return { zone: 0, name: 'BREAKOUT', color: '#3b82f6', reason: `pivot ${bko > 0 ? '+' : ''}${bko.toFixed(1)}%` };
-        const reasons = [];
-        if (sig != null && sig >= cfg.extSigma) reasons.push(`σ ${sig.toFixed(1)}`);
-        if (vert1 != null && vert1 >= cfg.vertThresh) reasons.push(`V1W ${vert1.toFixed(1)}`);
-        if (vert4 != null && vert4 >= cfg.vertThresh) reasons.push(`V4W ${vert4.toFixed(1)}`);
-        if (bko != null && bko > 5) reasons.forEach((r, i) => { if (i === 0) reasons[i] = `pivot +${bko.toFixed(1)}% · ` + r; });
-        if (reasons.length)
-            return { zone: 3, name: 'EXTENDED', color: '#b91c1c', reason: reasons.join(' · ') };
-        if (sig != null && sig <= cfg.buySigma && sig >= -2)
-            return { zone: 1, name: 'BUYABLE', color: '#15803d', reason: `σ ${sig.toFixed(1)}` };
-        return { zone: 2, name: 'IN TREND', color: '#d97706', reason: sig != null ? `σ ${sig.toFixed(1)}` : '' };
-    }
 
     function renderLeaders() {
         if (!allData.length) return;
@@ -8408,110 +8339,69 @@ Write a thorough 7-section market analysis.`;
         const cfg = {
             rsIbdMin:  parseFloat(document.getElementById('leadRsIbd')?.value)  || 0,
             pct6mMin:  parseFloat(document.getElementById('leadPct6m')?.value)  || 0,
-            aboveMa50: document.getElementById('leadAboveMa50')?.checked ?? true,
             salesConf: document.getElementById('leadSalesConf')?.checked ?? false,
-            mktcapMin: parseFloat(document.getElementById('leadMktcap')?.value) || 0,
-            buySigma:  parseFloat(document.getElementById('leadBuySigma')?.value),
-            extSigma:  parseFloat(document.getElementById('leadExtSigma')?.value),
-            vertThresh:parseFloat(document.getElementById('leadVertThresh')?.value)
+            mktcapMin: parseFloat(document.getElementById('leadMktcap')?.value) || 0
         };
-        if (isNaN(cfg.buySigma)) cfg.buySigma = 0.5;
-        if (isNaN(cfg.extSigma)) cfg.extSigma = 2;
-        if (isNaN(cfg.vertThresh)) cfg.vertThresh = 2;
-
-        // Qualification des leaders
         let rows = allData.filter(d => {
             if ((d.rs_ibd ?? -1) < cfg.rsIbdMin) return false;
             if ((d.pct_6m ?? -1) < cfg.pct6mMin) return false;
-            if (cfg.aboveMa50 && (d.ma50_dist ?? -1) < 0) return false;
             if (cfg.salesConf && (d.pct_sales_cq ?? -1) < 60) return false;
             if (cfg.mktcapMin > 0 && (parseFloat(d.mktcap) || 0) < cfg.mktcapMin) return false;
             return true;
-        }).map(d => ({ d, z: leadClassify(d, cfg) }));
+        });
 
-        // Panels
-        const bkout = rows.filter(r => r.z.zone === 0).sort((a, b) => (b.d.rs_ibd ?? 0) - (a.d.rs_ibd ?? 0));
-        const buy   = rows.filter(r => r.z.zone === 1).sort((a, b) => (b.d.rs_ibd ?? 0) - (a.d.rs_ibd ?? 0));
-        const trend = rows.filter(r => r.z.zone === 2).sort((a, b) => (b.d.rs_ibd ?? 0) - (a.d.rs_ibd ?? 0));
-        const ext   = rows.filter(r => r.z.zone === 3).sort((a, b) => (b.d.ma20_sigma ?? 0) - (a.d.ma20_sigma ?? 0));
-
-        const panelRow = (r, accent) => {
-            const d = r.d;
-            const nameSafe = (d.name || '').replace(/'/g, "\\'");
-            return `
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--faint);">
-                <div style="min-width:0;">
-                    <div style="display:flex;align-items:baseline;gap:8px;">
-                        <span style="font-weight:700;font-size:13px;color:var(--accent2);cursor:pointer;font-family:'IBM Plex Mono',monospace;" onclick="openNews('${d.ticker}','${nameSafe}')">${d.ticker}</span>
-                        <a href="https://www.tradingview.com/chart/?symbol=${d.ticker}" target="_blank" style="color:#475569;font-size:8px;text-decoration:none;font-weight:600;">TV</a>
-                        <span style="font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;">${d.name || ''}</span>
-                    </div>
-                    <div style="font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-top:2px;">RS ${d.rs_ibd ?? '—'} · 6M ${d.pct_6m ?? '—'} · MA20 ${d.ma20_dist != null ? (d.ma20_dist > 0 ? '+' : '') + d.ma20_dist + '%' : '—'} · ${d.group || ''}</div>
-                </div>
-                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:${accent};white-space:nowrap;margin-left:10px;">${r.z.reason}</span>
-            </div>`;
-        };
-
-        document.getElementById('leadBkoList').innerHTML   = bkout.length ? bkout.map(r => panelRow(r, '#3b82f6')).join('') : '<div style="padding:14px 12px;font-size:11px;color:var(--muted);">Aucune cassure fraîche de pivot.</div>';
-        document.getElementById('leadBuyList').innerHTML   = buy.length   ? buy.map(r => panelRow(r, '#15803d')).join('')   : '<div style="padding:14px 12px;font-size:11px;color:var(--muted);">Aucun leader en zone d\'achat aux seuils actuels.</div>';
-        document.getElementById('leadTrendList').innerHTML = trend.length ? trend.map(r => panelRow(r, '#d97706')).join('') : '<div style="padding:14px 12px;font-size:11px;color:var(--muted);">—</div>';
-        document.getElementById('leadExtList').innerHTML   = ext.length   ? ext.map(r => panelRow(r, '#b91c1c')).join('')   : '<div style="padding:14px 12px;font-size:11px;color:var(--muted);">Aucun leader en surextension.</div>';
-        document.getElementById('leadBkoCount').textContent   = bkout.length || '';
-        document.getElementById('leadBuyCount').textContent   = buy.length   || '';
-        document.getElementById('leadTrendCount').textContent = trend.length || '';
-        document.getElementById('leadExtCount').textContent   = ext.length   || '';
-
-        // Master table
-        rows.forEach(r => { r.d._zone = r.z.zone; });
         rows.sort((a, b) => {
-            if (leadSortCol === 'ticker') return leadSortDir === 'asc' ? a.d.ticker.localeCompare(b.d.ticker) : b.d.ticker.localeCompare(a.d.ticker);
-            if (leadSortCol === 'group')  return leadSortDir === 'asc' ? (a.d.group || '').localeCompare(b.d.group || '') : (b.d.group || '').localeCompare(a.d.group || '');
-            if (leadSortCol === 'zone')   return leadSortDir === 'asc' ? a.z.zone - b.z.zone : b.z.zone - a.z.zone;
-            const av = leadSortCol === 'mktcap' ? parseFloat(a.d.mktcap) : a.d[leadSortCol];
-            const bv = leadSortCol === 'mktcap' ? parseFloat(b.d.mktcap) : b.d[leadSortCol];
-            if (av == null || isNaN(av)) return 1;
-            if (bv == null || isNaN(bv)) return -1;
+            if (leadSortCol === 'ticker') return leadSortDir === 'asc' ? a.ticker.localeCompare(b.ticker) : b.ticker.localeCompare(a.ticker);
+            const av = a[leadSortCol], bv = b[leadSortCol];
+            if (av == null) return 1;
+            if (bv == null) return -1;
             return leadSortDir === 'desc' ? bv - av : av - bv;
         });
 
-        const sigCellL = (v, warnHi) => {
-            if (v == null) return '<span style="color:var(--muted)">—</span>';
-            const c = v >= warnHi ? '#b91c1c' : v <= 0.5 ? '#15803d' : 'var(--text)';
-            return `<span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:${c}">${v.toFixed(1)}</span>`;
-        };
+        // Cellules feu tricolore (fond coloré, texte sombre — style Excel)
+        const G = '#86efac', P = '#f5e6d3', R = '#fca5a5', TX = '#111827'; // vert / beige / rouge
+        const cell = (txt, bg, extra) => `<td style="text-align:center;background:${bg};color:${TX};font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:12px;padding:7px 6px;border:1px solid var(--border);${extra || ''}">${txt}</td>`;
+        const yesNo = (dist, extra) => dist == null
+            ? cell('—', 'transparent', extra)
+            : cell(dist >= 0 ? 'Yes' : 'No', dist >= 0 ? G : R, extra);
+        // Seuils couleur (spec Reuven) :
+        // PCT 6M / PCT 4W : >70 vert, <50 rouge, sinon beige
+        // RS IBD          : >85 vert, <50 rouge, sinon beige
+        // SALES NY        : >30% vert, <10% rouge, sinon beige
+        // 1M DRAWDOWN     : >-10% vert, <-25% rouge, sinon beige
+        const pctC = v => v == null ? cell('—', 'transparent')
+            : cell(v, v > 70 ? G : v < 50 ? R : P);
+        const rsC = v => v == null ? cell('—', 'transparent')
+            : cell(v, v > 85 ? G : v < 50 ? R : P);
+        const salesC = v => v == null ? cell('—', 'transparent')
+            : cell((v > 0 ? '+' : '') + Math.round(v) + '%', v > 30 ? G : v < 10 ? R : P);
+        const ddC = v => v == null ? cell('—', 'transparent')
+            : cell(v.toFixed(1) + '%', v > -10 ? G : v < -25 ? R : P);
 
-        const tbody = document.getElementById('leadBody');
+        const tbody = document.getElementById('leadSimpleBody');
         tbody.innerHTML = '';
-        rows.forEach(r => {
-            const d = r.d;
+        rows.forEach(d => {
             const nameSafe = (d.name || '').replace(/'/g, "\\'");
             const inW = watchlist.includes(d.ticker);
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td style="padding:4px 8px;white-space:nowrap;">
+                <td style="padding:6px 10px;white-space:nowrap;border:1px solid var(--border);">
                     <span style="cursor:pointer;font-size:11px;color:${inW ? '#06b6d4' : '#475569'};margin-right:4px" class="watch-toggle" data-ticker="${d.ticker}">${inW ? '★' : '☆'}</span>
                     <a href="https://www.tradingview.com/chart/?symbol=${d.ticker}" target="_blank" style="color:#475569;font-size:8px;text-decoration:none;font-weight:600;margin-right:6px">TV</a>
-                    <span style="font-weight:700;font-size:12px;color:var(--accent2);cursor:pointer;" onclick="openNews('${d.ticker}','${nameSafe}')">${d.ticker}</span>
+                    <span style="font-weight:700;font-size:13px;color:var(--accent2);cursor:pointer;" onclick="openNews('${d.ticker}','${nameSafe}')">${d.ticker}</span>
+                    <span style="font-size:10px;color:var(--muted);margin-left:8px;">${d.name || ''} · ${d.group || ''}</span>
                 </td>
-                <td style="font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:170px;">${d.name || ''}</td>
-                <td style="font-size:10px;color:var(--muted);white-space:nowrap;">${d.group || ''}</td>
-                <td class="td-pct" style="color:var(--muted)">${fmktcap(d.mktcap)}</td>
-                <td class="td-pct" style="border-left:1px solid var(--border2)">${pctCell(d.rs_ibd)}</td>
-                <td class="td-pct">${pctCell(d.pct_6m)}</td>
-                <td class="td-pct">${pctCell(d.pct_sales_cq)}</td>
-                <td class="td-pct" style="border-left:1px solid var(--border2);color:#10b981">${distCell(d.ma20_dist)}</td>
-                <td class="td-pct">${sigCellL(d.ma20_sigma, cfg.extSigma)}</td>
-                <td class="td-pct" style="border-left:1px solid var(--border2)">${sigCellL(d.vert_1w, cfg.vertThresh)}</td>
-                <td class="td-pct">${sigCellL(d.vert_4w, cfg.vertThresh)}</td>
-                <td class="td-pct" style="border-left:1px solid var(--border2)">${retCell(d.w1)}</td>
-                <td class="td-pct">${retCell(d.m1)}</td>
-                <td class="td-pct" style="color:#f59e0b">${distCell52w(d.high52_dist)}</td>
-                <td class="td-pct" style="color:#3b82f6;font-family:'IBM Plex Mono',monospace;">${d.bko_ext != null ? (d.bko_ext > 0 ? '+' : '') + d.bko_ext.toFixed(1) + '%' : '—'}</td>
-                <td style="text-align:center;border-left:1px solid var(--border2)"><span style="background:${r.z.color}18;color:${r.z.color};border:1px solid ${r.z.color}66;font-size:9px;font-weight:700;letter-spacing:.08em;padding:2px 7px;white-space:nowrap;">${r.z.name}</span></td>`;
+                ${yesNo(d.ma50_dist, 'border-left:2px solid var(--border2);')}
+                ${pctC(d.pct_6m)}
+                ${rsC(d.rs_ibd)}
+                ${salesC(d.ny_yoy_s)}
+                ${(d.pct_4w == null ? cell('—', 'transparent', 'border-left:2px solid var(--border2);') : cell(d.pct_4w, d.pct_4w > 70 ? G : d.pct_4w < 50 ? R : P, 'border-left:2px solid var(--border2);'))}
+                ${ddC(d.dd_1m)}
+                ${yesNo(d.ma20_dist)}`;
             tbody.appendChild(tr);
         });
 
-        document.getElementById('leadCount').textContent = `${rows.length} leaders (${bkout.length} breakout · ${buy.length} buyable · ${trend.length} in trend · ${ext.length} extended)`;
+        document.getElementById('leadCount').textContent = `${rows.length} leaders`;
     }
 
     // MA MATRIX : leaders regroupés par statut vs MA20/MA50/MA200, format ✓/✗ lisible.
