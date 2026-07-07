@@ -1670,6 +1670,10 @@
                 </label>
                 <span style="font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">CAP ≥ ($B)</span>
                 <input id="leadMktcap" class="filter-input" type="number" placeholder="0" style="width:52px;" oninput="debounce(renderLeaders,80)()">
+                <span style="border-left:1px solid var(--border2);height:18px;"></span>
+                <span style="font-size:9px;color:#3b82f6;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;" title="Régénère le tableau tel qu'il aurait été à cette date : percentiles et MAs recalculés cross-sectionnellement au jour choisi">AS OF</span>
+                <input id="leadAsOf" class="filter-input" type="date" style="width:130px;" onchange="renderLeaders()">
+                <span id="leadAsOfNote" style="font-size:9px;color:#d97706;font-family:'IBM Plex Mono',monospace;"></span>
                 <span style="font-size:10px;color:var(--muted);margin-left:auto" id="leadCount"></span>
             </div>
 
@@ -1680,17 +1684,19 @@
                         <thead>
                             <tr>
                                 <th rowspan="2" style="text-align:left;vertical-align:bottom;padding:6px 10px;">★ TV TICKER</th>
-                                <th colspan="4" style="text-align:center;padding:6px;border-left:2px solid var(--border2);border-bottom:1px solid var(--border);font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.14em;color:var(--text);">MEDIUM-TERM</th>
-                                <th colspan="3" style="text-align:center;padding:6px;border-left:2px solid var(--border2);border-bottom:1px solid var(--border);font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.14em;color:var(--text);">SHORT-TERM</th>
+                                <th colspan="5" style="text-align:center;padding:6px;border-left:2px solid var(--border2);border-bottom:1px solid var(--border);font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.14em;color:var(--text);">MEDIUM-TERM</th>
+                                <th colspan="4" style="text-align:center;padding:6px;border-left:2px solid var(--border2);border-bottom:1px solid var(--border);font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.14em;color:var(--text);">SHORT-TERM</th>
                             </tr>
                             <tr>
-                                <th style="cursor:pointer;width:92px;text-align:center;border-left:2px solid var(--border2)" class="th-pct" onclick="leadSort('ma50_dist')">ABOVE 50MA</th>
-                                <th style="cursor:pointer;width:76px;text-align:center" class="th-pct" onclick="leadSort('pct_6m')">PCT 6M</th>
-                                <th style="cursor:pointer;width:76px;text-align:center" class="th-pct" onclick="leadSort('rs_ibd')">RS IBD</th>
-                                <th style="cursor:pointer;width:92px;text-align:center" class="th-pct" onclick="leadSort('ny_yoy_s')" title="Croissance Sales estimée année fiscale suivante (%)">SALES NY</th>
-                                <th style="cursor:pointer;width:76px;text-align:center;border-left:2px solid var(--border2)" class="th-pct" onclick="leadSort('pct_4w')">PCT 4W</th>
-                                <th style="cursor:pointer;width:100px;text-align:center" class="th-pct" onclick="leadSort('dd_1m')" title="Drawdown depuis le plus haut du dernier mois (21 séances)">1M DRAWDOWN</th>
-                                <th style="cursor:pointer;width:92px;text-align:center" class="th-pct" onclick="leadSort('ma20_dist')">ABOVE 20MA</th>
+                                <th style="cursor:pointer;width:88px;text-align:center;border-left:2px solid var(--border2)" class="th-pct" onclick="leadSort('ma50_dist')">ABOVE 50MA</th>
+                                <th style="cursor:pointer;width:72px;text-align:center" class="th-pct" onclick="leadSort('pct_6m')">PCT 6M</th>
+                                <th style="cursor:pointer;width:72px;text-align:center" class="th-pct" onclick="leadSort('rs_ibd')">RS IBD</th>
+                                <th style="cursor:pointer;width:84px;text-align:center" class="th-pct" onclick="leadSort('ny_yoy_s')" title="Croissance Sales estimée année fiscale suivante (%) — toujours les estimations ACTUELLES, même en mode as-of">SALES NY</th>
+                                <th style="cursor:pointer;width:80px;text-align:center" class="th-pct" onclick="leadSort('h52')" title="Distance au plus haut 52 semaines (%)">vs 52WH</th>
+                                <th style="cursor:pointer;width:72px;text-align:center;border-left:2px solid var(--border2)" class="th-pct" onclick="leadSort('pct_4w')">PCT 4W</th>
+                                <th style="cursor:pointer;width:72px;text-align:center" class="th-pct" onclick="leadSort('pct_1w')">PCT 1W</th>
+                                <th style="cursor:pointer;width:96px;text-align:center" class="th-pct" onclick="leadSort('dd_1m')" title="Pire baisse peak-to-trough (clôtures) sur les 21 dernières séances">1M DRAWDOWN</th>
+                                <th style="cursor:pointer;width:88px;text-align:center" class="th-pct" onclick="leadSort('ma20_dist')">ABOVE 20MA</th>
                             </tr>
                         </thead>
                         <tbody id="leadSimpleBody"></tbody>
@@ -8319,22 +8325,128 @@ Write a thorough 7-section market analysis.`;
                 for (let i = 0; i < 200; i++) { if (p[i] > 0) { s += p[i]; n++; } }
                 if (n >= 180) d.ma200_dist = Math.round((p[0] / (s / n) - 1) * 1000) / 10;
             }
-            // Drawdown 1M : % depuis le plus haut des 21 dernières séances
+            // Drawdown 1M : pire baisse peak-to-trough (clôtures) à l'intérieur des 21 dernières séances
             d.dd_1m = null;
             if (p[0] > 0) {
-                let hi = 0;
-                for (let i = 0; i < Math.min(21, p.length); i++) if (p[i] > hi) hi = p[i];
-                if (hi > 0) d.dd_1m = Math.round((p[0] / hi - 1) * 1000) / 10;
+                let peak = 0, maxDD = 0;
+                for (let i = Math.min(20, p.length - 1); i >= 0; i--) { // du plus ancien au plus récent
+                    const v = p[i];
+                    if (!(v > 0)) continue;
+                    if (v > peak) peak = v;
+                    else if (peak > 0) maxDD = Math.min(maxDD, (v / peak - 1) * 100);
+                }
+                d.dd_1m = Math.round(maxDD * 10) / 10;
             }
         });
         _vertComputedFor = nPrices;
     }
 
 
+    // ── AS-OF ENGINE : recalcule les métriques du tableau Leaders à une date passée ──
+    // Percentiles recalculés cross-sectionnellement à l'offset (index dans priceDates).
+    // Composite RS IBD : poids renormalisés si les horizons longs (9M/12M) dépassent l'historique disponible.
+    function leadAsOfMetrics(off) {
+        const stamp = (priceDates[0] || '') + '|' + off;
+        if (window._leadAO && window._leadAO.stamp === stamp) return window._leadAO.map;
+        const recs = [];
+        allData.forEach(d => {
+            const p = rawPrices[d.ticker];
+            if (!p || off >= p.length || !(p[off] > 0)) return;
+            const at = i => (off + i < p.length && p[off + i] > 0) ? p[off + i] : null;
+            const ret = (a, b) => { const pa = at(a), pb = at(b); return (pa != null && pb != null) ? (pa / pb - 1) * 100 : null; };
+            const rec = { d };
+            for (let i = 1; i <= 4; i++) rec['w' + i] = ret(5 * (i - 1), 5 * i);
+            for (let i = 1; i <= 6; i++) rec['m' + i] = ret(21 * (i - 1), 21 * i);
+            // Composite IBD as-of (retours cumulés, poids renormalisés sur horizons disponibles, min 3M+6M)
+            const r63 = ret(0, 63), r126 = ret(0, 126), r189 = ret(0, 189), r252 = ret(0, 252);
+            let cs = 0, cw = 0;
+            if (r63 != null)  { cs += 0.4 * r63;  cw += 0.4; }
+            if (r126 != null) { cs += 0.2 * r126; cw += 0.2; }
+            if (r189 != null) { cs += 0.2 * r189; cw += 0.2; }
+            if (r252 != null) { cs += 0.2 * r252; cw += 0.2; }
+            rec.comp = cw >= 0.6 ? cs / cw : null;
+            // MAs as-of
+            const sma = n => { let s = 0, c = 0; for (let i = 0; i < n && off + i < p.length; i++) { if (p[off + i] > 0) { s += p[off + i]; c++; } } return c >= n * 0.9 ? s / c : null; };
+            const s20 = sma(20), s50 = sma(50);
+            rec.ma20_dist = s20 ? Math.round((p[off] / s20 - 1) * 1000) / 10 : null;
+            rec.ma50_dist = s50 ? Math.round((p[off] / s50 - 1) * 1000) / 10 : null;
+            // Drawdown 1M as-of (peak-to-trough intra-fenêtre)
+            let peak = 0, maxDD = 0;
+            for (let i = Math.min(20, p.length - 1 - off); i >= 0; i--) {
+                const v = p[off + i];
+                if (!(v > 0)) continue;
+                if (v > peak) peak = v;
+                else if (peak > 0) maxDD = Math.min(maxDD, (v / peak - 1) * 100);
+            }
+            rec.dd_1m = Math.round(maxDD * 10) / 10;
+            // 52WH as-of (sur l'historique disponible avant la date)
+            let hi = 0;
+            for (let i = 0; i < Math.min(252, p.length - off); i++) if (p[off + i] > hi) hi = p[off + i];
+            rec.h52 = hi > 0 ? Math.round((p[off] / hi - 1) * 1000) / 10 : null;
+            recs.push(rec);
+        });
+        // Rangs percentiles cross-sectionnels (même définition que computePercentiles : #dessous/(n-1)×100)
+        const mkRank = key => {
+            const vals = recs.map(r => r[key]).filter(v => v != null).sort((a, b) => a - b);
+            const n = vals.length;
+            return v => {
+                if (v == null || n < 2) return null;
+                let lo = 0, hi = n;
+                while (lo < hi) { const mid = (lo + hi) >> 1; if (vals[mid] < v) lo = mid + 1; else hi = mid; }
+                return Math.round(lo / (n - 1) * 100);
+            };
+        };
+        const rw = [1, 2, 3, 4].map(i => mkRank('w' + i));
+        const rm = [1, 2, 3, 4, 5, 6].map(i => mkRank('m' + i));
+        const rc = mkRank('comp');
+        const W6 = [0.25, 0.20, 0.15, 0.15, 0.15, 0.10];
+        const map = {};
+        recs.forEach(rec => {
+            const wr = [0, 1, 2, 3].map(ix => rw[ix](rec['w' + (ix + 1)]));
+            const mr = [0, 1, 2, 3, 4, 5].map(ix => rm[ix](rec['m' + (ix + 1)]));
+            const avgR = arr => { const v = arr.filter(x => x != null); return v.length ? Math.round(v.reduce((s, x) => s + x, 0) / v.length) : null; };
+            let s6 = 0, w6 = 0;
+            mr.forEach((v, i) => { if (v != null) { s6 += v * W6[i]; w6 += W6[i]; } });
+            map[rec.d.ticker] = {
+                pct_1w: wr[0], pct_4w: avgR(wr),
+                pct_6m: w6 > 0 ? Math.round(s6 / w6) : null,
+                rs_ibd: rc(rec.comp),
+                ma20_dist: rec.ma20_dist, ma50_dist: rec.ma50_dist,
+                dd_1m: rec.dd_1m, h52: rec.h52
+            };
+        });
+        window._leadAO = { stamp, map };
+        return map;
+    }
+
     function renderLeaders() {
         if (!allData.length) return;
         computeVerticality();
         if (leadView === 'matrix') { renderLeadersMatrix(); return; }
+
+        // Résolution de la date as-of → offset dans priceDates
+        const asOfEl = document.getElementById('leadAsOf');
+        const noteEl = document.getElementById('leadAsOfNote');
+        let off = 0;
+        if (asOfEl && priceDates.length) {
+            if (!asOfEl.value) asOfEl.value = priceDates[0];
+            asOfEl.max = priceDates[0];
+            asOfEl.min = priceDates[Math.min(priceDates.length - 1, 130)]; // ~6 mois en arrière max (garde des rangs 6M fiables)
+            const chosen = asOfEl.value;
+            if (chosen && chosen !== priceDates[0]) {
+                off = priceDates.findIndex(dt => dt <= chosen); // séance exacte ou la plus proche avant
+                if (off < 0) off = 0;
+            }
+        }
+        const asOf = off > 0;
+        if (noteEl) noteEl.textContent = asOf ? `→ ${priceDates[off]} · percentiles recalculés à cette date · SALES NY = estimations actuelles` : '';
+
+        // Métriques : champs officiels si aujourd'hui, moteur as-of sinon
+        const M = asOf ? leadAsOfMetrics(off) : null;
+        const met = d => asOf ? (M[d.ticker] || {}) : {
+            pct_1w: d.pct_1w, pct_4w: d.pct_4w, pct_6m: d.pct_6m, rs_ibd: d.rs_ibd,
+            ma20_dist: d.ma20_dist, ma50_dist: d.ma50_dist, dd_1m: d.dd_1m, h52: d.high52_dist
+        };
 
         const cfg = {
             rsIbdMin:  parseFloat(document.getElementById('leadRsIbd')?.value)  || 0,
@@ -8342,45 +8454,49 @@ Write a thorough 7-section market analysis.`;
             salesConf: document.getElementById('leadSalesConf')?.checked ?? false,
             mktcapMin: parseFloat(document.getElementById('leadMktcap')?.value) || 0
         };
-        let rows = allData.filter(d => {
-            if ((d.rs_ibd ?? -1) < cfg.rsIbdMin) return false;
-            if ((d.pct_6m ?? -1) < cfg.pct6mMin) return false;
+        let rows = allData.map(d => ({ d, m: met(d) })).filter(({ d, m }) => {
+            if ((m.rs_ibd ?? -1) < cfg.rsIbdMin) return false;
+            if ((m.pct_6m ?? -1) < cfg.pct6mMin) return false;
             if (cfg.salesConf && (d.pct_sales_cq ?? -1) < 60) return false;
             if (cfg.mktcapMin > 0 && (parseFloat(d.mktcap) || 0) < cfg.mktcapMin) return false;
             return true;
         });
 
         rows.sort((a, b) => {
-            if (leadSortCol === 'ticker') return leadSortDir === 'asc' ? a.ticker.localeCompare(b.ticker) : b.ticker.localeCompare(a.ticker);
-            const av = a[leadSortCol], bv = b[leadSortCol];
+            if (leadSortCol === 'ticker') return leadSortDir === 'asc' ? a.d.ticker.localeCompare(b.d.ticker) : b.d.ticker.localeCompare(a.d.ticker);
+            const get = r => leadSortCol === 'ny_yoy_s' ? r.d.ny_yoy_s : r.m[leadSortCol];
+            const av = get(a), bv = get(b);
             if (av == null) return 1;
             if (bv == null) return -1;
             return leadSortDir === 'desc' ? bv - av : av - bv;
         });
 
         // Cellules feu tricolore (fond coloré, texte sombre — style Excel)
+        // Seuils couleur (spec Reuven) :
+        // PCT 6M / PCT 4W / PCT 1W : >70 vert, <50 rouge, sinon beige
+        // RS IBD          : >85 vert, <50 rouge, sinon beige
+        // SALES NY        : >30% vert, <10% rouge, sinon beige
+        // 1M DRAWDOWN     : >-10% vert, <-25% rouge, sinon beige
+        // vs 52WH         : >-5% vert, <-20% rouge, sinon beige
         const G = '#86efac', P = '#f5e6d3', R = '#fca5a5', TX = '#111827'; // vert / beige / rouge
         const cell = (txt, bg, extra) => `<td style="text-align:center;background:${bg};color:${TX};font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:12px;padding:7px 6px;border:1px solid var(--border);${extra || ''}">${txt}</td>`;
         const yesNo = (dist, extra) => dist == null
             ? cell('—', 'transparent', extra)
             : cell(dist >= 0 ? 'Yes' : 'No', dist >= 0 ? G : R, extra);
-        // Seuils couleur (spec Reuven) :
-        // PCT 6M / PCT 4W : >70 vert, <50 rouge, sinon beige
-        // RS IBD          : >85 vert, <50 rouge, sinon beige
-        // SALES NY        : >30% vert, <10% rouge, sinon beige
-        // 1M DRAWDOWN     : >-10% vert, <-25% rouge, sinon beige
-        const pctC = v => v == null ? cell('—', 'transparent')
-            : cell(v, v > 70 ? G : v < 50 ? R : P);
+        const pctC = (v, extra) => v == null ? cell('—', 'transparent', extra)
+            : cell(v, v > 70 ? G : v < 50 ? R : P, extra);
         const rsC = v => v == null ? cell('—', 'transparent')
             : cell(v, v > 85 ? G : v < 50 ? R : P);
         const salesC = v => v == null ? cell('—', 'transparent')
             : cell((v > 0 ? '+' : '') + Math.round(v) + '%', v > 30 ? G : v < 10 ? R : P);
         const ddC = v => v == null ? cell('—', 'transparent')
             : cell(v.toFixed(1) + '%', v > -10 ? G : v < -25 ? R : P);
+        const h52C = v => v == null ? cell('—', 'transparent')
+            : cell((v > 0 ? '+' : '') + v.toFixed(1) + '%', v > -5 ? G : v < -20 ? R : P);
 
         const tbody = document.getElementById('leadSimpleBody');
         tbody.innerHTML = '';
-        rows.forEach(d => {
+        rows.forEach(({ d, m }) => {
             const nameSafe = (d.name || '').replace(/'/g, "\\'");
             const inW = watchlist.includes(d.ticker);
             const tr = document.createElement('tr');
@@ -8391,17 +8507,19 @@ Write a thorough 7-section market analysis.`;
                     <span style="font-weight:700;font-size:13px;color:var(--accent2);cursor:pointer;" onclick="openNews('${d.ticker}','${nameSafe}')">${d.ticker}</span>
                     <span style="font-size:10px;color:var(--muted);margin-left:8px;">${d.name || ''} · ${d.group || ''}</span>
                 </td>
-                ${yesNo(d.ma50_dist, 'border-left:2px solid var(--border2);')}
-                ${pctC(d.pct_6m)}
-                ${rsC(d.rs_ibd)}
+                ${yesNo(m.ma50_dist, 'border-left:2px solid var(--border2);')}
+                ${pctC(m.pct_6m)}
+                ${rsC(m.rs_ibd)}
                 ${salesC(d.ny_yoy_s)}
-                ${(d.pct_4w == null ? cell('—', 'transparent', 'border-left:2px solid var(--border2);') : cell(d.pct_4w, d.pct_4w > 70 ? G : d.pct_4w < 50 ? R : P, 'border-left:2px solid var(--border2);'))}
-                ${ddC(d.dd_1m)}
-                ${yesNo(d.ma20_dist)}`;
+                ${h52C(m.h52)}
+                ${pctC(m.pct_4w, 'border-left:2px solid var(--border2);')}
+                ${pctC(m.pct_1w)}
+                ${ddC(m.dd_1m)}
+                ${yesNo(m.ma20_dist)}`;
             tbody.appendChild(tr);
         });
 
-        document.getElementById('leadCount').textContent = `${rows.length} leaders`;
+        document.getElementById('leadCount').textContent = `${rows.length} leaders${asOf ? ' @ ' + priceDates[off] : ''}`;
     }
 
     // MA MATRIX : leaders regroupés par statut vs MA20/MA50/MA200, format ✓/✗ lisible.
