@@ -3847,30 +3847,23 @@
 
     function fullRow(d, bold) {
         const tr = document.createElement('tr');
-        if (bold)
-            tr.style.fontWeight = '700';
-        const fmtRoe = v => v == null ? '<span style="color:var(--muted)">—</span>' : (v > 0 ? '+' : '') + Math.round(v) + '%';
-        const fmtPe = v => v == null ? '<span style="color:var(--muted)">—</span>' : Math.round(v * 10) / 10 + 'x';
-        const peColor = v => v == null ? 'var(--muted)' : v < 20 ? 'var(--up)' : v < 40 ? 'var(--text)' : 'var(--down)';
-        const bL1 = 'box-shadow:-1px 0 0 0 var(--border2)';
-        const bL2 = 'box-shadow:-2px 0 0 0 var(--border2)';
+        if (bold) tr.style.fontWeight = '700';
+        const bL = 'border-left:1px solid var(--border2)';
         tr.innerHTML = infoTds(d) + `
-    <td class="td-pct" style="${bL1}">${pctCell(d.pct_1w)}</td>
+    <td class="td-pct" style="${bL}">${pctCell(d.pct_1w)}</td>
     <td class="td-pct">${pctCell(d.pct_4w)}</td>
-    <td class="td-pct">${pctCell(d.pct_3m)}</td>
     <td class="td-pct">${pctCell(d.pct_6m)}</td>
     <td class="td-pct">${pctCell(d.pct_12m)}</td>
-    <td class="td-pct" style="${bL2}">${pctCell(d.rs_ibd)}</td>
-    <td class="td-num ${pc(d.eps_cq)}" style="${bL1}">${fr(d.eps_cq)}</td>
-    <td class="td-num ${pc(d.eps_nq)}">${fr(d.eps_nq)}</td>
-    <td class="td-pct">${pctCell(d.pct_eps_cq)}</td>
-    <td class="td-pct">${pctCell(d.pct_eps_nq)}</td>
-    <td class="td-num ${pc(d.sales_cq)}" style="${bL1}">${fr(d.sales_cq)}</td>
-    <td class="td-num ${pc(d.sales_nq)}">${fr(d.sales_nq)}</td>
-    <td class="td-pct">${pctCell(d.pct_sales_cq)}</td>
-    <td class="td-pct">${pctCell(d.pct_sales_nq)}</td>
-    <td class="td-num" style="${bL1};color:${d.roe != null && d.roe > 0 ? 'var(--up)' : 'var(--muted)'}">${fmtRoe(d.roe)}</td>
-    <td class="td-num" style="color:${peColor(d.forward_pe)}">${fmtPe(d.forward_pe)}</td>`;
+    <td class="td-pct" style="color:#6d28d9">${pctCell(d.rs_ibd)}</td>
+    <td class="td-pct" style="${bL};color:#0ea5e9">${pctCell(d.va_1w)}</td>
+    <td class="td-pct" style="color:#0ea5e9">${pctCell(d.va_4w)}</td>
+    <td class="td-pct" style="color:#0ea5e9">${pctCell(d.va_6m)}</td>
+    <td class="td-pct" style="color:#0ea5e9">${pctCell(d.va_12m)}</td>
+    <td class="td-pct" style="color:var(--accent2)">${pctCell(d.va_rs)}</td>
+    <td class="td-pct" style="${bL}">${salesCell(d.sales_cq)}</td>
+    <td class="td-pct">${salesCell(d.sales_nq)}</td>
+    <td class="td-pct" style="${bL}">${epsCell(d.eps_cq)}</td>
+    <td class="td-pct">${epsCell(d.eps_nq)}</td>`;
         return tr;
     }
 
@@ -3884,6 +3877,7 @@
         tbody.innerHTML = '';
 
         const exactMatch = search.length > 0 && rows.some(r => r.ticker.toLowerCase() === search);
+        if (exactMatch && allData.length && allData[0].va_4w === undefined) computeVolAdjRS();
 
         if (exactMatch) {
             const pt = document.getElementById('priceTable');
@@ -3892,53 +3886,26 @@
       <tr>
         <th style="width:20px;padding:4px 2px">★</th>
         <th style="width:20px;padding:4px 2px">TV</th>
-        <th style="width:48px">TICKER</th>
-        <th style="width:120px">NAME</th>
-        <th style="width:80px">SECTOR</th>
-        <th style="width:100px">GROUP</th>
-        <th style="width:48px" class="th-pct">CAP</th>
-        <th class="th-pct" style="border-left:1px solid var(--border2);width:44px">1W</th>
-        <th class="th-pct" style="width:44px">4W</th>
-        <th class="th-pct" style="width:44px">3M</th>
-        <th class="th-pct" style="width:44px">6M</th>
-        <th class="th-pct" style="width:44px">12M</th>
-        <th class="th-pct" style="border-left:1px solid var(--border2);width:48px;color:#6d28d9">RS IBD</th>
-        <th class="th-pct" style="border-left:1px solid var(--border2);color:var(--accent2);width:48px">EPS CQ</th>
-        <th class="th-pct" style="color:var(--accent2);width:48px">EPS NQ</th>
-        <th class="th-pct" style="color:var(--accent2);width:50px">PCT CQ</th>
-        <th class="th-pct" style="color:var(--accent2);width:50px">PCT NQ</th>
-        <th class="th-pct" style="border-left:1px solid var(--border2);color:#f59e0b;width:48px">SAL CQ</th>
-        <th class="th-pct" style="color:#f59e0b;width:48px">SAL NQ</th>
-        <th class="th-pct" style="color:#f59e0b;width:50px">PCT CQ</th>
-        <th class="th-pct" style="color:#f59e0b;width:50px">PCT NQ</th>
-        <th class="th-pct" style="border-left:1px solid var(--border2);width:48px">ROE</th>
-        <th class="th-pct" style="width:50px">P/E</th>
-      </tr>`
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            ;
+        <th style="width:52px">TICKER</th>
+        <th style="width:150px">NAME</th>
+        <th style="width:100px">SECTOR</th>
+        <th style="width:120px">GROUP</th>
+        <th style="width:52px" class="th-pct">CAP</th>
+        <th class="th-pct" style="border-left:1px solid var(--border2);width:48px">1W</th>
+        <th class="th-pct" style="width:48px">4W</th>
+        <th class="th-pct" style="width:48px">6M</th>
+        <th class="th-pct" style="width:48px">12M</th>
+        <th class="th-pct" style="width:54px;color:#6d28d9">RS IBD</th>
+        <th class="th-pct" style="border-left:1px solid var(--border2);width:52px;color:#0ea5e9">VA 1W</th>
+        <th class="th-pct" style="width:52px;color:#0ea5e9">VA 4W</th>
+        <th class="th-pct" style="width:52px;color:#0ea5e9">VA 6M</th>
+        <th class="th-pct" style="width:56px;color:#0ea5e9">VA 12M</th>
+        <th class="th-pct" style="width:54px;color:var(--accent2)">VA-RS</th>
+        <th class="th-pct" style="border-left:1px solid var(--border2);width:60px;color:#f59e0b">SAL CQ</th>
+        <th class="th-pct" style="width:60px;color:#f59e0b">SAL NQ</th>
+        <th class="th-pct" style="border-left:1px solid var(--border2);width:60px;color:var(--accent2)">EPS CQ</th>
+        <th class="th-pct" style="width:60px;color:var(--accent2)">EPS NQ</th>
+      </tr>`;
             const d = rows.find(r => r.ticker.toLowerCase() === search) || rows[0];
             tbody.appendChild(fullRow(d, true));
             if (d.group) {
@@ -3954,7 +3921,7 @@
                 });
                 if (peers.length) {
                     const sep = document.createElement('tr');
-                    sep.innerHTML = `<td colspan="18" style="padding:6px 12px;font-size:9px;letter-spacing:.15em;color:var(--accent);border-top:1px solid var(--accent);text-transform:uppercase;">— Peers: ${d.group} (${peers.length}) —</td>`;
+                    sep.innerHTML = `<td colspan="21" style="padding:6px 12px;font-size:9px;letter-spacing:.15em;color:var(--accent);border-top:1px solid var(--accent);text-transform:uppercase;">— Peers: ${d.group} (${peers.length}) —</td>`;
                     tbody.appendChild(sep);
                     peers.forEach(p => tbody.appendChild(fullRow(p, false)));
                 }
