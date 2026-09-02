@@ -857,8 +857,6 @@
                                 <th style="cursor:pointer" class="th-pct" data-sort-col="pct_6m" data-sort-tab="price" onclick="setSortCol('pct_6m','price')">PCT 6M</th>
                                 <th style="cursor:pointer" class="th-pct" data-sort-col="pct_12m" data-sort-tab="price" onclick="setSortCol('pct_12m','price')">PCT 12M</th>
                                 <th style="cursor:pointer" class="th-pct" data-sort-col="rs_ibd" data-sort-tab="price" onclick="setSortCol('rs_ibd','price')" style="border-left:1px solid var(--border2);">RS IBD</th>
-                                <th style="cursor:pointer" class="th-pct" data-sort-col="ma20_dist" data-sort-tab="price" onclick="setSortCol('ma20_dist','price')" style="color:#10b981">vs MA20</th>
-                                <th style="cursor:pointer" class="th-pct" data-sort-col="high52_dist" data-sort-tab="price" onclick="setSortCol('high52_dist','price')" style=";color:#f59e0b">vs 52W H</th>
                             </tr>
                         </thead>
                         <tbody id="priceBody"></tbody>
@@ -908,17 +906,11 @@
                                 <th style="cursor:pointer" onclick="vaSort('sector')">SECTOR</th>
                                 <th style="cursor:pointer" onclick="vaSort('group')">GROUP</th>
                                 <th style="cursor:pointer;text-align:center" class="th-pct" onclick="vaSort('mktcap')">CAP</th>
-                                <th style="cursor:pointer;text-align:center;border-left:1px solid var(--border2)" class="th-pct" onclick="vaSort('pct_1w')">1W</th>
-                                <th style="cursor:pointer;text-align:center" class="th-pct" onclick="vaSort('pct_4w')">4W</th>
-                                <th style="cursor:pointer;text-align:center" class="th-pct" onclick="vaSort('pct_6m')">6M</th>
-                                <th style="cursor:pointer;text-align:center;" class="th-pct" onclick="vaSort('pct_12m')">12M</th>
                                 <th style="cursor:pointer;text-align:center;border-left:1px solid var(--border2);color:#0ea5e9" class="th-pct" onclick="vaSort('va_1w')">VA 1W</th>
                                 <th style="cursor:pointer;text-align:center;color:#0ea5e9" class="th-pct" onclick="vaSort('va_4w')">VA 4W</th>
                                 <th style="cursor:pointer;text-align:center;color:#0ea5e9" class="th-pct" onclick="vaSort('va_6m')">VA 6M</th>
                                 <th style="cursor:pointer;text-align:center;color:#0ea5e9" class="th-pct" onclick="vaSort('va_12m')">VA 12M</th>
-                                <th style="cursor:pointer;text-align:center;border-left:1px solid var(--border2);color:#6d28d9" class="th-pct" onclick="vaSort('rs_ibd')">RS IBD</th>
-                                <th style="cursor:pointer;text-align:center;color:var(--accent2)" class="th-pct" onclick="vaSort('va_rs')">VA-RS</th>
-                                <th style="cursor:pointer;text-align:center;border-left:1px solid var(--border2)" class="th-pct" onclick="vaSort('va_delta')">Δ</th>
+                                <th style="cursor:pointer;text-align:center;border-left:1px solid var(--border2)" class="th-pct" onclick="vaSort('va_delta6')" title="VA 6M − PCT 6M">Δ 6M</th>
                             </tr>
                         </thead>
                         <tbody id="vaBody"></tbody>
@@ -1156,6 +1148,12 @@
 
         <!-- TAB: ROTATION (dynamic momentum shifts) -->
         <div class="tab-content" id="tab-rotation">
+            <!-- Sub-tabs -->
+            <div style="display:flex;gap:0;border-bottom:1px solid var(--border2);margin-bottom:12px;">
+                <button id="rotTabRs" onclick="setRotMode('rs')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--accent2);border-bottom:1px solid var(--accent2);background:transparent;border-top:none;border-left:none;border-right:none;">UNADJUSTED</button>
+                <button id="rotTabVa" onclick="setRotMode('va')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border-bottom:1px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;">VOL-ADJ</button>
+            </div>
+
             <!-- Controls -->
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;margin-top:4px;flex-wrap:wrap;">
                 <select id="rotView" class="filter-select" onchange="renderRotation()">
@@ -1170,7 +1168,7 @@
             </div>
 
             <div style="font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:14px;border-left:2px solid var(--accent2);padding-left:10px;">
-                <b style="color:var(--text)">&Delta; = PCT 4W &minus; PCT 6M</b> : &eacute;cart entre la force relative r&eacute;cente (4 semaines) et la force &eacute;tablie (6 mois).
+                <b style="color:var(--text)"><span id="rotDeltaLabel">&Delta; = PCT 4W &minus; PCT 6M</span></b> : &eacute;cart entre la force relative r&eacute;cente (4 semaines) et la force &eacute;tablie (6 mois).
                 &Delta; positif = le groupe acc&eacute;l&egrave;re. &Delta; n&eacute;gatif = le groupe d&eacute;croche. Cliquer une ligne pour voir les titres.
             </div>
 
@@ -1181,8 +1179,8 @@
                             <th style="cursor:pointer;text-align:left" onclick="rotSort('label')">GROUP</th>
                             <th style="cursor:pointer;text-align:left;width:130px" onclick="rotSort('sector')">SECTOR</th>
                             <th style="width:52px;text-align:center" class="th-pct">N</th>
-                            <th style="cursor:pointer;width:80px;text-align:center;border-left:1px solid var(--border2)" class="th-pct" onclick="rotSort('p6m')">PCT 6M</th>
-                            <th style="cursor:pointer;width:80px;text-align:center" class="th-pct" onclick="rotSort('p4w')">PCT 4W</th>
+                            <th id="rotTh4w" style="cursor:pointer;width:80px;text-align:center;border-left:1px solid var(--border2)" class="th-pct" onclick="rotSort('p4w')">PCT 4W</th>
+                            <th id="rotTh6m" style="cursor:pointer;width:80px;text-align:center" class="th-pct" onclick="rotSort('p6m')">PCT 6M</th>
                             <th style="cursor:pointer;width:86px;text-align:center;border-left:1px solid var(--border2);color:var(--accent2)" class="th-pct" onclick="rotSort('delta')">&Delta;</th>
                         </tr>
                     </thead>
@@ -2735,12 +2733,12 @@
 
         // Composite score helpers
         const compScore = d => {
-            const vals = [d.pct_1w, d.pct_4w, d.pct_6m, d.pct_12m];
+            const vals = [d.pct_4w, d.pct_6m, d.pct_12m];
             if (vals.some(v => v == null || v < rsMin)) return null;
             return Math.round(vals.reduce((s, v) => s + v, 0) / vals.length);
         };
         const compScoreVa = d => {
-            const vals = [d.va_1w, d.va_4w, d.va_6m, d.va_12m];
+            const vals = [d.va_4w, d.va_6m, d.va_12m];
             if (vals.some(v => v == null || v < rsMin)) return null;
             return Math.round(vals.reduce((s, v) => s + v, 0) / vals.length);
         };
@@ -2775,26 +2773,24 @@
 
                 // Universe score: mean of ALL 8 percentiles for ALL members with data
                 const rsAll = members.map(d => {
-                    const vals = [d.pct_1w, d.pct_4w, d.pct_6m, d.pct_12m].filter(v => v != null);
-                    return vals.length === 4 ? vals.reduce((s,v) => s+v,0)/4 : null;
+                    const vals = [d.pct_4w, d.pct_6m, d.pct_12m].filter(v => v != null);
+                    return vals.length === 3 ? vals.reduce((s,v) => s+v,0)/3 : null;
                 }).filter(v => v != null);
                 const vaAll = members.map(d => {
-                    const vals = [d.va_1w, d.va_4w, d.va_6m, d.va_12m].filter(v => v != null);
-                    return vals.length === 4 ? vals.reduce((s,v) => s+v,0)/4 : null;
+                    const vals = [d.va_4w, d.va_6m, d.va_12m].filter(v => v != null);
+                    return vals.length === 3 ? vals.reduce((s,v) => s+v,0)/3 : null;
                 }).filter(v => v != null);
                 const rsScore = rsAll.length ? Math.round(rsAll.reduce((s,v) => s+v,0)/rsAll.length) : null;
                 const vaScore = vaAll.length ? Math.round(vaAll.reduce((s,v) => s+v,0)/vaAll.length) : null;
-                const uniScore = (rsScore != null && vaScore != null)
-                    ? Math.round((rsScore + vaScore) / 2) : (rsScore ?? vaScore ?? 0);
 
-                return { sector, rsPool, vaPool, rsTopAvg, vaTopAvg, rsScore, vaScore, uniScore, memberCount: members.length };
+                return { sector, rsPool, vaPool, rsTopAvg, vaTopAvg, rsScore, vaScore, memberCount: members.length };
             });
 
         // Add any sectors not in the fixed list at the end
         const extraSectors = sectors.filter(s => !SECTOR_ORDER.includes(s));
         extraSectors.forEach(sector => {
             const members = universe.filter(d => d.sector === sector);
-            blocks.push({ sector, rsPool: [], vaPool: [], rsTopAvg: null, vaTopAvg: null, rsScore: null, vaScore: null, uniScore: 0, memberCount: members.length });
+            blocks.push({ sector, rsPool: [], vaPool: [], rsTopAvg: null, vaTopAvg: null, rsScore: null, vaScore: null, memberCount: members.length });
         });
 
         document.getElementById('sectorCount').textContent = `${blocks.length} secteurs`;
@@ -2824,12 +2820,11 @@
 
         blocks.forEach((b) => {
             const rsScoreHtml = b.rsScore != null
-                ? `<span style="font-size:10px;font-weight:700;color:${scoreColor(b.rsScore)};font-family:'IBM Plex Mono',monospace;padding:2px 6px;border:1px solid ${scoreColor(b.rsScore)};" title="Score universel RS (moyenne 4 pct, tous membres)">RS ${b.rsScore}</span>`
+                ? `<span style="font-size:10px;font-weight:700;color:${scoreColor(b.rsScore)};font-family:'IBM Plex Mono',monospace;padding:2px 6px;border:1px solid ${scoreColor(b.rsScore)};" title="Moyenne des percentiles 4W / 6M / 12M sur tous les membres du secteur">AVG RS ${b.rsScore}</span>`
                 : '';
             const vaScoreHtml = b.vaScore != null
-                ? `<span style="font-size:10px;font-weight:700;color:#0ea5e9;font-family:'IBM Plex Mono',monospace;padding:2px 6px;border:1px solid #0ea5e9;" title="Score universel VA (moyenne 4 pct vol-adj, tous membres)">VA ${b.vaScore}</span>`
+                ? `<span style="font-size:10px;font-weight:700;color:#0ea5e9;font-family:'IBM Plex Mono',monospace;padding:2px 6px;border:1px solid #0ea5e9;" title="Moyenne des percentiles vol-adj 4W / 6M / 12M sur tous les membres du secteur">AVG VA ${b.vaScore}</span>`
                 : '';
-            const uniScoreHtml = `<span style="font-size:11px;font-weight:700;color:${scoreColor(b.uniScore)};font-family:'IBM Plex Mono',monospace;" title="Score global secteur (RS+VA / tous membres)">${b.uniScore}</span>`;
 
             const rsRows = b.rsPool.map((d, i) => tickerRow(d, i)).join('');
             const vaRows = b.vaPool.map((d, i) => tickerRow(d, i)).join('');
@@ -2839,7 +2834,6 @@
             card.innerHTML = `
                 <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border);">
                     <span style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.1em;color:var(--text);flex:1;">${b.sector}</span>
-                    ${uniScoreHtml}
                     <span style="display:flex;gap:4px;">${rsScoreHtml}${vaScoreHtml}</span>
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 10px;">
@@ -2985,10 +2979,11 @@
         allData.forEach(d => {
             d.va_rs = vaComposite(d);
             d.va_delta = (d.va_rs != null && d.rs_ibd != null) ? d.va_rs - d.rs_ibd : null;
+            d.va_delta6 = (d.va_6m != null && d.pct_6m != null) ? d.va_6m - d.pct_6m : null;
         });
     }
 
-    let vaSortCol = 'va_rs', vaSortDir = 'desc';
+    let vaSortCol = 'va_6m', vaSortDir = 'desc';
 
     function vaSort(col) {
         if (vaSortCol === col) vaSortDir = vaSortDir === 'desc' ? 'asc' : 'desc';
@@ -3136,23 +3131,17 @@
                  <td class="td-name" style="font-size:11px;">${d.sector||''}</td>
                  <td class="td-name" style="font-size:11px;">${d.group||''}</td>
                  <td class="td-pct">${fmktcap(d.mktcap)}</td>
-                 <td class="td-pct" style="border-left:1px solid var(--faint)">${pctCell(d.pct_1w)}</td>
-                 <td class="td-pct">${pctCell(d.pct_4w)}</td>
-                 <td class="td-pct">${pctCell(d.pct_6m)}</td>
-                 <td class="td-pct" style="border-right:1px solid var(--faint)">${pctCell(d.pct_12m)}</td>
                  <td class="td-pct" style="border-left:1px solid var(--border2)">${pctCell(d.va_1w)}</td>
                  <td class="td-pct">${pctCell(d.va_4w)}</td>
                  <td class="td-pct">${pctCell(d.va_6m)}</td>
                  <td class="td-pct">${pctCell(d.va_12m)}</td>
-                 <td class="td-pct" style="border-left:1px solid var(--border2)">${pctCell(d.rs_ibd)}</td>
-                 <td class="td-pct">${pctCell(d.va_rs)}</td>
-                 <td class="td-pct" style="border-left:1px solid var(--faint)">${deltaCell(d.va_delta)}</td>`;
+                 <td class="td-pct" style="border-left:1px solid var(--border2)">${deltaCell(d.va_delta6)}</td>`;
             frag.appendChild(tr);
         });
         tbody.appendChild(frag);
         if (rows.length > VA_LIMIT) {
             const limitRow = document.createElement('tr');
-            limitRow.innerHTML = `<td colspan="20" style="text-align:center;padding:8px;font-size:11px;color:var(--muted);">Showing ${VA_LIMIT} of ${rows.length} — use filters to narrow</td>`;
+            limitRow.innerHTML = `<td colspan="12" style="text-align:center;padding:8px;font-size:11px;color:var(--muted);">Showing ${VA_LIMIT} of ${rows.length} — use filters to narrow</td>`;
             tbody.appendChild(limitRow);
         }
 
@@ -3852,8 +3841,7 @@
     <td class="td-pct">${pctCell(d.pct_6m)}</td>
     <td class="td-pct">${pctCell(d.pct_12m)}</td>
     <td class="td-pct" style="border-left:1px solid var(--border2);">${pctCell(d.rs_ibd)}</td>
-    <td class="td-pct" style="border-left:1px solid var(--border2)">${distCell(d.ma20_dist)}</td>
-    <td class="td-pct" style="">${distCell52w(d.high52_dist)}</td>`;
+`;
         return tr;
     }
 
@@ -3988,8 +3976,6 @@
         <th style="cursor:pointer" class="th-pct" data-sort-col="pct_6m" data-sort-tab="price" onclick="setSortCol('pct_6m','price')">PCT 6M</th>
         <th style="cursor:pointer" class="th-pct" data-sort-col="pct_12m" data-sort-tab="price" onclick="setSortCol('pct_12m','price')">PCT 12M</th>
         <th class="th-pct" data-sort-col="rs_ibd" data-sort-tab="price" onclick="setSortCol('rs_ibd','price')" style="cursor:pointer;border-left:1px solid var(--border2);;color:#6d28d9">RS IBD</th>
-        <th class="th-pct" data-sort-col="ma20_dist" data-sort-tab="price" onclick="setSortCol('ma20_dist','price')" style="cursor:pointer;border-left:1px solid var(--border2);color:#10b981">vs MA20</th>
-        <th class="th-pct" data-sort-col="high52_dist" data-sort-tab="price" onclick="setSortCol('high52_dist','price')" style="cursor:pointer;;color:#f59e0b">vs 52W H</th>
       </tr>`
 
 
@@ -4485,6 +4471,8 @@
     }
 
     function renderGroups() {
+        // VA percentiles are computed lazily by the Vol-Adj RS screen.
+        if (allData.length && allData[0].va_4w === undefined) computeVolAdjRS();
         const sc = sortCols.groups;
         const sd = document.getElementById('sortDir').value;
         const search = document.getElementById('searchInput').value.toLowerCase();
@@ -4601,10 +4589,12 @@
         <th style="width:65px" data-sort-col="mktcap" data-sort-tab="groups" onclick="setSortCol('mktcap','groups')" class="th-pct">MKT CAP</th>
         <th class="th-pct" style="width:62px;border-left:1px solid var(--border2)" data-sort-col="pct_1w" data-sort-tab="groups" onclick="setSortCol('pct_1w','groups')">PCT 1W</th>
         <th class="th-pct" style="width:62px" data-sort-col="pct_4w" data-sort-tab="groups" onclick="setSortCol('pct_4w','groups')">PCT 4W</th>
-        <th class="th-pct" style="width:62px" data-sort-col="pct_3m" data-sort-tab="groups" onclick="setSortCol('pct_3m','groups')">PCT 3M</th>
         <th class="th-pct" style="width:62px" data-sort-col="pct_6m" data-sort-tab="groups" onclick="setSortCol('pct_6m','groups')">PCT 6M</th>
         <th class="th-pct" style="width:62px" data-sort-col="pct_12m" data-sort-tab="groups" onclick="setSortCol('pct_12m','groups')">PCT 12M</th>
-        <th class="th-pct" style="width:62px;border-left:1px solid var(--border2)" data-sort-col="rs_ibd" data-sort-tab="groups" onclick="setSortCol('rs_ibd','groups')">RS IBD</th>
+        <th class="th-pct" style="width:62px;border-left:1px solid var(--border2);color:#0ea5e9" data-sort-col="va_1w" data-sort-tab="groups" onclick="setSortCol('va_1w','groups')">VA 1W</th>
+        <th class="th-pct" style="width:62px;color:#0ea5e9" data-sort-col="va_4w" data-sort-tab="groups" onclick="setSortCol('va_4w','groups')">VA 4W</th>
+        <th class="th-pct" style="width:62px;color:#0ea5e9" data-sort-col="va_6m" data-sort-tab="groups" onclick="setSortCol('va_6m','groups')">VA 6M</th>
+        <th class="th-pct" style="width:62px;color:#0ea5e9" data-sort-col="va_12m" data-sort-tab="groups" onclick="setSortCol('va_12m','groups')">VA 12M</th>
       </tr>`
 
 
@@ -4625,10 +4615,12 @@
         <td class="td-pct" style="padding:6px 7px;font-size:12px">${fmktcap(d.mktcap)}</td>
         <td class="td-pct" style="border-left:1px solid var(--border2)">${pctCell(d.pct_1w)}</td>
         <td class="td-pct">${pctCell(d.pct_4w)}</td>
-        <td class="td-pct">${pctCell(d.pct_3m)}</td>
         <td class="td-pct">${pctCell(d.pct_6m)}</td>
         <td class="td-pct">${pctCell(d.pct_12m)}</td>
-        <td class="td-pct" style="border-left:1px solid var(--border2)">${pctCell(d.rs_ibd)}</td>`;
+        <td class="td-pct" style="border-left:1px solid var(--border2)">${pctCell(d.va_1w)}</td>
+        <td class="td-pct">${pctCell(d.va_4w)}</td>
+        <td class="td-pct">${pctCell(d.va_6m)}</td>
+        <td class="td-pct">${pctCell(d.va_12m)}</td>`;
                 tr.querySelector('.td-ticker').addEventListener('click', () => window.open(`https://www.tradingview.com/chart/?symbol=${d.ticker}`, '_blank'));
                 tbody.appendChild(tr);
             });
@@ -4652,13 +4644,12 @@
       <th style="${
         thN}width:65px;border-left:1px solid var(--border2)" data-sort-col="pct_1w" data-sort-tab="groups" onclick="setSortCol('pct_1w','groups')">PCT 1W</th>
       <th style="${thN}width:65px" data-sort-col="pct_4w" data-sort-tab="groups" onclick="setSortCol('pct_4w','groups')">PCT 4W</th>
-      <th style="${thN}width:65px" data-sort-col="pct_3m" data-sort-tab="groups" onclick="setSortCol('pct_3m','groups')">PCT 3M</th>
       <th style="${thN}width:65px" data-sort-col="pct_6m" data-sort-tab="groups" onclick="setSortCol('pct_6m','groups')">PCT 6M</th>
       <th style="${thN}width:65px" data-sort-col="pct_12m" data-sort-tab="groups" onclick="setSortCol('pct_12m','groups')">PCT 12M</th>
-      <th style="${thN}width:65px;border-left:1px solid var(--border2)" data-sort-col="avg_rs_ibd" data-sort-tab="groups" onclick="setSortCol('avg_rs_ibd','groups')">RS IBD</th>
-      <th style="${thN}width:65px;color:#0ea5e9" data-sort-col="avg_va_rs" data-sort-tab="groups" onclick="setSortCol('avg_va_rs','groups')">VA-RS</th>
-      <th style="${thN}width:68px;border-left:1px solid var(--border2);color:#f59e0b" data-sort-col="avg_pct" data-sort-tab="groups" onclick="setSortCol('avg_pct','groups')">AVG PCT</th>
-      <th style="${thN}width:68px;color:#0ea5e9" data-sort-col="avg_va_pct" data-sort-tab="groups" onclick="setSortCol('avg_va_pct','groups')">AVG VA</th>
+      <th style="${thN}width:65px;border-left:1px solid var(--border2);color:#0ea5e9" data-sort-col="avg_va_1w" data-sort-tab="groups" onclick="setSortCol('avg_va_1w','groups')">VA 1W</th>
+      <th style="${thN}width:65px;color:#0ea5e9" data-sort-col="avg_va_4w" data-sort-tab="groups" onclick="setSortCol('avg_va_4w','groups')">VA 4W</th>
+      <th style="${thN}width:65px;color:#0ea5e9" data-sort-col="avg_va_6m" data-sort-tab="groups" onclick="setSortCol('avg_va_6m','groups')">VA 6M</th>
+      <th style="${thN}width:65px;color:#0ea5e9" data-sort-col="avg_va_12m" data-sort-tab="groups" onclick="setSortCol('avg_va_12m','groups')">VA 12M</th>
     </tr>`
         ;
         rows.forEach(g => {
@@ -4670,13 +4661,12 @@
       <td class="td-num flat">${g.count}</td>
       <td class="td-pct" style="border-left:1px solid var(--border2)">${pctCell(g.pct_1w)}</td>
       <td class="td-pct">${pctCell(g.pct_4w)}</td>
-      <td class="td-pct">${pctCell(g.pct_3m)}</td>
       <td class="td-pct">${pctCell(g.pct_6m)}</td>
       <td class="td-pct">${pctCell(g.pct_12m)}</td>
-      <td class="td-pct" style="border-left:1px solid var(--border2)">${pctCell(g.avg_rs_ibd)}</td>
-      <td class="td-pct">${pctCell(g.avg_va_rs)}</td>
-      <td class="td-pct" style="border-left:1px solid var(--border2)">${pctCell(g.avg_pct)}</td>
-      <td class="td-pct">${pctCell(g.avg_va_pct)}</td>`;
+      <td class="td-pct" style="border-left:1px solid var(--border2)">${pctCell(g.avg_va_1w)}</td>
+      <td class="td-pct">${pctCell(g.avg_va_4w)}</td>
+      <td class="td-pct">${pctCell(g.avg_va_6m)}</td>
+      <td class="td-pct">${pctCell(g.avg_va_12m)}</td>`;
             const nameCell = tr.querySelector('.group-name-cell');
             nameCell.textContent = g.group;
             nameCell.addEventListener('click', () => drillDown(g.group));
@@ -5581,6 +5571,28 @@
 
     // ── ROTATION TAB (dynamic momentum shifts) ────────────────────
     let rotSortCol = 'delta', rotSortDir = 'desc';
+    let rotMode = 'rs';   // 'rs' = raw percentiles, 'va' = vol-adjusted percentiles
+
+    function setRotMode(mode) {
+        rotMode = mode;
+        [['rotTabRs', 'rs'], ['rotTabVa', 'va']].forEach(([id, key]) => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            const active = key === mode;
+            btn.style.color = active ? 'var(--accent2)' : 'var(--muted)';
+            btn.style.borderBottom = active ? '1px solid var(--accent2)' : '1px solid transparent';
+        });
+        const p = mode === 'va' ? 'VA' : 'PCT';
+        const h4 = document.getElementById('rotTh4w'); if (h4) h4.textContent = p + ' 4W';
+        const h6 = document.getElementById('rotTh6m'); if (h6) h6.textContent = p + ' 6M';
+        const lbl = document.getElementById('rotDeltaLabel');
+        if (lbl) lbl.textContent = 'Δ = ' + p + ' 4W − ' + p + ' 6M';
+        const drill = document.querySelector('.rot-drill-row');
+        if (drill) drill.remove();
+        rotDrillOpen = null;
+        renderRotation();
+    }
+
     let rotDrillOpen = null;
 
     function rotSort(col) {
@@ -5615,6 +5627,11 @@
             (buckets[label] = buckets[label] || []).push(d);
         });
 
+        // Vol-adjusted percentiles are computed lazily by the Rel-Strength tab.
+        if (rotMode === 'va' && allData[0].va_4w === undefined) computeVolAdjRS();
+        const f4w = d => rotMode === 'va' ? d.va_4w : d.pct_4w;
+        const f6m = d => rotMode === 'va' ? d.va_6m : d.pct_6m;
+
         const avg = arr => {
             const v = arr.filter(x => x != null);
             return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null;
@@ -5623,8 +5640,8 @@
         let rows = Object.entries(buckets)
             .filter(([, members]) => members.length >= minMembers)
             .map(([label, members]) => {
-                const p4w = avg(members.map(d => d.pct_4w));
-                const p6m = avg(members.map(d => d.pct_6m));
+                const p4w = avg(members.map(f4w));
+                const p6m = avg(members.map(f6m));
                 return {
                     label,
                     sector: members[0].sector || '',
@@ -5664,8 +5681,8 @@
                 <td style="font-weight:600;font-size:12px;color:var(--accent2);padding:5px 10px;">${g.label}</td>
                 <td class="td-name" style="font-size:11px;">${g.sector}</td>
                 <td class="td-pct" style="color:var(--muted)">${g.n}</td>
-                <td class="td-pct" style="border-left:1px solid var(--border2)">${pctCell(g.p6m)}</td>
-                <td class="td-pct">${pctCell(g.p4w)}</td>
+                <td class="td-pct" style="border-left:1px solid var(--border2)">${pctCell(g.p4w)}</td>
+                <td class="td-pct">${pctCell(g.p6m)}</td>
                 <td class="td-pct" style="border-left:1px solid var(--border2)">${deltaCell(g.delta)}</td>`;
             tbody.appendChild(tr);
         });
@@ -5684,34 +5701,36 @@
         rotDrillOpen = null;
         if (wasOpen) return;
 
-        // Members with their own delta, sorted by delta ascending for ROLLING OVER context, else desc
-        const members = g.members.map(d => {
-            const past = ((d.pct_m2 ?? null) != null || (d.pct_m3 ?? null) != null)
-                ? ((d.pct_m2 ?? d.pct_m3) + (d.pct_m3 ?? d.pct_m2)) / 2 : null;
-            const recent = ((d.pct_w1 ?? null) != null || (d.pct_w2 ?? null) != null)
-                ? ((d.pct_w1 ?? d.pct_w2) + (d.pct_w2 ?? d.pct_w1)) / 2 : null;
-            const delta = (past != null && recent != null) ? Math.round(recent - past) : null;
-            return { ...d, _delta: delta };
-        }).sort((a, b) => (b._delta ?? -999) - (a._delta ?? -999));
+        // Same columns as the parent table, same Δ definition (PCT 4W − PCT 6M), sorted by Δ desc.
+        const g4w = d => rotMode === 'va' ? d.va_4w : d.pct_4w;
+        const g6m = d => rotMode === 'va' ? d.va_6m : d.pct_6m;
+        const members = g.members.map(d => ({
+            ...d,
+            _p4w: g4w(d),
+            _p6m: g6m(d),
+            _delta: (g4w(d) != null && g6m(d) != null) ? Math.round(g4w(d) - g6m(d)) : null
+        })).sort((a, b) => (b._delta ?? -999) - (a._delta ?? -999));
+
+        const deltaCell = v => {
+            if (v == null) return '<span style="color:var(--muted)">—</span>';
+            const c = v >= 15 ? '#15803d' : v <= -15 ? '#b91c1c' : 'var(--muted)';
+            return `<span style="color:${c};font-weight:700;font-family:'IBM Plex Mono',monospace;font-size:12px;">${v > 0 ? '+' : ''}${v}</span>`;
+        };
 
         const innerRows = members.map(d => {
             const inW = watchlist.includes(d.ticker);
             const nameSafe = (d.name || '').replace(/'/g, "\\'");
-            const dc = d._delta == null ? 'var(--muted)' : d._delta < 0 ? '#b91c1c' : '#15803d';
             return `<tr style="border-bottom:1px solid var(--faint)">
-                <td style="padding:4px 8px;white-space:nowrap;">
+                <td style="padding:4px 10px;white-space:nowrap;">
                     <span style="cursor:pointer;font-size:11px;color:${inW ? '#06b6d4' : '#475569'};margin-right:4px" class="watch-toggle" data-ticker="${d.ticker}">${inW ? '★' : '☆'}</span>
                     <a href="https://www.tradingview.com/chart/?symbol=${d.ticker}" target="_blank" style="color:#475569;font-size:8px;text-decoration:none;font-weight:600;margin-right:6px">TV</a>
-                    <span style="font-weight:700;font-size:12px;color:var(--accent2);cursor:pointer;" onclick="openNews('${d.ticker}','${nameSafe}')">${d.ticker}</span>
+                    <span style="font-weight:700;font-size:12px;color:var(--accent2);cursor:pointer;" onclick="event.stopPropagation();openNews('${d.ticker}','${nameSafe}')">${d.ticker}</span>
                 </td>
-                <td style="padding:4px 8px;font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.name || ''}</td>
+                <td style="padding:4px 10px;font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.name || ''}</td>
                 <td class="td-pct" style="color:var(--muted)">${fmktcap(d.mktcap)}</td>
-                <td class="td-pct" style="border-left:1px solid var(--border2)">${pctCell(d.pct_1w)}</td>
-                <td class="td-pct">${pctCell(d.pct_4w)}</td>
-                <td class="td-pct">${pctCell(d.pct_6m)}</td>
-                <td class="td-pct">${pctCell(d.pct_12m)}</td>
-                <td class="td-pct" style="border-left:1px solid var(--border2);font-weight:700;font-family:'IBM Plex Mono',monospace;color:${dc}">${d._delta != null ? (d._delta > 0 ? '+' : '') + d._delta : '—'}</td>
-                <td class="td-pct">${pctCell(d.rs_ibd)}</td>
+                <td class="td-pct" style="border-left:1px solid var(--border2)">${pctCell(d._p4w)}</td>
+                <td class="td-pct">${pctCell(d._p6m)}</td>
+                <td class="td-pct" style="border-left:1px solid var(--border2)">${deltaCell(d._delta)}</td>
             </tr>`;
         }).join('');
 
@@ -5719,21 +5738,18 @@
         drillTr.className = 'rot-drill-row';
         drillTr.innerHTML = `<td colspan="6" style="padding:0;background:var(--bg3);border-bottom:1px solid var(--accent2)">
             <div style="padding:6px 12px 4px;display:flex;align-items:center;justify-content:space-between">
-                <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;color:var(--accent2)">${g.label} — ${members.length} tickers (triés par Δ)</span>
+                <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;color:var(--accent2)">${g.label} — ${members.length} tickers</span>
                 <button onclick="event.stopPropagation();this.closest('tr').remove();rotDrillOpen=null;" style="font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;letter-spacing:.1em;padding:2px 10px;background:transparent;border:1px solid var(--border2);color:var(--muted);cursor:pointer">✕ CLOSE</button>
             </div>
             <table style="width:100%;border-collapse:collapse;table-layout:fixed">
-                <colgroup><col style="width:130px"><col><col style="width:70px"><col style="width:64px"><col style="width:64px"><col style="width:64px"><col style="width:64px"><col style="width:70px"><col style="width:64px"></colgroup>
+                <colgroup><col><col style="width:130px"><col style="width:52px"><col style="width:80px"><col style="width:80px"><col style="width:86px"></colgroup>
                 <thead><tr style="background:var(--bg2)">
-                    <th style="font-size:8px;letter-spacing:.12em;color:var(--muted);padding:4px 8px;text-align:left">★ TV TICKER</th>
-                    <th style="font-size:8px;letter-spacing:.12em;color:var(--muted);padding:4px 8px;text-align:left">NAME</th>
-                    <th style="font-size:8px;letter-spacing:.12em;color:var(--muted);padding:4px 8px;text-align:center">CAP</th>
-                    <th style="font-size:8px;letter-spacing:.12em;color:var(--muted);padding:4px 8px;text-align:center;border-left:1px solid var(--border2)">PCT 1W</th>
-                    <th style="font-size:8px;letter-spacing:.12em;color:var(--muted);padding:4px 8px;text-align:center">PCT 4W</th>
-                    <th style="font-size:8px;letter-spacing:.12em;color:var(--muted);padding:4px 8px;text-align:center">PCT 6M</th>
-                    <th style="font-size:8px;letter-spacing:.12em;color:var(--muted);padding:4px 8px;text-align:center">PCT 12M</th>
-                    <th style="font-size:8px;letter-spacing:.12em;color:var(--accent2);padding:4px 8px;text-align:center;border-left:1px solid var(--border2)">Δ MOM</th>
-                    <th style="font-size:8px;letter-spacing:.12em;color:#6d28d9;padding:4px 8px;text-align:center">RS IBD</th>
+                    <th style="font-size:8px;letter-spacing:.12em;color:var(--muted);padding:4px 10px;text-align:left">★ TV TICKER</th>
+                    <th style="font-size:8px;letter-spacing:.12em;color:var(--muted);padding:4px 10px;text-align:left">NAME</th>
+                    <th style="font-size:8px;letter-spacing:.12em;color:var(--muted);padding:4px 10px;text-align:center">CAP</th>
+                    <th style="font-size:8px;letter-spacing:.12em;color:var(--muted);padding:4px 10px;text-align:center;border-left:1px solid var(--border2)">${rotMode === 'va' ? 'VA' : 'PCT'} 4W</th>
+                    <th style="font-size:8px;letter-spacing:.12em;color:var(--muted);padding:4px 10px;text-align:center">${rotMode === 'va' ? 'VA' : 'PCT'} 6M</th>
+                    <th style="font-size:8px;letter-spacing:.12em;color:var(--accent2);padding:4px 10px;text-align:center;border-left:1px solid var(--border2)">Δ</th>
                 </tr></thead>
                 <tbody>${innerRows}</tbody>
             </table>
