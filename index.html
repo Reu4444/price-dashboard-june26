@@ -1163,7 +1163,7 @@
                 <span style="font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">MIN MEMBERS</span>
                 <input id="rotMinMembers" class="filter-input" type="number" value="3" min="1" max="20" style="width:46px;" oninput="debounce(renderRotation,80)()">
                 <span style="font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">MKT CAP &ge; ($B)</span>
-                <input id="rotMktcap" class="filter-input" type="number" placeholder="0" style="width:56px;" oninput="debounce(renderRotation,80)()">
+                <input id="rotMktcap" class="filter-input" type="number" value="10" placeholder="0" style="width:56px;" oninput="debounce(renderRotation,80)()">
                 <span style="font-size:10px;color:var(--muted);margin-left:auto" id="rotCount"></span>
             </div>
 
@@ -1635,7 +1635,7 @@
     let allData = [];
     let allDataRoW = [];
     let rawPricesRoW = {};
-    let rowSortCol = 'pct_1w',
+    let rowSortCol = 'pct_4w',
         rowSortDir = 'desc';
     let descMap = {};
     let watchlist = JSON.parse(localStorage.getItem('watchlist') || '[]');
@@ -1643,10 +1643,10 @@
     let _dataLoadedAt = null;
     let activeTab = 'price';
     let sortCols = {
-        price: 'pct_1w',
+        price: 'pct_4w',
         eps: 'pct_eps_cq',
         sales: 'pct_sales_cq',
-        groups: 'pct_1w',
+        groups: 'pct_4w',
         fund: 'gross_margin',
         epssales: 'pct_eps_cq'
     };
@@ -2983,7 +2983,7 @@
         });
     }
 
-    let vaSortCol = 'va_6m', vaSortDir = 'desc';
+    let vaSortCol = 'va_4w', vaSortDir = 'desc';
 
     function vaSort(col) {
         if (vaSortCol === col) vaSortDir = vaSortDir === 'desc' ? 'asc' : 'desc';
