@@ -1533,6 +1533,8 @@
                 <div class="pf-hint">One line per position: <b>TICKER WEIGHT</b> (e.g. <code>NVDA 6.5</code>). Auto-loaded from the portfolio Google Sheet (col A ticker, col B weight %). Bloomberg tickers (AMZN US, ISP IM…) are mapped automatically. You can also edit below and press Analyse. Remainder below 100% = cash.</div>
                 <textarea id="pfInput" spellcheck="false" placeholder="NVDA 6&#10;MSFT 5&#10;ANET 4&#10;..."></textarea>
                 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;">
+                    <label style="font-size:11px;color:var(--muted);display:flex;gap:6px;align-items:center;width:100%;margin-bottom:4px">Rank leaders by
+                        <select id="pfRankBy" onchange="renderPortfolio()"><option value="va" selected>VA RS (low-vol leaders)</option><option value="score">Composite score</option></select></label>
                     <button class="btn" onclick="pfLoadSheet()">Load from Sheet</button>
                     <button class="btn" onclick="pfSave()">Analyse</button>
                     <button class="btn" style="background:var(--muted)" onclick="pfExportCSV()">Export CSV</button>
@@ -1563,6 +1565,8 @@
             <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('sales_cq')">SALES CQ</th>
             <th class="th-pct" onclick="pfSort('eps_cq')">EPS CQ</th>
             <th class="th-pct" onclick="pfSort('forward_pe')">FWD PE</th>
+            <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('vol60')">VOL 60D</th>
+            <th class="th-pct" onclick="pfSort('dvol60')">DOWN VOL</th>
             <th class="th-pct" style="border-left:1px solid var(--border2);color:#6d28d9" onclick="pfSort('score')">SCORE</th>
         </tr></thead><tbody id="pfBody"></tbody></table></div>
 
@@ -1589,20 +1593,20 @@
             <div class="pf-card" style="max-height:560px">
                 <div class="pf-sub">Strong groups not held
                     <select id="pfGapMinN" onchange="pfRenderGaps()"><option value="3">≥ 3 stocks</option><option value="5" selected>≥ 5 stocks</option><option value="10">≥ 10 stocks</option></select></div>
-                <div class="pf-hint">US groups ranked by median RS IBD of their members. Leaders = top 3 by score.</div>
+                <div class="pf-hint">US groups ranked by median RS IBD of their members. Leaders = top 3 by the ranking measure.</div>
                 <div class="table-wrap"><table class="pf-gt"><thead><tr><th>GROUP</th><th>SECTOR</th><th class="th-pct">N</th><th class="th-pct">MED RS</th><th class="th-pct">MED 4W</th><th class="th-pct">SALES CQ</th><th>LEADERS</th></tr></thead><tbody id="pfGapGroups"></tbody></table></div>
             </div>
             <div class="pf-card" style="max-height:560px">
                 <div class="pf-sub">Large-cap leaders not held
                     <span><select id="pfGapCap" onchange="pfRenderGaps()"><option value="20">Cap ≥ 20B</option><option value="50" selected>Cap ≥ 50B</option><option value="100">Cap ≥ 100B</option><option value="200">Cap ≥ 200B</option></select>
                     <select id="pfGapUni" onchange="pfRenderGaps()"><option value="all">US + RoW</option><option value="us">US</option><option value="row">RoW</option></select></span></div>
-                <div class="pf-hint">RS IBD ≥ 70, sorted by composite score. ● = group/sector already held. RoW cap in EUR.</div>
-                <div class="table-wrap"><table class="pf-gt"><thead><tr><th>TICKER</th><th>NAME</th><th>GROUP</th><th class="th-pct">CAP</th><th class="th-pct">RS</th><th class="th-pct">VA</th><th class="th-pct">4W</th><th class="th-pct">SALES</th><th class="th-pct">EPS</th><th class="th-pct">SCORE</th></tr></thead><tbody id="pfGapStocks"></tbody></table></div>
+                <div class="pf-hint">RS IBD ≥ 70, sorted by the ranking measure (VA RS by default). ● = group/sector already held. RoW cap in EUR.</div>
+                <div class="table-wrap"><table class="pf-gt"><thead><tr><th>TICKER</th><th>NAME</th><th>GROUP</th><th class="th-pct">CAP</th><th class="th-pct">RS</th><th class="th-pct">VA</th><th class="th-pct">4W</th><th class="th-pct">SALES</th><th class="th-pct">EPS</th><th class="th-pct">VOL</th><th class="th-pct">SCORE</th></tr></thead><tbody id="pfGapStocks"></tbody></table></div>
             </div>
         </div>
 
         <div class="pf-h" style="margin-top:22px;">SWITCH RECOMMENDATIONS</div>
-        <div class="pf-hint" style="margin-bottom:8px;">Score = 70% relative strength (RS IBD 35 · VA RS 25 · Pct 6M 20 · Pct 4W 20) + 30% fundamentals (Sales CQ and EPS CQ growth percentiles). Switch candidates: same group first, then same sector, RS IBD ≥ 70 and score ≥ holding +15. Rule-based, not investment advice.</div>
+        <div class="pf-hint" style="margin-bottom:8px;">Score = 70% relative strength (RS IBD 35 · VA RS 25 · Pct 6M 20 · Pct 4W 20) + 30% fundamentals (Sales CQ and EPS CQ growth percentiles). Switch candidates: same group first, then same sector, RS IBD ≥ 70 and ranking measure (VA RS or score, see selector) ≥ holding +15. Rule-based, not investment advice.</div>
         <div id="pfRecos"></div>
     </div>
 
@@ -6621,6 +6625,7 @@
             if (!r.group) r.group = r.sector ? `RoW · ${r.sector}` : '(n/a)';
             r.country = PF_BBG_COUNTRY[ex] || d.country || (allData.includes(d) ? 'United States' : '(n/a)');
             r.rsScore = pfRsScore(d); r.fundScore = pfFundScore(d); r.score = pfScore(d);
+            r.vol60 = pfVol(d.ticker, 60); r.dvol60 = pfDownVol(d.ticker, 60);
             return r;
         }).filter(Boolean);
         window._pfCash = Math.max(0, 100 - holdings.reduce((s, h) => s + h.w, 0));
@@ -6660,6 +6665,33 @@
         let c = 0; for (const x of v) { c += x.w; if (c >= tot / 2) return x.v; }
         return null;
     }
+
+
+    function pfPrices(tk) { return (rawPrices && rawPrices[tk]) || (rawPricesRoW && rawPricesRoW[tk]) || null; }
+    function pfRets(tk, n) {
+        const p = pfPrices(tk); if (!p || p.length < n + 1) return null;
+        const r = []; for (let i = 0; i < n; i++) r.push(Math.log(p[i] / p[i + 1]));
+        return r;
+    }
+    function pfVol(tk, n) {
+        const r = pfRets(tk, n); if (!r) return null;
+        const m = r.reduce((a, b) => a + b, 0) / n;
+        return Math.sqrt(r.reduce((a, b) => a + (b - m) ** 2, 0) / (n - 1) * 252) * 100;
+    }
+    function pfDownVol(tk, n) {
+        const r = pfRets(tk, n); if (!r) return null;
+        return Math.sqrt(r.reduce((a, b) => a + Math.min(b, 0) ** 2, 0) / n * 252) * 100;
+    }
+    // realised portfolio vol from the covariance of daily returns (current weights)
+    function pfPortVol(rows, n) {
+        const R = rows.map(r => ({ w: r.w, x: pfRets(r._src.ticker, n) })).filter(o => o.x);
+        const W = R.reduce((s, o) => s + o.w, 0); if (!W || R.length < 2) return null;
+        const port = []; for (let t = 0; t < n; t++) port.push(R.reduce((s, o) => s + o.w / W * o.x[t], 0));
+        const m = port.reduce((a, b) => a + b, 0) / n;
+        return Math.sqrt(port.reduce((a, b) => a + (b - m) ** 2, 0) / (n - 1) * 252) * 100;
+    }
+    function pfRankVal(d) { return document.getElementById('pfRankBy')?.value === 'score' ? pfScore(d) : d.va_rs; }
+    function pfRankLabel() { return document.getElementById('pfRankBy')?.value === 'score' ? 'score' : 'VA RS'; }
 
     function pfRenderKpis() {
         const R = pfRows;
@@ -6716,7 +6748,20 @@
                 pfKpi(pfFmt(wShare(r => r.above200), 0, '%'), 'Above 200 MA', shareCol(wShare(r => r.above200))),
                 pfKpi(pfSigned(pfWavg(R, 'high52_dist')), 'Distance from 52W high'),
             ]),
-            sec('5 · Returns <span>(weighted)</span>', [
+            (() => {
+                const pv = pfPortVol(R, 60), pv126 = pfPortVol(R, 126), wv = pfWavg(R, 'vol60');
+                const hiVol = [...R].filter(r => r.vol60 != null).sort((a, b) => b.vol60 * b.w - a.vol60 * a.w).slice(0, 3).map(r => r.input).join(', ');
+                return sec('5 · Volatility <span>(annualised, daily returns)</span>', [
+                    pfKpi(pfFmt(pv, 1, '%'), 'Portfolio vol 60D'),
+                    pfKpi(pfFmt(pv126, 1, '%'), 'Portfolio vol 6M'),
+                    pfKpi(pfFmt(wv, 1, '%'), 'Wtd avg stock vol 60D'),
+                    pfKpi(pfFmt(pfWavg(R, 'dvol60'), 1, '%'), 'Wtd downside vol 60D'),
+                    pfKpi(pv && wv ? (wv / pv).toFixed(2) : '—', 'Diversification ratio'),
+                    pfKpi(pfFmt(pfWavg(R, 'va_rs')), 'Wtd VA RS'),
+                    pfKpi(hiVol || '—', 'Top vol contributors'),
+                ]);
+            })(),
+            sec('6 · Returns <span>(weighted)</span>', [
                 pfKpi(pfSigned(pfWavg(R, 'ret_5d')), '5D', pfRetCol(pfWavg(R, 'ret_5d'))),
                 pfKpi(pfSigned(pfWavg(R, 'm1')), '1M', pfRetCol(pfWavg(R, 'm1'))),
                 pfKpi(pfSigned(pfWavg(R, 'ret_3m')), '3M', pfRetCol(pfWavg(R, 'ret_3m'))),
@@ -6751,6 +6796,7 @@
             <td class="td-pct">${pfGrowN(d.ma20_dist)}</td><td class="td-pct">${pfGrowN(d.high52_dist)}</td>
             <td class="td-pct" style="${bL}">${pfGrowN(d.sales_cq)}</td><td class="td-pct">${pfGrowN(d.eps_cq)}</td>
             <td class="td-pct">${d.forward_pe != null ? d.forward_pe.toFixed(1) : '—'}</td>
+            <td class="td-pct" style="${bL}">${d.vol60 != null ? d.vol60.toFixed(0) + '%' : '—'}</td><td class="td-pct">${d.dvol60 != null ? d.dvol60.toFixed(0) + '%' : '—'}</td>
             <td class="td-pct" style="${bL}">${pfPctN(d.score)}</td></tr>`).join('');
     }
 
@@ -6881,7 +6927,7 @@
         const groups = Object.entries(gm).filter(([g, a]) => a.length >= minN && !heldG.has(g)).map(([g, a]) => ({
             g, sector: a[0].sector, n: a.length, rs: pfMedian(a.map(d => d.rs_ibd)), p4: pfMedian(a.map(d => d.pct_4w)),
             sales: pfMedian(a.map(d => d.sales_cq)),
-            leaders: a.map(d => ({ d, s: pfScore(d) })).filter(x => x.s != null).sort((x, y) => y.s - x.s).slice(0, 3)
+            leaders: a.map(d => ({ d, s: pfRankVal(d) })).filter(x => x.s != null).sort((x, y) => y.s - x.s).slice(0, 3)
         })).filter(x => x.rs != null).sort((a, b) => b.rs - a.rs).slice(0, 20);
         document.getElementById('pfGapGroups').innerHTML = groups.map(x => `<tr>
             <td class="td-name" style="font-weight:700">${x.g}</td><td class="td-name">${x.sector || ''}</td>
@@ -6896,8 +6942,8 @@
         if (uni !== 'row') allData.forEach(d => pool.push({ d, cap: parseFloat(d.mktcap), row: false }));
         if (uni !== 'us') (allDataRoW || []).forEach(d => pool.push({ d, cap: parseFloat(d.mktcap_eur || d.mktcap), row: true }));
         const stocks = pool.filter(x => !heldT.has(x.d.ticker) && x.cap >= cap && x.d.rs_ibd != null && x.d.rs_ibd >= 70)
-            .map(x => ({ ...x, s: pfScore(x.d), grp: x.d.group || (x.d.sector ? `RoW · ${x.d.sector}` : '') }))
-            .filter(x => x.s != null).sort((a, b) => b.s - a.s).slice(0, 30);
+            .map(x => ({ ...x, s: pfScore(x.d), rk: pfRankVal(x.d), vol: pfVol(x.d.ticker, 60), grp: x.d.group || (x.d.sector ? `RoW · ${x.d.sector}` : '') }))
+            .filter(x => x.rk != null).sort((a, b) => b.rk - a.rk).slice(0, 30);
         document.getElementById('pfGapStocks').innerHTML = stocks.map(x => {
             const d = x.d, inTheme = heldG.has(x.grp) || (!d.group && heldS.has(d.sector));
             return `<tr><td class="td-ticker" style="color:var(--accent2);cursor:pointer" onclick="openNews('${d.ticker}','${(d.name || '').replace(/'/g, "\\'")}')">${d.ticker}</td>
@@ -6905,14 +6951,15 @@
             <td class="td-name">${inTheme ? '<span title="group already held">●</span> ' : ''}${x.grp}</td>
             <td class="td-pct">${Math.round(x.cap)}</td>
             <td class="td-pct">${pfPctN(d.rs_ibd)}</td><td class="td-pct">${pfPctN(d.va_rs)}</td><td class="td-pct">${pfPctN(d.pct_4w)}</td>
-            <td class="td-pct">${pfGrowN(d.sales_cq)}</td><td class="td-pct">${pfGrowN(d.eps_cq)}</td><td class="td-pct">${pfPctN(x.s)}</td></tr>`;
-        }).join('') || '<tr><td colspan="10" class="pf-hint">None.</td></tr>';
+            <td class="td-pct">${pfGrowN(d.sales_cq)}</td><td class="td-pct">${pfGrowN(d.eps_cq)}</td><td class="td-pct">${x.vol != null ? Math.round(x.vol) + '%' : '—'}</td><td class="td-pct">${pfPctN(x.s)}</td></tr>`;
+        }).join('') || '<tr><td colspan="11" class="pf-hint">None.</td></tr>';
     }
 
     function pfCandidates(r, held) {
         const pool = allData.filter(d => !held.has(d.ticker) && d.rs_ibd != null && d.rs_ibd >= 70);
-        const pick = f => pool.filter(f).map(d => ({ d, s: pfScore(d) }))
-            .filter(x => x.s != null && x.s >= (r.score || 0) + 15).sort((a, b) => b.s - a.s).slice(0, 3);
+        const base = pfRankVal(r._src) || 0;
+        const pick = f => pool.filter(f).map(d => ({ d, s: pfScore(d), rk: pfRankVal(d) }))
+            .filter(x => x.rk != null && x.s != null && x.rk >= base + 15).sort((a, b) => b.rk - a.rk).slice(0, 3);
         let c = r.group ? pick(d => d.group === r.group) : [];
         let scope = 'group';
         if (c.length < 2 && r.sector) {
@@ -6939,6 +6986,7 @@
         else if (decay != null && decay >= 20) s.push('Short-term RS is accelerating.');
         if (r.sales_cq != null || r.eps_cq != null)
             s.push(`Fundamentals: sales CQ ${r.sales_cq != null ? Math.round(r.sales_cq) + '%' : '—'}, EPS CQ ${r.eps_cq != null ? Math.round(r.eps_cq) + '%' : '—'}${r.fundScore != null ? ` (pctl ${Math.round(r.fundScore)})` : ''}.`);
+        if (r.vol60 != null) s.push(`60D vol ${Math.round(r.vol60)}% (downside ${r.dvol60 != null ? Math.round(r.dvol60) : '—'}%).`);
         if (r.high52_dist != null && r.high52_dist < -25) s.push(`Trading ${Math.abs(Math.round(r.high52_dist))}% below its 52W high.`);
         if (v === 'HOLD' && r.ma20_dist > 25) s.push('Extended — avoid adding here.');
         return s.join(' ');
@@ -6962,16 +7010,16 @@
             <div class="pf-why">${pfWhy(r, v)}</div>
             ${v !== 'HOLD' ? (cand.c.length
                 ? `<div class="pf-cands"><span style="font-size:11px;color:var(--muted)">Switch into (${cand.scope}):</span>${cand.c.map(x =>
-                    `<span class="pf-cand"><b>${x.d.ticker}</b> score ${x.s} · RS ${x.d.rs_ibd} · VA ${x.d.va_rs ?? '—'} · S ${x.d.sales_cq != null ? Math.round(x.d.sales_cq) + '%' : '—'} · E ${x.d.eps_cq != null ? Math.round(x.d.eps_cq) + '%' : '—'}</span>`).join('')}</div>`
+                    `<span class="pf-cand"><b>${x.d.ticker}</b> VA ${x.d.va_rs ?? '—'} · score ${x.s} · RS ${x.d.rs_ibd} · vol ${pfVol(x.d.ticker, 60) != null ? Math.round(pfVol(x.d.ticker, 60)) + '%' : '—'} · S ${x.d.sales_cq != null ? Math.round(x.d.sales_cq) + '%' : '—'} · E ${x.d.eps_cq != null ? Math.round(x.d.eps_cq) + '%' : '—'}</span>`).join('')}</div>`
                 : '<div class="pf-hint">No stronger candidate in group/sector — consider trimming rather than switching.</div>') : ''}
         </div>`).join('') || '<div class="pf-hint">Enter holdings and press Analyse.</div>';
     }
 
     function pfExportCSV() {
         if (!window._pfRecos) return;
-        const h = ['ticker','name','sector','group','weight','rs_ibd','va_rs','pct_4w','pct_6m','ret_1w','ret_3m','ma20_dist','high52_dist','sales_cq','eps_cq','forward_pe','score','verdict','candidates'];
+        const h = ['ticker','name','sector','group','weight','rs_ibd','va_rs','pct_4w','pct_6m','ret_1w','ret_3m','ma20_dist','high52_dist','sales_cq','eps_cq','forward_pe','vol60','downside_vol60','score','verdict','candidates'];
         const lines = [h.join(',')].concat(window._pfRecos.map(({ r, v, cand }) => [r.ticker, `"${r.name || ''}"`, `"${r.sector || ''}"`, `"${r.group || ''}"`,
-            r.w.toFixed(2), r.rs_ibd, r.va_rs, r.pct_4w, r.pct_6m, r.ret_5d, r.ret_3m, r.ma20_dist, r.high52_dist, r.sales_cq, r.eps_cq, r.forward_pe, r.score, v,
+            r.w.toFixed(2), r.rs_ibd, r.va_rs, r.pct_4w, r.pct_6m, r.ret_5d, r.ret_3m, r.ma20_dist, r.high52_dist, r.sales_cq, r.eps_cq, r.forward_pe, r.vol60 != null ? r.vol60.toFixed(1) : null, r.dvol60 != null ? r.dvol60.toFixed(1) : null, r.score, v,
             `"${cand.c.map(x => x.d.ticker).join(' ')}"`].map(x => x == null ? '' : x).join(',')));
         const a = document.createElement('a');
         a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv' }));
