@@ -683,7 +683,7 @@
         display: none;
     }
         /* ── PORTFOLIO ── */
-    .pf-top{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:16px;margin-bottom:18px}
+    .pf-top{display:grid;grid-template-columns:minmax(240px,300px) 1fr;gap:18px;margin-bottom:18px}
     @media(max-width:900px){.pf-top{grid-template-columns:1fr}}
     .pf-input-box{background:var(--bg2);border:1px solid var(--border);padding:12px}
     #pfInput{width:100%;height:170px;font-family:'IBM Plex Mono',monospace;font-size:12px;border:1px solid var(--faint);padding:8px;resize:vertical;background:var(--bg)}
@@ -691,7 +691,12 @@
     .pf-sub{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.1em;color:var(--text);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
     .pf-sub select{font-size:11px}
     .pf-hint{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:6px}
-    .pf-kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;align-content:start}
+    .pf-kpis{display:flex;flex-direction:column;gap:10px}
+    .pf-sec{display:grid;grid-template-columns:170px 1fr;gap:10px;align-items:start}
+    @media(max-width:900px){.pf-sec{grid-template-columns:1fr}}
+    .pf-sec-t{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.08em;color:var(--accent2);padding-top:10px;border-top:2px solid var(--accent2)}
+    .pf-sec-t span{font-family:Arial,sans-serif;font-size:10px;letter-spacing:0;color:var(--muted);display:block}
+    .pf-sec-c{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px}
     .pf-kpi{background:var(--bg2);border:1px solid var(--faint);padding:8px 10px}
     .pf-kpi .v{font-size:20px;font-weight:700}
     .pf-kpi .l{font-size:10px;color:var(--muted);margin-top:2px}
@@ -705,7 +710,10 @@
     .pf-bar .p{text-align:right;font-weight:700}
     .pf-bar .r{text-align:right;font-size:10px}
     #pfTable th{cursor:pointer;white-space:nowrap}
-    .pf-alerts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+    .pf-alerts{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-bottom:16px;align-items:start}
+    .pf-acol{background:var(--bg2);border:1px solid var(--border);padding:8px;display:flex;flex-direction:column;gap:4px;max-height:320px;overflow:auto}
+    .pf-acol-t{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.08em;color:var(--text);display:flex;justify-content:space-between}
+    .pf-acol-t span{font-family:Arial,sans-serif;font-size:11px;color:var(--muted)}
     .pf-alert{font-size:11px;padding:4px 8px;border:1px solid var(--faint);background:var(--bg2)}
     .pf-alert.hi{border-color:#b91c1c;color:#b91c1c}
     .pf-alert.md{border-color:#b45309;color:#b45309}
@@ -6599,42 +6607,85 @@
     const pfCol = v => v == null ? 'var(--muted)' : v >= 70 ? '#15803d' : v >= 30 ? 'var(--text)' : '#b91c1c';
     const pfRetCol = v => v == null ? 'var(--muted)' : v > 0 ? '#15803d' : v < 0 ? '#b91c1c' : 'var(--text)';
 
+    function pfSma(tk, n) {
+        const p = (rawPrices && rawPrices[tk]) || (rawPricesRoW && rawPricesRoW[tk]);
+        if (!p || p.length < n) return null;
+        let sum = 0; for (let i = 0; i < n; i++) sum += p[i];
+        return sum / n;
+    }
+    function pfAbove(tk, n) {
+        const p = (rawPrices && rawPrices[tk]) || (rawPricesRoW && rawPricesRoW[tk]);
+        const m = pfSma(tk, n);
+        return p && m ? p[0] > m : null;
+    }
+    function pfWmedian(rows, key) {
+        const v = rows.filter(r => r[key] != null && !isNaN(r[key])).map(r => ({ v: r[key], w: r.w })).sort((a, b) => a.v - b.v);
+        const tot = v.reduce((s, x) => s + x.w, 0); if (!tot) return null;
+        let c = 0; for (const x of v) { c += x.w; if (c >= tot / 2) return x.v; }
+        return null;
+    }
+
     function pfRenderKpis() {
         const R = pfRows;
         const el = document.getElementById('pfKpis');
         if (!R.length) { el.innerHTML = ''; return; }
+        R.forEach(r => {
+            r.above50 = pfAbove(r.ticker, 50);
+            r.above200 = pfAbove(r.ticker, 200);
+            r.above20 = r.ma20_dist != null ? r.ma20_dist > 0 : null;
+        });
         const inv = R.reduce((s, r) => s + r.w, 0) || 1;
         const hhi = R.reduce((s, r) => s + Math.pow(r.w / inv, 2), 0);
         const top5 = [...R].sort((a, b) => b.w - a.w).slice(0, 5).reduce((s, r) => s + r.w, 0);
-        const wIn = f => R.filter(f).reduce((s, r) => s + r.w, 0);
+        const wShare = f => { const c = R.filter(r => f(r) != null); const cw = c.reduce((s, r) => s + r.w, 0); return cw ? c.filter(f).reduce((s, r) => s + r.w, 0) / cw * 100 : null; };
+        const wIn = f => R.filter(f).reduce((s, r) => s + r.w, 0) / inv * 100;
         const pe = R.filter(r => r.forward_pe != null && r.forward_pe > 0);
         const peW = pe.reduce((s, r) => s + r.w, 0);
         const hPE = peW ? peW / pe.reduce((s, r) => s + r.w / r.forward_pe, 0) : null;
-        const rs = pfWavg(R, 'rs_ibd'), va = pfWavg(R, 'va_rs'), p4 = pfWavg(R, 'pct_4w'), p6 = pfWavg(R, 'pct_6m');
+        const g = k => pfWmedian(R, k);
+        const shareCol = v => v == null ? 'var(--muted)' : v >= 60 ? '#15803d' : v < 40 ? '#b91c1c' : 'var(--text)';
+        const growCol = v => v == null ? 'var(--muted)' : v >= 20 ? '#15803d' : v < 0 ? '#b91c1c' : 'var(--text)';
         const sc = pfWavg(R, 'score');
-        const r1w = pfWavg(R, 'ret_5d'), r1m = pfWavg(R, 'm1'), r3m = pfWavg(R, 'ret_3m'), r12 = pfWavg(R, 'ret_12m');
+        const sec = (title, cards) => `<div class="pf-sec"><div class="pf-sec-t">${title}</div><div class="pf-sec-c">${cards.join('')}</div></div>`;
         el.innerHTML = [
-            pfKpi(R.length, 'Positions'),
-            pfKpi(pfFmt(R.reduce((s, r) => s + r.w, 0), 1, '%'), 'Invested (matched)'),
-            pfKpi(pfFmt(window._pfCash, 1, '%'), 'Cash'),
-            pfKpi(pfFmt(1 / hhi, 1), 'Effective N (1/HHI)'),
-            pfKpi(pfFmt(top5, 0, '%'), 'Top-5 weight'),
-            pfKpi(pfFmt(sc), 'Wtd score', pfCol(sc)),
-            pfKpi(pfFmt(rs), 'Wtd RS IBD', pfCol(rs)),
-            pfKpi(pfFmt(va), 'Wtd VA RS', pfCol(va)),
-            pfKpi(pfFmt(p4), 'Wtd Pct 4W', pfCol(p4)),
-            pfKpi(pfFmt(p6), 'Wtd Pct 6M', pfCol(p6)),
-            pfKpi(pfFmt(wIn(r => r.rs_ibd >= 80), 0, '%'), 'Weight RS ≥ 80', '#15803d'),
-            pfKpi(pfFmt(wIn(r => r.rs_ibd != null && r.rs_ibd < 30), 0, '%'), 'Weight RS < 30', '#b91c1c'),
-            pfKpi(pfFmt(wIn(r => r.ma20_dist != null && r.ma20_dist > 0), 0, '%'), 'Weight above EMA20'),
-            pfKpi(pfSigned(pfWavg(R, 'high52_dist')), 'Wtd vs 52W high'),
-            pfKpi(pfSigned(r1w), 'Wtd return 1W', pfRetCol(r1w)),
-            pfKpi(pfSigned(r1m), 'Wtd return 1M', pfRetCol(r1m)),
-            pfKpi(pfSigned(r3m), 'Wtd return 3M', pfRetCol(r3m)),
-            pfKpi(pfSigned(r12), 'Wtd return 12M', pfRetCol(r12)),
-            pfKpi(pfSigned(pfWavg(R, 'sales_cq'), 0), 'Wtd Sales CQ growth'),
-            pfKpi(pfSigned(pfWavg(R, 'eps_cq'), 0), 'Wtd EPS CQ growth'),
-            pfKpi(pfFmt(hPE, 1, 'x'), 'Fwd PE (harmonic)'),
+            sec('1 · Portfolio construction', [
+                pfKpi(R.length, 'Positions'),
+                pfKpi(pfFmt(inv, 1, '%'), 'Invested (matched)'),
+                pfKpi(pfFmt(window._pfCash, 1, '%'), 'Cash'),
+                pfKpi(pfFmt(1 / hhi, 1), 'Effective N (1/HHI)'),
+                pfKpi(pfFmt(top5 / inv * 100, 0, '%'), 'Top-5 weight'),
+                pfKpi(pfFmt(sc), 'Composite score', pfCol(sc)),
+            ]),
+            sec('2 · Relative strength', [
+                pfKpi(pfFmt(pfWavg(R, 'pct_4w')), 'Pct 4W', pfCol(pfWavg(R, 'pct_4w'))),
+                pfKpi(pfFmt(pfWavg(R, 'pct_6m')), 'Pct 6M', pfCol(pfWavg(R, 'pct_6m'))),
+                pfKpi(pfFmt(pfWavg(R, 'pct_12m')), 'Pct 12M', pfCol(pfWavg(R, 'pct_12m'))),
+                pfKpi(pfFmt(pfWavg(R, 'rs_ibd')), 'RS IBD', pfCol(pfWavg(R, 'rs_ibd'))),
+                pfKpi(pfFmt(pfWavg(R, 'va_rs')), 'VA RS', pfCol(pfWavg(R, 'va_rs'))),
+                pfKpi(pfFmt(wIn(r => r.rs_ibd >= 80), 0, '%'), 'Weight RS IBD ≥ 80', '#15803d'),
+                pfKpi(pfFmt(wIn(r => r.rs_ibd != null && r.rs_ibd < 30), 0, '%'), 'Weight RS IBD < 30', '#b91c1c'),
+            ]),
+            sec('3 · Fundamentals <span>(weighted median)</span>', [
+                pfKpi(pfSigned(g('sales_cq'), 0), 'Sales growth CQ', growCol(g('sales_cq'))),
+                pfKpi(pfSigned(g('sales_nq'), 0), 'Sales growth NQ', growCol(g('sales_nq'))),
+                pfKpi(pfSigned(g('ny_yoy_s'), 0), 'Sales growth next year', growCol(g('ny_yoy_s'))),
+                pfKpi(pfSigned(g('eps_cq'), 0), 'EPS growth CQ', growCol(g('eps_cq'))),
+                pfKpi(pfSigned(g('eps_nq'), 0), 'EPS growth NQ', growCol(g('eps_nq'))),
+                pfKpi(pfSigned(g('ny_yoy'), 0), 'EPS growth next year', growCol(g('ny_yoy'))),
+                pfKpi(pfFmt(hPE, 1, 'x'), 'Fwd P/E (harmonic)'),
+            ]),
+            sec('4 · Technicals <span>(% of weight)</span>', [
+                pfKpi(pfFmt(wShare(r => r.above20), 0, '%'), 'Above 20 EMA', shareCol(wShare(r => r.above20))),
+                pfKpi(pfFmt(wShare(r => r.above50), 0, '%'), 'Above 50 MA', shareCol(wShare(r => r.above50))),
+                pfKpi(pfFmt(wShare(r => r.above200), 0, '%'), 'Above 200 MA', shareCol(wShare(r => r.above200))),
+                pfKpi(pfSigned(pfWavg(R, 'high52_dist')), 'Distance from 52W high'),
+            ]),
+            sec('5 · Returns <span>(weighted)</span>', [
+                pfKpi(pfSigned(pfWavg(R, 'ret_5d')), '5D', pfRetCol(pfWavg(R, 'ret_5d'))),
+                pfKpi(pfSigned(pfWavg(R, 'm1')), '1M', pfRetCol(pfWavg(R, 'm1'))),
+                pfKpi(pfSigned(pfWavg(R, 'ret_3m')), '3M', pfRetCol(pfWavg(R, 'ret_3m'))),
+                pfKpi(pfSigned(pfWavg(R, 'ret_12m')), '12M', pfRetCol(pfWavg(R, 'ret_12m'))),
+            ]),
         ].join('');
     }
 
@@ -6704,19 +6755,28 @@
     }
 
     function pfRenderAlerts(missing) {
-        const A = [];
+        const C = { rs: [], tech: [], conc: [], data: [] };
+        const add = (cat, sev, txt, sortKey) => C[cat].push({ sev, txt, k: sortKey || 0 });
         pfRows.forEach(r => {
-            if (r.ma20_dist != null && r.ma20_dist > 25) A.push(['md', `${r.ticker} extended +${Math.round(r.ma20_dist)}% vs EMA20`]);
-            if (r.high52_dist != null && r.high52_dist < -25) A.push(['hi', `${r.ticker} ${Math.round(r.high52_dist)}% off 52W high`]);
-            if (r.pct_4w != null && r.pct_6m != null && r.pct_4w - r.pct_6m <= -25) A.push(['hi', `${r.ticker} RS decaying (4W ${r.pct_4w} vs 6M ${r.pct_6m})`]);
-            if (r.ema10_above === false && r.ma20_dist != null && r.ma20_dist < 0) A.push(['md', `${r.ticker} below EMA20, EMA10 < EMA20`]);
-            if (r.w > 10) A.push(['md', `${r.ticker} weight ${r.w.toFixed(1)}%`]);
+            if (r.rs_ibd != null && r.rs_ibd < 30) add('rs', 'hi', `${r.input} RS IBD ${r.rs_ibd}`, r.rs_ibd);
+            if (r.pct_4w != null && r.pct_6m != null && r.pct_4w - r.pct_6m <= -25) add('rs', 'hi', `${r.input} RS decaying (4W ${r.pct_4w} vs 6M ${r.pct_6m})`, r.pct_4w - r.pct_6m);
+            if (r.above200 === false) add('tech', 'hi', `${r.input} below 200 MA`, -300);
+            if (r.high52_dist != null && r.high52_dist < -25) add('tech', 'hi', `${r.input} ${Math.round(r.high52_dist)}% off 52W high`, r.high52_dist);
+            if (r.ema10_above === false && r.ma20_dist != null && r.ma20_dist < 0) add('tech', 'md', `${r.input} below 20 EMA, 10 EMA < 20 EMA`, r.ma20_dist);
+            if (r.ma20_dist != null && r.ma20_dist > 25) add('tech', 'md', `${r.input} extended +${Math.round(r.ma20_dist)}% vs 20 EMA`, -r.ma20_dist);
+            if (r.w > 10) add('conc', 'md', `${r.input} weight ${r.w.toFixed(1)}%`, -r.w);
         });
-        pfGroupBy('group').filter(g => g.k !== '(n/a)' && g.w > 25).forEach(g => A.push(['md', `Group ${g.k} at ${g.w.toFixed(0)}%`]));
-        pfGroupBy('sector').filter(g => g.w > 40).forEach(g => A.push(['md', `Sector ${g.k} at ${g.w.toFixed(0)}%`]));
-        if (missing.length) A.push(['hi', `Not in universe: ${missing.join(', ')}`]);
-        document.getElementById('pfAlertsWrap').style.display = A.length ? '' : 'none';
-        document.getElementById('pfAlerts').innerHTML = A.map(([c, t]) => `<span class="pf-alert ${c}">${t}</span>`).join('');
+        pfGroupBy('group').filter(g => g.k !== '(n/a)' && g.w > 25).forEach(g => add('conc', 'md', `Group ${g.k} at ${g.w.toFixed(0)}%`, -g.w));
+        pfGroupBy('sector').filter(g => g.w > 40).forEach(g => add('conc', 'md', `Sector ${g.k} at ${g.w.toFixed(0)}%`, -g.w));
+        missing.forEach(t => add('data', 'md', `${t} not in universe`));
+        const titles = { rs: 'Relative strength', tech: 'Technicals', conc: 'Concentration', data: 'Data' };
+        const total = Object.values(C).reduce((s, a) => s + a.length, 0);
+        document.getElementById('pfAlertsWrap').style.display = total ? '' : 'none';
+        document.getElementById('pfAlerts').innerHTML = Object.entries(C).filter(([, a]) => a.length).map(([k, a]) => {
+            a.sort((x, y) => (x.sev === y.sev ? 0 : x.sev === 'hi' ? -1 : 1) || x.k - y.k);
+            return `<div class="pf-acol"><div class="pf-acol-t">${titles[k]} <span>${a.length}</span></div>
+                ${a.map(x => `<div class="pf-alert ${x.sev}">${x.txt}</div>`).join('')}</div>`;
+        }).join('');
     }
 
     function pfCandidates(r, held) {
