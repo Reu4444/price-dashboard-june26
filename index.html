@@ -695,8 +695,8 @@
     .pf-kpi{background:var(--bg2);border:1px solid var(--faint);padding:8px 10px}
     .pf-kpi .v{font-size:20px;font-weight:700}
     .pf-kpi .l{font-size:10px;color:var(--muted);margin-top:2px}
-    .pf-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-    @media(max-width:1100px){.pf-grid3{grid-template-columns:1fr}}
+    .pf-grid3{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    @media(max-width:1300px){.pf-grid3{grid-template-columns:repeat(2,1fr)}}@media(max-width:800px){.pf-grid3{grid-template-columns:1fr}}
     .pf-card{background:var(--bg2);border:1px solid var(--border);padding:12px;max-height:420px;overflow:auto}
     .pf-bar{display:grid;grid-template-columns:minmax(90px,38%) 1fr 46px 34px;gap:6px;align-items:center;font-size:11px;margin-bottom:4px}
     .pf-bar .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1536,7 +1536,7 @@
         <div class="pf-h">HOLDINGS STATISTICS</div>
         <div class="table-wrap"><table id="pfTable"><thead><tr>
             <th onclick="pfSort('ticker')">TICKER</th><th onclick="pfSort('name')">NAME</th>
-            <th onclick="pfSort('sector')">SECTOR</th><th onclick="pfSort('group')">GROUP</th>
+            <th onclick="pfSort('country')">COUNTRY</th><th onclick="pfSort('sector')">SECTOR</th><th onclick="pfSort('group')">GROUP</th>
             <th class="th-pct" onclick="pfSort('w')">WT %</th>
             <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('rs_ibd')">RS IBD</th>
             <th class="th-pct" onclick="pfSort('va_rs')">VA RS</th>
@@ -1555,6 +1555,7 @@
         <div class="pf-h" style="margin-top:22px;">WEIGHTS</div>
         <div class="pf-grid3">
             <div class="pf-card"><div class="pf-sub">By sector</div><div id="pfWSector"></div></div>
+            <div class="pf-card"><div class="pf-sub">By country</div><div id="pfWCountry"></div></div>
             <div class="pf-card"><div class="pf-sub">By group</div><div id="pfWGroup"></div></div>
             <div class="pf-card"><div class="pf-sub">By percentile
                 <select id="pfBucketMetric" onchange="pfRenderBuckets()">
@@ -3904,7 +3905,7 @@
             tr.innerHTML = `
                 <td class="sticky-0 watch-toggle" style="text-align:center;cursor:pointer;font-size:11px;width:22px;padding:4px 3px;color:${inW ? '#06b6d4' : '#475569'}" data-ticker="${d.ticker}">${inW ? '★' : '☆'}</td>
                 <td class="sticky-1" style="text-align:center;width:22px;padding:4px 3px;"><a href="https://www.tradingview.com/chart/?symbol=${d.ticker}" target="_blank" style="color:#475569;font-size:8px;text-decoration:none;font-weight:600;" onmouseover="this.style.color='#06b6d4'" onmouseout="this.style.color='#475569'">TV</a></td>
-                <td class="td-ticker sticky-2" style="cursor:pointer;color:var(--accent2);min-width:44px;" onclick="openNews('${d.ticker}','${(d.name || '').replace(/'/g, "\\'")}')">${d.ticker}</td>
+                <td class="td-ticker sticky-2" style="cursor:pointer;color:var(--accent2);min-width:44px;" onclick="openNews('${d.ticker}','${(d.name || '').replace(/'/g, "\\'")}')">${d.input || d.ticker}</td>
                 <td class="td-name sticky-3" style="min-width:100px;">${d.name || ''}</td>
                 <td class="td-name">${d.country || ''}</td>
                 <td class="td-name">${d.currency || ''}</td>
@@ -5615,7 +5616,7 @@
             tr.innerHTML = `
       <td class="watch-toggle" style="text-align:center;cursor:pointer;font-size:11px;width:22px;padding:4px 3px;color:${inW ? '#06b6d4' : '#475569'}" data-ticker="${d.ticker}">${inW ? '★' : '☆'}</td>
       <td style="text-align:center;width:22px;padding:4px 3px"><a href="https://www.tradingview.com/chart/?symbol=${d.ticker}" target="_blank" style="color:#475569;font-size:8px;text-decoration:none;font-weight:600" onmouseover="this.style.color='#06b6d4'" onmouseout="this.style.color='#475569'">TV</a></td>
-      <td class="td-ticker" style="cursor:pointer;color:var(--accent2);min-width:44px;" onclick="openNews('${d.ticker}','${(d.name || '').replace(/'/g, "\\'")}')">${d.ticker}</td>
+      <td class="td-ticker" style="cursor:pointer;color:var(--accent2);min-width:44px;" onclick="openNews('${d.ticker}','${(d.name || '').replace(/'/g, "\\'")}')">${d.input || d.ticker}</td>
       <td class="td-name" style="color:var(--text);font-size:12px;">${d.name || ''}</td>
       <td class="td-name" style="font-size:11px;">${d.country || '<span style="color:var(--muted)">—</span>'}</td>
       <td class="td-name" style="font-size:11px;font-family:'IBM Plex Mono',monospace;">${d.currency || '<span style="color:var(--muted)">—</span>'}</td>
@@ -6439,10 +6440,25 @@
     const PF_BBG_SUFFIX = { US:'', UW:'', UN:'', IM:'.MI', BB:'.BR', LN:'.L', FP:'.PA', SW:'.SW', SE:'.SW', VX:'.SW', GR:'.DE', GY:'.DE', GF:'.F',
         NA:'.AS', SM:'.MC', SQ:'.MC', SS:'.ST', DC:'.CO', NO:'.OL', FH:'.HE', ID:'.IR', PL:'.LS', AV:'.VI', JP:'.T', JT:'.T', HK:'.HK',
         CN:'.TO', CT:'.TO', AU:'.AX', AT:'.AX', KS:'.KS', TT:'.TW', SP:'.SI', IN:'.NS', BZ:'.SA', MM:'.MX' };
+    const PF_BBG_COUNTRY = { US:'United States', UW:'United States', UN:'United States', IM:'Italy', BB:'Belgium', LN:'United Kingdom',
+        FP:'France', SW:'Switzerland', SE:'Switzerland', VX:'Switzerland', GR:'Germany', GY:'Germany', NA:'Netherlands', SM:'Spain',
+        SS:'Sweden', DC:'Denmark', NO:'Norway', FH:'Finland', ID:'Ireland', PL:'Portugal', AV:'Austria', JP:'Japan', JT:'Japan',
+        HK:'Hong Kong', CN:'Canada', CT:'Canada', AU:'Australia', AT:'Australia', KS:'South Korea', TT:'Taiwan', SP:'Singapore',
+        IN:'India', BZ:'Brazil', MM:'Mexico' };
+    const PF_COUNTRY_ALIAS = { 'united kingdom':['uk','gb','great britain','england'], 'united states':['us','usa'], 'switzerland':['ch'],
+        'italy':['it'], 'belgium':['be'], 'france':['fr'], 'germany':['de'], 'netherlands':['nl','the netherlands'], 'spain':['es'] };
+    function pfCountryOk(d, ex) {
+        const c = PF_BBG_COUNTRY[ex]; if (!c) return true;
+        const dc = String(d.country || '').toLowerCase().trim(); if (!dc) return true;
+        return dc === c.toLowerCase() || (PF_COUNTRY_ALIAS[c.toLowerCase()] || []).includes(dc);
+    }
     function pfResolve(t, map) {
         if (map[t]) return map[t];
         const parts = t.split(' ');
         const base = parts[0].replace(/\//g, '.'), ex = parts[1];
+        if (!ex || ['US','UW','UN'].includes(ex)) return allData.find(d => d.ticker === base || d.ticker === base.replace('.', '-') || d.ticker === base.replace('.', '')) || null;
+        const rowHits = (allDataRoW || []).filter(d => d.ticker.split(/[.\s:-]/)[0] === base && pfCountryOk(d, ex));
+        if (rowHits.length === 1) return rowHits[0];
         const tries = [base, t.replace(/ /g, '.'), t.replace(/ /g, '')];
         if (ex && PF_BBG_SUFFIX[ex] !== undefined) tries.unshift(base + PF_BBG_SUFFIX[ex]);
         if (ex) tries.push(base + '.' + ex, base + '-' + ex, base + ':' + ex);
@@ -6541,7 +6557,9 @@
         pfRows = holdings.map(h => {
             const d = pfResolve(h.ticker, map);
             if (!d) { missing.push(h.ticker); return null; }
+            const ex = h.ticker.split(' ')[1];
             const r = Object.assign({}, d, { w: h.w, _src: d, input: h.ticker });
+            r.country = PF_BBG_COUNTRY[ex] || d.country || (allData.includes(d) ? 'United States' : '(n/a)');
             r.rsScore = pfRsScore(d); r.fundScore = pfFundScore(d); r.score = pfScore(d);
             return r;
         }).filter(Boolean);
@@ -6604,7 +6622,7 @@
 
     function pfSort(col) {
         if (pfSortCol === col) pfSortDir = pfSortDir === 'desc' ? 'asc' : 'desc';
-        else { pfSortCol = col; pfSortDir = ['ticker', 'name', 'sector', 'group'].includes(col) ? 'asc' : 'desc'; }
+        else { pfSortCol = col; pfSortDir = ['ticker', 'name', 'country', 'sector', 'group'].includes(col) ? 'asc' : 'desc'; }
         pfRenderTable();
     }
 
@@ -6618,8 +6636,8 @@
         });
         const bL = 'border-left:1px solid var(--border2)';
         body.innerHTML = rows.map(d => `<tr>
-            <td class="td-ticker" style="color:var(--accent2);cursor:pointer" onclick="openNews('${d.ticker}','${(d.name || '').replace(/'/g, "\\'")}')">${d.ticker}</td>
-            <td class="td-name">${d.name || ''}</td><td class="td-name">${d.sector || ''}</td><td class="td-name">${d.group || ''}</td>
+            <td class="td-ticker" style="color:var(--accent2);cursor:pointer" onclick="openNews('${d.ticker}','${(d.name || '').replace(/'/g, "\\'")}')">${d.input || d.ticker}</td>
+            <td class="td-name">${d.name || ''}</td><td class="td-name">${d.country || ''}</td><td class="td-name">${d.sector || ''}</td><td class="td-name">${d.group || ''}</td>
             <td class="td-pct" style="font-weight:700">${d.w.toFixed(1)}</td>
             <td class="td-pct" style="${bL}">${pctCell(d.rs_ibd)}</td><td class="td-pct">${pctCell(d.va_rs)}</td>
             <td class="td-pct">${pctCell(d.pct_4w)}</td><td class="td-pct">${pctCell(d.pct_6m)}</td>
@@ -6651,6 +6669,7 @@
     function pfRenderWeights() {
         document.getElementById('pfWSector').innerHTML = pfBars(pfGroupBy('sector'), true);
         document.getElementById('pfWGroup').innerHTML = pfBars(pfGroupBy('group'), true);
+        document.getElementById('pfWCountry').innerHTML = pfBars(pfGroupBy('country'), true);
         pfRenderBuckets();
     }
     function pfRenderBuckets() {
