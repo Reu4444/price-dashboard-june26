@@ -722,6 +722,22 @@
     .pf-swf{font-size:11px;padding:3px 10px;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--text)}
     .pf-swf.on{background:var(--text);color:var(--bg)}
     .pf-swt tr.grp td{border-top:2px solid var(--border)}
+    #pfTable:not(.all) [data-x]{display:none}
+    .pf-topline{font-size:13px;line-height:1.7;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--accent2);padding:8px 12px;margin-bottom:10px}
+    .pf-topline b{font-weight:700}
+    .pf-topline .sep{color:var(--faint);margin:0 8px}
+    details.pf-det{margin-top:12px}
+    details.pf-det>summary{cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.08em;color:var(--accent2);padding:4px 0;list-style:none}
+    details.pf-det>summary::before{content:'▸ ';}
+    details.pf-det[open]>summary::before{content:'▾ ';}
+    details.pf-info{margin-top:6px}
+    details.pf-info>summary{cursor:pointer;font-size:11px;color:var(--accent2);list-style:none}
+    details.pf-info>summary::before{content:'ℹ︎ ';}
+    details.pf-info>div{margin-top:4px}
+    #tab-portfolio.pf-compact .pf-gt td,#tab-portfolio.pf-compact .pf-gt th,#tab-portfolio.pf-compact #pfTable td,#tab-portfolio.pf-compact #pfTable th{padding:2px 5px!important;font-size:10.5px!important}
+    #tab-portfolio.pf-compact .pf-kpi{padding:3px 5px}#tab-portfolio.pf-compact .pf-kpi .v{font-size:12px}
+    #tab-portfolio.pf-compact .pf-bar{margin-bottom:2px;font-size:10.5px}
+    #tab-portfolio.pf-compact .pf-card{padding:6px 8px}
     .pf-strip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(72px,1fr);gap:4px}
     .pf-strip .pf-kpi{padding:5px 6px;white-space:nowrap}
     .pf-sec{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:start}
@@ -1582,6 +1598,7 @@
                 <label>Rank leaders by <select id="pfRankBy" onchange="renderPortfolio()"><option value="va" selected>VA RS</option><option value="score">Composite score</option></select></label>
                                                 <a href="#" onclick="pfLoadSheet();return false">Reload sheet</a>
                 <a href="#" onclick="pfExportCSV();return false">Export CSV</a>
+                <a href="#" id="pfCompactLink" onclick="pfToggleCompact();return false">Compact view</a>
                 <a href="#" onclick="document.getElementById('pfEdit').classList.toggle('open');return false">Edit manually</a>
             </span>
         </div>
@@ -1591,6 +1608,7 @@
         </div>
         <div class="pf-stabs"><button class="pf-stab" data-sub="portfolio" onclick="pfSubTab('portfolio')">PORTFOLIO</button><button class="pf-stab" data-sub="alerts" onclick="pfSubTab('alerts')">ALERTS</button><button class="pf-stab" data-sub="switch" onclick="pfSubTab('switch')">SWITCH</button><button class="pf-stab" data-sub="themes" onclick="pfSubTab('themes')">WHAT TO OWN</button><button class="pf-stab" data-sub="bench" onclick="pfSubTab('bench')">VS ACWI</button><button class="pf-stab" data-sub="models" onclick="pfSubTab('models')">MODEL PORTFOLIOS</button></div>
         <div class="pf-subc" id="pfSub-portfolio">
+        <div class="pf-topline" id="pfTopLine"></div>
         <div class="pf-kpis" id="pfKpis"></div>
 
         <div class="pf-h">WEIGHTS</div>
@@ -1606,24 +1624,24 @@
         </div>
 
 
-        <div class="pf-h" style="margin-top:18px;">HOLDINGS STATISTICS</div>
+        <div class="pf-h" style="margin-top:18px;display:flex;justify-content:space-between;align-items:baseline">HOLDINGS STATISTICS <a href="#" id="pfColsLink" onclick="pfToggleCols();return false" style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--accent2);text-decoration:none">Show all columns</a></div>
         <div class="table-wrap"><table id="pfTable"><thead><tr>
-            <th onclick="pfSort('ticker')">TICKER</th><th onclick="pfSort('name')">NAME</th>
-            <th onclick="pfSort('country')">COUNTRY</th><th onclick="pfSort('sector')">SECTOR</th><th onclick="pfSort('group')">GROUP</th>
-            <th class="th-pct" onclick="pfSort('w')">WT %</th>
+            <th onclick="pfSort('ticker')">TICKER</th><th data-x="1" onclick="pfSort('name')">NAME</th>
+            <th data-x="1" onclick="pfSort('country')">COUNTRY</th><th data-x="1" onclick="pfSort('sector')">SECTOR</th><th onclick="pfSort('group')">GROUP</th>
+            <th class="th-pct" onclick="pfSort('w')">WEIGHT</th>
             <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('pct_4w')">PCT 4W</th>
             <th class="th-pct" onclick="pfSort('pct_6m')">PCT 6M</th>
             <th class="th-pct" onclick="pfSort('rs_ibd')">RS IBD</th>
             <th class="th-pct" onclick="pfSort('va_rs')">VA RS</th>
-            <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('ret_5d')">1W</th>
-            <th class="th-pct" onclick="pfSort('ret_3m')">3M</th>
+            <th data-x="1" class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('ret_5d')">1W</th>
+            <th data-x="1" class="th-pct" onclick="pfSort('ret_3m')">3M</th>
             <th class="th-pct" onclick="pfSort('ma200_dist')">vs 200 MA</th>
-            <th class="th-pct" onclick="pfSort('high52_dist')">vs 52WH</th>
+            <th data-x="1" class="th-pct" onclick="pfSort('high52_dist')">vs 52WH</th>
             <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('ny_yoy_s')">SALES 2027</th>
             <th class="th-pct" onclick="pfSort('ny_yoy')">EPS 2027</th>
-            <th class="th-pct" onclick="pfSort('forward_pe')">FWD PE</th>
+            <th data-x="1" class="th-pct" onclick="pfSort('forward_pe')">FWD PE</th>
             <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('vol60')">VOL 60D</th>
-            <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('score')">SCORE</th>
+            <th data-x="1" class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('score')">SCORE</th>
         </tr></thead><tbody id="pfBody"></tbody></table></div>
 
         </div>
@@ -1718,11 +1736,15 @@
                 <th class="th-pct">SALES 2027</th><th class="th-pct">EPS 2027</th><th class="th-pct">FWD P/E</th><th class="th-pct">VOL 60D</th><th class="th-pct">MAX DD 12M</th><th class="th-pct">RESILIENCE</th><th class="th-pct">FROM 52WH</th><th class="th-pct">CAP</th>
             </tr></thead><tbody id="cpHold"></tbody></table></div>
         </div>
+        <details class="pf-det" data-k="cpAnalysis"><summary>Analysis &amp; current vs Claude</summary>
         <div class="pf-grid2" style="grid-template-columns:1.1fr 1fr">
             <div class="pf-card" style="max-height:none"><div class="pf-sub">Analysis</div><div id="cpNarr" class="pf-narr"></div></div>
             <div class="pf-card" style="max-height:none"><div class="pf-sub">Current vs Claude</div>
                 <div class="table-wrap"><table class="pf-gt"><thead><tr><th></th><th class="th-pct">CURRENT</th><th class="th-pct">CLAUDE</th><th class="th-pct">CHANGE</th></tr></thead><tbody id="cpCmp"></tbody></table></div></div>
         </div>
+        </details>
+
+        <details class="pf-det" data-k="cpThemes"><summary>Themes ranking</summary>
         <div style="margin-top:12px">
             <div class="pf-card" style="max-height:520px"><div class="pf-sub">Themes</div>
                 <div class="pf-hint">Theme score = 60% average VA 6-12M + 40% breadth (% of members with VA 6-12M ≥ 70). No 4-week data, to avoid short-term momentum. Bottom 40% of themes are excluded from the Claude portfolio.</div>
@@ -1744,12 +1766,17 @@
             <label>Weighting within sector <select id="awWt" onchange="pfRenderAcwi()"><option value="iv" selected>Inverse vol</option><option value="eq">Equal</option></select></label>
             <a href="#" onclick="pfAcwiCSV();return false" style="color:var(--accent2);text-decoration:none">Export CSV</a>
         </div>
+        <details class="pf-det" data-k="awSectors"><summary>Sectors &amp; current vs Claude vs ACWI-neutral</summary>
         <div class="pf-grid2" style="grid-template-columns:1fr 1.6fr">
             <div class="pf-card" style="max-height:none"><div class="pf-sub">Sectors — ACWI vs portfolios</div>
                 <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr><th>SECTOR</th><th class="th-pct">ACWI</th><th class="th-pct">ACWI-NEUTRAL</th><th class="th-pct">CURRENT</th><th class="th-pct">CURRENT − ACWI</th><th class="th-pct">N</th></tr></thead><tbody id="awSec"></tbody></table></div></div>
             <div class="pf-card" style="max-height:none"><div class="pf-sub">Current vs Claude vs ACWI-neutral</div>
                 <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr><th></th><th class="th-pct">CURRENT</th><th class="th-pct">CLAUDE</th><th class="th-pct">ACWI-NEUTRAL</th></tr></thead><tbody id="awCmp"></tbody></table></div></div>
         </div>
+        </details>
+
+        </details>
+
         <div class="pf-card" style="max-height:none;margin-top:12px"><div class="pf-sub">Holdings <span id="awSum" style="font-family:Arial;font-size:11px;color:var(--muted)"></span></div>
             <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr>
                 <th>SECTOR</th><th>TICKER</th><th>NAME</th><th>STATUS</th><th>GROUP</th><th>REGION</th>
@@ -6848,6 +6875,10 @@
         pfRenderGaps();
         pfRenderRecos();
         pfRenderSwitch();
+        if (pfSub !== 'bench') { const keep = pfBenchN; pfBenchN = 21; pfRenderBench(); pfBenchN = keep; }
+        pfRenderTopLine();
+        if (!window._pfUiInit) { window._pfUiInit = true; pfInitDetails(); pfCollapseHints();
+            try { pfToggleCols(localStorage.getItem('pfCols') === '1'); pfToggleCompact(localStorage.getItem('pfCompact') === '1'); } catch (e) {} }
         window._pfModelsDirty = true;
         if (pfSub === 'models') pfRenderModels();
         pfSubTab(pfSub); pfModelTab(pfModel);
@@ -6971,17 +7002,17 @@
         const bL = 'border-left:1px solid var(--border2)';
         body.innerHTML = rows.map(d => `<tr>
             <td class="td-ticker" style="color:var(--accent2);cursor:pointer" onclick="openNews('${d.ticker}','${(d.name || '').replace(/'/g, "\\'")}')">${pfShort(d.input || d.ticker)}</td>
-            <td class="td-name">${d.name || ''}</td><td class="td-name">${d.country || ''}</td><td class="td-name">${d.sector || ''}</td><td class="td-name">${d.group || ''}</td>
-            <td class="td-pct" style="font-weight:700">${d.w.toFixed(1)}</td>
+            <td class="td-name" data-x="1">${d.name || ''}</td><td class="td-name" data-x="1">${d.country || ''}</td><td class="td-name" data-x="1">${d.sector || ''}</td><td class="td-name">${d.group || ''}</td>
+            <td class="td-pct" style="font-weight:700">${d.w.toFixed(1)}%</td>
             <td class="td-pct" style="${bL}">${pfPctC(d.pct_4w)}</td><td class="td-pct">${pfPctC(d.pct_6m)}</td>
             <td class="td-pct">${pfPctC(d.rs_ibd)}</td><td class="td-pct">${pfPctC(d.va_rs)}</td>
-            <td class="td-pct" style="${bL};color:${pfRetCol(d.ret_5d)}">${pfRetN(d.ret_5d)}</td>
-            <td class="td-pct" style="color:${pfRetCol(d.ret_3m)}">${pfRetN(d.ret_3m)}</td>
-            <td class="td-pct">${pfGrowN(d.ma200_dist)}</td><td class="td-pct">${pfGrowN(d.high52_dist)}</td>
+            <td class="td-pct" data-x="1" style="${bL}">${pfRetN(d.ret_5d)}</td>
+            <td class="td-pct" data-x="1">${pfRetN(d.ret_3m)}</td>
+            <td class="td-pct">${pfRetN(d.ma200_dist)}</td><td class="td-pct" data-x="1">${pfRetN(d.high52_dist)}</td>
             <td class="td-pct" style="${bL}">${pfGrowN(d.ny_yoy_s)}</td><td class="td-pct">${pfGrowN(d.ny_yoy)}</td>
-            <td class="td-pct">${d.forward_pe != null ? d.forward_pe.toFixed(1) : '—'}</td>
+            <td class="td-pct" data-x="1">${d.forward_pe != null ? d.forward_pe.toFixed(1) + 'x' : '—'}</td>
             <td class="td-pct" style="${bL}">${d.vol60 != null ? d.vol60.toFixed(0) + '%' : '—'}</td>
-            <td class="td-pct" style="${bL}">${pfPctN(d.score)}</td></tr>`).join('');
+            <td class="td-pct" data-x="1" style="${bL}">${pfPctN(d.score)}</td></tr>`).join('');
     }
 
     function pfBars(entries, withRs) {
@@ -7136,6 +7167,7 @@
         document.getElementById('pfAlertsWrap').style.display = rows.length ? '' : 'none';
         // summary
         const redW = red.reduce((s, x) => s + x.r.w, 0);
+        window._pfAlertStats = { red: red.length, redW, n: rows.length, w: rows.reduce((s, x) => s + x.r.w, 0) };
         const weakGroups = {};
         all.filter(x => x.f.grp).forEach(x => { const t = pfTheme(x.r._src); (weakGroups[t] = weakGroups[t] || { w: 0, t: [] }).w += x.r.w; weakGroups[t].t.push(pfShort(x.r.input)); });
         const wg = Object.entries(weakGroups).sort((a, b) => b[1].w - a[1].w).slice(0, 4)
@@ -7176,6 +7208,7 @@
             ${hidden ? `<div class="pf-hint" style="margin-top:4px"><a href="#" onclick="pfAlertsShowAll=true;pfRenderAlerts([]);return false" style="color:var(--accent2)">Show ${hidden} stocks with only 1 flag</a></div>`
                      : (pfAlertsShowAll ? `<div class="pf-hint" style="margin-top:4px"><a href="#" onclick="pfAlertsShowAll=false;pfRenderAlerts([]);return false" style="color:var(--accent2)">Hide stocks with only 1 flag</a></div>` : '')}
             <div class="pf-hint" style="margin-top:4px">Stocks within 5% of their 52W high are never flagged. Relative weakness = RS IBD &lt; 50, or Pct 4W and Pct 6M both &lt; 50. Below MA = below the 50 MA or the 200 MA (one flag). Group weak = group Pct 4W &lt; 50 and Pct 6M &lt; 50 (average of members). Sorted by weight × flags. Red = 3+ flags.</div>` + summary;
+        pfCollapseHints(document.getElementById('pfAlerts'));
     }
     function pfMaDistV(r, n) {
         const p = pfPrices(r._src.ticker), m = pfSma(r._src.ticker, n);
@@ -7637,6 +7670,54 @@
     }
 
 
+
+    // ── READABILITY HELPERS ──────────────────────────────────────
+    function pfCollapseHints(root) {
+        (root || document.getElementById('tab-portfolio')).querySelectorAll('.pf-hint').forEach(h => {
+            if (h.dataset.coll || h.closest('details.pf-info') || h.id === 'bmSrc' || (h.textContent || '').length < 170) return;
+            h.dataset.coll = '1';
+            const d = document.createElement('details'); d.className = 'pf-info';
+            d.innerHTML = '<summary>How it\'s calculated</summary>';
+            h.parentNode.insertBefore(d, h); const w = document.createElement('div'); d.appendChild(w); w.appendChild(h);
+        });
+    }
+    function pfInitDetails() {
+        document.querySelectorAll('#tab-portfolio details.pf-det').forEach(d => {
+            try { const v = localStorage.getItem('pfDet:' + d.dataset.k); if (v != null) d.open = v === '1'; } catch (e) {}
+            d.addEventListener('toggle', () => { try { localStorage.setItem('pfDet:' + d.dataset.k, d.open ? '1' : '0'); } catch (e) {} });
+        });
+    }
+    function pfToggleCols(force) {
+        const t = document.getElementById('pfTable'); if (!t) return;
+        const on = force != null ? force : !t.classList.contains('all');
+        t.classList.toggle('all', on);
+        document.getElementById('pfColsLink').textContent = on ? 'Show key columns' : 'Show all columns';
+        try { localStorage.setItem('pfCols', on ? '1' : '0'); } catch (e) {}
+    }
+    function pfToggleCompact(force) {
+        const t = document.getElementById('tab-portfolio'); if (!t) return;
+        const on = force != null ? force : !t.classList.contains('pf-compact');
+        t.classList.toggle('pf-compact', on);
+        document.getElementById('pfCompactLink').textContent = on ? 'Normal view' : 'Compact view';
+        try { localStorage.setItem('pfCompact', on ? '1' : '0'); } catch (e) {}
+    }
+    function pfRenderTopLine() {
+        const el = document.getElementById('pfTopLine'); if (!el || !pfRows.length) return;
+        const R = pfRows, f0 = v => v == null || isNaN(v) ? '—' : Math.round(v);
+        const a200 = (() => { const c = R.filter(r => r.above200 != null), cw = c.reduce((s, r) => s + r.w, 0); return cw ? c.filter(r => r.above200).reduce((s, r) => s + r.w, 0) / cw * 100 : null; })();
+        const A = window._pfAlertStats || { red: 0, redW: 0, n: 0, w: 0 };
+        const L = window._pfRecos || [], sw = L.filter(x => x.v === 'SWITCH'), wa = L.filter(x => x.v === 'WATCH');
+        const ws = a => a.reduce((s, x) => s + x.r.w, 0).toFixed(1);
+        const bm = window._bmLast;
+        const sg = v => (v > 0 ? '+' : '') + v.toFixed(1);
+        el.innerHTML = [
+            `Strength: RS IBD <b>${f0(pfWavg(R, 'rs_ibd'))}</b>, VA RS <b>${f0(pfWavg(R, 'va_rs'))}</b>, <b>${f0(a200)}%</b> of weight above the 200 MA`,
+            `<a href="#" onclick="pfSubTab('alerts');return false" style="color:inherit"><b>${A.red}</b> stocks with 3+ alert flags = <b>${A.redW.toFixed(1)}%</b></a>`,
+            `<a href="#" onclick="pfSubTab('switch');return false" style="color:inherit">Switch <b>${sw.length}</b> (${ws(sw)}%) · Watch <b>${wa.length}</b> (${ws(wa)}%)</a>`,
+            bm ? `<a href="#" onclick="pfSubTab('bench');return false" style="color:inherit">vs ACWI 1M: <b>${sg(bm.active)} pp</b> (${sg(bm.Rp)}% vs ${sg(bm.Rb)}%)</a>` : ''
+        ].filter(Boolean).join('<span class="sep">|</span>');
+    }
+
     // ── SUB-TABS ─────────────────────────────────────────────────
     let pfSub = (() => { try { return localStorage.getItem('pfSub') || 'portfolio'; } catch (e) { return 'portfolio'; } })();
     let pfModel = (() => { try { return localStorage.getItem('pfModel') || 'claude'; } catch (e) { return 'claude'; } })();
@@ -7829,6 +7910,7 @@
         const cashEff = cash / 100 * (0 - Rb);   // cash vs benchmark (allocation to a 0% asset)
         const A = rowsS.reduce((s, x) => s + x.alloc, 0), S = rowsS.reduce((s, x) => s + x.sel, 0), I = rowsS.reduce((s, x) => s + x.inter, 0);
         const active = Rp - Rb;
+        if (n === 21) window._bmLast = { Rp, Rb, active };
         const sg = (v, d = 2) => v == null || isNaN(v) ? '—' : (v > 0 ? '+' : '') + v.toFixed(d);
         const pc = (v, d = 1) => v == null || isNaN(v) ? '—' : (v > 0 ? '+' : '') + v.toFixed(d) + '%';
         document.getElementById('bmSrc').innerHTML = live
