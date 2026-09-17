@@ -754,6 +754,13 @@
     .pf-alert.hot{color:#b91c1c;border-color:#b91c1c}
     .pf-atable{width:100%;background:var(--bg2)}
     .pf-asum{font-size:12px;line-height:1.7;margin-bottom:8px}
+    .pf-asum2{display:grid;grid-template-columns:1fr 1.6fr 1fr;gap:12px;margin-top:14px}
+    @media(max-width:1100px){.pf-asum2{grid-template-columns:1fr}}
+    .pf-acard{background:var(--bg2);border:1px solid var(--border);padding:10px 12px}
+    .pf-acard-t{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.08em;margin-bottom:8px;display:flex;justify-content:space-between}
+    .pf-acard-t span{font-family:Arial,sans-serif;font-size:11px;color:var(--muted)}
+    .pf-abig{font-size:12px;margin-bottom:8px}.pf-abig b{font-size:22px;margin-right:6px}.pf-abig span{display:block;color:var(--muted);font-size:11px}
+    .pf-achg{font-size:12px;margin-bottom:8px}.pf-achg span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em}
     .pf-new{font-size:9px;border:1px solid var(--text);padding:0 3px;font-weight:700}
     .pf-atable .th-c,.pf-atable .td-c{text-align:center}
     .pf-atable td.td-c{font-size:13px}
@@ -1582,7 +1589,7 @@
             <textarea id="pfInput" spellcheck="false" placeholder="AMZN US 5.9&#10;ISP IM 4.3"></textarea>
             <button class="btn" onclick="pfSave()">Analyse</button>
         </div>
-        <div class="pf-stabs"><button class="pf-stab" data-sub="portfolio" onclick="pfSubTab('portfolio')">PORTFOLIO</button><button class="pf-stab" data-sub="alerts" onclick="pfSubTab('alerts')">ALERTS</button><button class="pf-stab" data-sub="themes" onclick="pfSubTab('themes')">THEMES / STOCKS</button><button class="pf-stab" data-sub="switch" onclick="pfSubTab('switch')">SWITCH</button><button class="pf-stab" data-sub="models" onclick="pfSubTab('models')">MODEL PORTFOLIOS</button></div>
+        <div class="pf-stabs"><button class="pf-stab" data-sub="portfolio" onclick="pfSubTab('portfolio')">PORTFOLIO</button><button class="pf-stab" data-sub="alerts" onclick="pfSubTab('alerts')">ALERTS</button><button class="pf-stab" data-sub="switch" onclick="pfSubTab('switch')">SWITCH</button><button class="pf-stab" data-sub="themes" onclick="pfSubTab('themes')">WHAT TO OWN</button><button class="pf-stab" data-sub="bench" onclick="pfSubTab('bench')">VS ACWI</button><button class="pf-stab" data-sub="models" onclick="pfSubTab('models')">MODEL PORTFOLIOS</button></div>
         <div class="pf-subc" id="pfSub-portfolio">
         <div class="pf-kpis" id="pfKpis"></div>
 
@@ -1647,14 +1654,46 @@
 
         </div>
         <div class="pf-subc" id="pfSub-switch">
-        <div class="pf-bar-top" style="justify-content:flex-start;gap:10px" id="swFilters"></div>
+        <div class="pf-bar-top" style="justify-content:flex-start;gap:10px"><span id="swFilters" style="display:flex;gap:10px"></span>
+            <label style="margin-left:14px">Candidate market cap <select id="swCap" onchange="pfSwCapChanged()"><option value="third" selected>≥ 1/3 of holding</option><option value="same">≥ holding</option><option value="10">≥ 10B</option><option value="20">≥ 20B</option><option value="50">≥ 50B</option><option value="100">≥ 100B</option></select></label></div>
         <div class="table-wrap"><table class="pf-gt pf-swt"><thead><tr>
             <th>VERDICT</th><th>TICKER</th><th>GROUP</th><th class="th-pct">WEIGHT</th>
             <th class="th-pct">VA RS</th><th class="th-pct">RS IBD</th><th class="th-pct">PCT 4W</th><th class="th-pct">PCT 6M</th><th class="th-pct">VOL 60D</th>
-            <th class="pf-swc">CANDIDATE 1</th><th class="pf-swc">CANDIDATE 2</th><th class="pf-swc">CANDIDATE 3</th>
+            <th class="pf-swc">CANDIDATE 1</th><th class="pf-swc">CANDIDATE 2</th><th class="pf-swc">CANDIDATE 3</th><th class="pf-swc" style="min-width:190px">BETTER IN SAME GROUP</th>
         </tr></thead><tbody id="swBody"></tbody></table></div>
-        <div class="pf-hint" style="margin-top:6px">Verdict: SWITCH if relative strength is weak (RS score &lt; 40, composite &lt; 40 or RS IBD &lt; 30), HOLD if strong (RS score ≥ 65, composite ≥ 60, no sharp 4W deterioration), otherwise WATCH. Candidates: same universe (US / RoW), same sector, market cap ≥ 1/3 of the holding, RS IBD and VA RS both better than the holding (RS IBD only for RoW), US tickers of 5+ letters excluded, sorted by VA RS.</div>
+        <div class="pf-hint" style="margin-top:6px">Verdict: SWITCH if relative strength is weak (RS score &lt; 40, composite &lt; 40 or RS IBD &lt; 30), HOLD if strong (RS score ≥ 65, composite ≥ 60, no sharp 4W deterioration), otherwise WATCH. Candidates: same universe (US / RoW), same sector, market cap per the selector (default ≥ 1/3 of the holding), RS IBD and VA RS both better than the holding (RS IBD only for RoW), US tickers of 5+ letters excluded, sorted by VA RS. Better in same group = peers in the holding's group (same universe) with both VA RS and RS IBD higher than the holding and meeting the market cap criterion, shown as VA RS / RS IBD. For non-US stocks, VA RS = normal RS IBD.</div>
         <div id="pfRecos" style="display:none"></div>
+        </div>
+        <div class="pf-subc" id="pfSub-bench">
+            <div class="pf-bar-top" style="justify-content:flex-start;gap:10px">
+                <span>Period</span>
+                <button class="pf-swf" data-bp="5" onclick="pfBenchPeriod(5)">1W</button>
+                <button class="pf-swf" data-bp="21" onclick="pfBenchPeriod(21)">1M</button>
+                <button class="pf-swf" data-bp="63" onclick="pfBenchPeriod(63)">3M</button>
+                <span style="margin-left:14px">Benchmark sector returns: cap-weighted universe stocks ≥ <select id="bmCap" onchange="pfRenderBench()"><option value="5">5B</option><option value="10" selected>10B</option><option value="20">20B</option></select></span>
+            </div>
+            <div class="pf-hint" id="bmSrc" style="margin-bottom:8px"></div>
+            <div class="pf-strip" id="bmKpis" style="margin-bottom:12px"></div>
+            <div class="pf-card" style="max-height:none;margin-bottom:12px"><div class="pf-sub">Why</div><div id="bmNarr" class="pf-narr"></div></div>
+            <div class="pf-card" style="max-height:none;margin-bottom:12px"><div class="pf-sub">Attribution by sector</div>
+                <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr>
+                    <th>SECTOR</th><th class="th-pct">PORTFOLIO WT</th><th class="th-pct">ACWI WT</th><th class="th-pct">ACTIVE WT</th>
+                    <th class="th-pct">PORTFOLIO RET</th><th class="th-pct">ACWI SECTOR RET</th>
+                    <th class="th-pct">ALLOCATION</th><th class="th-pct">SELECTION</th><th class="th-pct">INTERACTION</th><th class="th-pct">TOTAL</th>
+                </tr></thead><tbody id="bmSec"></tbody></table></div></div>
+            <div class="pf-grid2">
+                <div class="pf-card" style="max-height:none"><div class="pf-sub">Top contributors vs sector</div>
+                    <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr><th>TICKER</th><th>SECTOR</th><th class="th-pct">WEIGHT</th><th class="th-pct">RETURN</th><th class="th-pct">SECTOR RET</th><th class="th-pct">EFFECT</th></tr></thead><tbody id="bmTop"></tbody></table></div></div>
+                <div class="pf-card" style="max-height:none"><div class="pf-sub">Top detractors vs sector</div>
+                    <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr><th>TICKER</th><th>SECTOR</th><th class="th-pct">WEIGHT</th><th class="th-pct">RETURN</th><th class="th-pct">SECTOR RET</th><th class="th-pct">EFFECT</th></tr></thead><tbody id="bmBot"></tbody></table></div></div>
+            </div>
+            <div class="pf-grid2" id="bmMissWrap" style="margin-top:12px;display:none">
+                <div class="pf-card" style="max-height:none"><div class="pf-sub">Index names not held that hurt most</div>
+                    <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr><th>TICKER</th><th>SECTOR</th><th class="th-pct">ACWI WT</th><th class="th-pct">RETURN</th><th class="th-pct">EFFECT</th></tr></thead><tbody id="bmMiss"></tbody></table></div></div>
+                <div class="pf-card" style="max-height:none"><div class="pf-sub">Index names not held that helped (by avoiding them)</div>
+                    <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr><th>TICKER</th><th>SECTOR</th><th class="th-pct">ACWI WT</th><th class="th-pct">RETURN</th><th class="th-pct">EFFECT</th></tr></thead><tbody id="bmMissPlus"></tbody></table></div></div>
+            </div>
+            <div class="pf-hint" style="margin-top:6px"><b>Method (Brinson-Fachler).</b> Allocation = (portfolio sector weight − ACWI sector weight) × (ACWI sector return − ACWI return): being overweight sectors that beat the index. Selection = ACWI sector weight × (portfolio sector return − ACWI sector return): picking stocks that beat their sector. Interaction = active weight × selection gap. Cash earns 0. Effects are in percentage points and add up to the active return. Index names not held: effect = −ACWI weight × (stock return − ACWI return). <b>Limits:</b> ACWI holdings and weights come from the iShares CSV (refreshed daily, via the Apps Script proxy); sector returns use only the constituents the dashboard has prices for (see coverage) — if the file cannot be loaded, a cap-weighted universe proxy is used; current weights are applied to the whole period (no trades); price returns in local currency, dividends and FX excluded. Use it to understand the drivers, not as official performance.</div>
         </div>
         <div class="pf-subc" id="pfSub-models">
             <div class="pf-bar-top" style="justify-content:flex-start;gap:0"><button class="pf-mtab" data-m="claude" onclick="pfModelTab('claude')">CLAUDE</button><button class="pf-mtab" data-m="acwi" onclick="pfModelTab('acwi')">ACWI NEUTRAL</button></div>
@@ -1690,7 +1729,7 @@
                 <div class="table-wrap"><table class="pf-gt"><thead><tr><th>#</th><th>THEME</th><th class="th-pct">SCORE</th><th class="th-pct">AVG VA 6-12M</th><th class="th-pct">BREADTH</th><th class="th-pct">CURRENT</th><th class="th-pct">CLAUDE</th></tr></thead><tbody id="cpThemes"></tbody></table></div></div>
 
         </div>
-        <div class="pf-hint" style="margin-top:6px"><b>Selection — vol-adjusted strength, resilience, diversification (no short-term momentum).</b> 1) Strength measure = VA 6-12M: average of the 6M and 12M vol-adjusted percentiles (the 4W part of VA RS is left out). RoW has no VA data, so it uses a proxy: percentile within RoW of 6M and 12M return divided by volatility. 2) Themes scored on average VA 6-12M and breadth; the bottom 40% of themes are excluded. 3) Eligible: market cap ≥ min, VA 6-12M ≥ 70, above the 200 MA, not extended (≤ 15% above the 50 MA), 12M max drawdown not worse than −35%, 60D vol ≤ 55%, US tickers of 5+ letters excluded. Current holdings with VA 6-12M ≥ 50 above the 200 MA stay eligible (+5 bonus). 4) Ranking = 60% VA 6-12M + 30% resilience (shallow drawdown, low downside vol, low vol) + 10% fundamentals. RS IBD and Pct 4W are not used. 5) Diversification while picking: max stocks per group, max names per sector in line with the sector cap, and no pair of stocks with a 6M daily-return correlation above the chosen limit. 6) Weights: inverse 60D vol (or equal), capped per stock and per sector, floor at min weight. Rule-based model, not investment advice.</div>
+        <div class="pf-hint" style="margin-top:6px"><b>Selection — vol-adjusted strength, resilience, diversification (no short-term momentum).</b> 1) Strength measure = VA 6-12M: average of the 6M and 12M vol-adjusted percentiles (the 4W part of VA RS is left out). Non-US stocks have no vol-adjusted data, so they use normal relative strength (average of Pct 6M and Pct 12M, else RS IBD). 2) Themes scored on average VA 6-12M and breadth; the bottom 40% of themes are excluded. 3) Eligible: market cap ≥ min, VA 6-12M ≥ 70, above the 200 MA, not extended (≤ 15% above the 50 MA), 12M max drawdown not worse than −35%, 60D vol ≤ 55%, US tickers of 5+ letters excluded. Current holdings with VA 6-12M ≥ 50 above the 200 MA stay eligible (+5 bonus). 4) Ranking = 60% VA 6-12M + 30% resilience (shallow drawdown, low downside vol, low vol) + 10% fundamentals. RS IBD and Pct 4W are not used. 5) Diversification while picking: max stocks per group, max names per sector in line with the sector cap, and no pair of stocks with a 6M daily-return correlation above the chosen limit. 6) Weights: inverse 60D vol (or equal), capped per stock and per sector, floor at min weight. Rule-based model, not investment advice.</div>
             </div>
             <div id="pfModel-acwi">
         <div class="pf-h" style="margin-top:6px;" id="pfAcwiAnchor">ACWI SECTOR-NEUTRAL PORTFOLIO</div>
@@ -6720,6 +6759,7 @@
 
     async function pfLoad() {
         await pfAlertHistLoadRemote();
+        pfLoadAcwi(false);
         const el = document.getElementById('pfInput');
         if (!el) return;
         try { el.value = localStorage.getItem(PF_KEY) || ''; } catch (e) {}
@@ -6762,7 +6802,13 @@
         return Math.round(f == null ? rs : 0.7 * rs + 0.3 * f);
     }
 
+    function pfRowVaFallback() {
+        (allDataRoW || []).forEach(d => {
+            if ((d.va_rs == null || d._vaFromRs) && d.rs_ibd != null) { d.va_rs = d.rs_ibd; d._vaFromRs = true; }
+        });
+    }
     function renderPortfolio() {
+        pfRowVaFallback();
         const input = document.getElementById('pfInput');
         if (!input) return;
         if (!allData.length) { pfStatus('Waiting for data…'); return; }
@@ -7094,21 +7140,27 @@
         all.filter(x => x.f.grp).forEach(x => { const t = pfTheme(x.r._src); (weakGroups[t] = weakGroups[t] || { w: 0, t: [] }).w += x.r.w; weakGroups[t].t.push(pfShort(x.r.input)); });
         const wg = Object.entries(weakGroups).sort((a, b) => b[1].w - a[1].w).slice(0, 4)
             .map(([k, v]) => `${k}: ${v.t.join(', ')} = ${v.w.toFixed(1)}%`).join(' · ');
-        const summary = `<div class="pf-asum">
-            <div><b>${red.length} stocks with 3+ flags = ${redW.toFixed(1)}% of the portfolio</b> · ${rows.length} flagged in total = ${rows.reduce((s, x) => s + x.r.w, 0).toFixed(1)}%</div>
-            ${wg ? `<div>Weak groups owned — ${wg}</div>` : ''}
-            ${prev ? `<div>Since ${new Date(prev.d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}: new ${rows.filter(x => !prevSet.has(x.r.input)).map(x => pfShort(x.r.input)).join(', ') || 'none'} · no longer flagged ${gone.map(pfShort).join(', ') || 'none'}</div>` : '<div>History starts today — new / no longer flagged will appear from the next session.</div>'}
+        const newT = prev ? rows.filter(x => !prevSet.has(x.r.input)).map(x => pfShort(x.r.input)) : [];
+        const wgList = Object.entries(weakGroups).sort((a, b) => b[1].w - a[1].w);
+        const summary = `<div class="pf-asum2">
+            <div class="pf-acard"><div class="pf-acard-t">Flagged</div>
+                <div class="pf-abig"><b>${red.length}</b> stocks with 3+ flags<span>${redW.toFixed(1)}% of the portfolio</span></div>
+                <div class="pf-abig"><b>${rows.length}</b> stocks flagged in total<span>${rows.reduce((s, x) => s + x.r.w, 0).toFixed(1)}% of the portfolio</span></div></div>
+            <div class="pf-acard"><div class="pf-acard-t">Weak groups owned <span>${wgList.length}</span></div>
+                ${wgList.length ? `<table class="pf-gt" style="width:100%"><tbody>${wgList.map(([k, v]) => `<tr><td class="td-name">${k}</td><td class="td-name">${v.t.join(', ')}</td><td class="td-pct" style="font-weight:700">${v.w.toFixed(1)}%</td></tr>`).join('')}</tbody></table>` : '<div class="pf-hint">None</div>'}</div>
+            <div class="pf-acard"><div class="pf-acard-t">Changes${prev ? ` since ${new Date(prev.d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}` : ''}</div>
+                ${prev ? `<div class="pf-achg"><span>New</span>${newT.join(', ') || 'none'}</div><div class="pf-achg"><span>No longer flagged</span>${gone.map(pfShort).join(', ') || 'none'}</div>`
+                       : '<div class="pf-hint">History starts today — new and no longer flagged stocks appear from the next session.</div>'}</div>
         </div>`;
         const visible = pfAlertsShowAll ? rows : rows.filter(x => x.n >= 2);
         const hidden = rows.length - visible.length;
         const v = x => x == null ? '—' : x;
-        document.getElementById('pfAlerts').innerHTML = summary + `<div class="table-wrap"><table class="pf-gt pf-atable"><thead><tr>
+        document.getElementById('pfAlerts').innerHTML = `<div class="table-wrap"><table class="pf-gt pf-atable"><thead><tr>
             <th>STOCK</th><th>GROUP</th><th class="th-pct">WEIGHT</th><th class="th-pct">PERF</th>
             <th class="th-c">PERF &lt; −10%</th><th class="th-c">RELATIVE WEAKNESS</th><th class="th-c">BELOW MA</th><th class="th-c">OFF 52W HIGH &lt; −25%</th>
-            <th class="th-c">GROUP WEAK</th><th class="th-c">FLAGS</th><th>SWITCH TO</th></tr></thead><tbody>
+            <th class="th-c">GROUP WEAK</th><th class="th-c">FLAGS</th></tr></thead><tbody>
             ${visible.map(x => {
                 const r = x.r, hot = x.n >= 3, isNew = prev && !prevSet.has(r.input);
-                const cand = hot ? pfCandidates(r, held).c[0] : null;
                 return `<tr class="${hot ? 'hot' : ''}">
                 <td class="td-ticker" style="cursor:pointer" onclick="openNews('${r._src.ticker}')"><b>${pfShort(r.input)}</b>${isNew ? ' <span class="pf-new">NEW</span>' : ''}</td>
                 <td class="td-name">${pfTheme(r._src)}</td>
@@ -7119,12 +7171,11 @@
                 <td class="td-c" title="${pfMaDist(r, 50)} · ${pfMaDist(r, 200)}">${ck(x.f.trend)}</td>
                 <td class="td-c" title="${r.high52_dist != null ? r.high52_dist.toFixed(1) + '%' : ''}">${ck(x.f.off52)}</td>
                 <td class="td-c" title="group Pct 4W ${x.g.p4 != null ? Math.round(x.g.p4) : '—'} · Pct 6M ${x.g.p6 != null ? Math.round(x.g.p6) : '—'}">${ck(x.f.grp)}</td>
-                <td class="td-c"><b>${x.n}/5</b></td>
-                <td class="td-name">${cand ? `<b>${pfShort(cand.d.ticker)}</b> <span style="color:var(--muted)">RS ${cand.d.rs_ibd} · VA ${cand.d.va_rs ?? '—'}</span>` : (hot ? '<span style="color:var(--muted)">—</span>' : '')}</td></tr>`; }).join('')}
+                <td class="td-c"><b>${x.n}/5</b></td></tr>`; }).join('')}
             </tbody></table></div>
             ${hidden ? `<div class="pf-hint" style="margin-top:4px"><a href="#" onclick="pfAlertsShowAll=true;pfRenderAlerts([]);return false" style="color:var(--accent2)">Show ${hidden} stocks with only 1 flag</a></div>`
                      : (pfAlertsShowAll ? `<div class="pf-hint" style="margin-top:4px"><a href="#" onclick="pfAlertsShowAll=false;pfRenderAlerts([]);return false" style="color:var(--accent2)">Hide stocks with only 1 flag</a></div>` : '')}
-            <div class="pf-hint" style="margin-top:4px">Stocks within 5% of their 52W high are never flagged. Relative weakness = RS IBD &lt; 50, or Pct 4W and Pct 6M both &lt; 50. Below MA = below the 50 MA or the 200 MA (one flag). Group weak = group Pct 4W &lt; 50 and Pct 6M &lt; 50 (average of members). Sorted by weight × flags. Red = 3+ flags; Switch to = best candidate (same universe, same sector, cap ≥ 1/3, better RS IBD and VA RS).</div>`;
+            <div class="pf-hint" style="margin-top:4px">Stocks within 5% of their 52W high are never flagged. Relative weakness = RS IBD &lt; 50, or Pct 4W and Pct 6M both &lt; 50. Below MA = below the 50 MA or the 200 MA (one flag). Group weak = group Pct 4W &lt; 50 and Pct 6M &lt; 50 (average of members). Sorted by weight × flags. Red = 3+ flags.</div>` + summary;
     }
     function pfMaDistV(r, n) {
         const p = pfPrices(r._src.ticker), m = pfSma(r._src.ticker, n);
@@ -7276,8 +7327,9 @@
             const v = [d.va_6m, d.va_12m].filter(x => x != null);
             return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : (d.va_rs ?? null);
         }
-        if (!_pfRowVA) pfBuildRowVA();
-        return _pfRowVA.get(d) ?? null;
+        // non-US: no vol-adjusted data → normal relative strength (average of Pct 6M and Pct 12M, else RS IBD)
+        const v = [d.pct_6m, d.pct_12m].filter(x => x != null);
+        return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : (d.rs_ibd ?? null);
     }
     // correlation of daily returns over n days (arrays are newest-first)
     const _pfRetCache = new Map();
@@ -7593,6 +7645,7 @@
         document.querySelectorAll('.pf-stab').forEach(b => b.classList.toggle('on', b.dataset.sub === k));
         document.querySelectorAll('.pf-subc').forEach(c => c.classList.toggle('on', c.id === 'pfSub-' + k));
         if (k === 'models' && window._pfModelsDirty) pfRenderModels();
+        if (k === 'bench') pfRenderBench();
     }
     function pfModelTab(m) {
         pfModel = m; try { localStorage.setItem('pfModel', m); } catch (e) {}
@@ -7603,6 +7656,26 @@
     function pfRenderModels() {
         window._pfModelsDirty = false;
         pfRenderClaude(); pfRenderAcwi(); window._awReady = true;
+    }
+
+
+    function pfSwCapChanged() {
+        const held = new Set(pfRows.map(r => r.ticker));
+        (window._pfRecos || []).forEach(x => { if (x.v !== 'HOLD') x.cand = pfCandidates(x.r, held); });
+        pfRenderSwitch(); pfRenderActions && document.getElementById('pfActions') && pfRenderActions();
+    }
+    // stocks in the same group (same universe) with better VA RS and better RS IBD than the holding
+    function pfGroupBetter(r, held) {
+        const src = r._src, isUS = allData.includes(src), uni = isUS ? allData : (allDataRoW || []);
+        const g = pfTheme(src), cap = pfCap(src);
+        const capMode = document.getElementById('swCap') ? document.getElementById('swCap').value : 'third';
+        const capOk = c => c != null && (capMode === 'third' ? (cap ? c >= cap / 3 : true) : capMode === 'same' ? (cap ? c >= cap : true) : c >= +capMode);
+        const L = uni.filter(d => d !== src && !held.has(d.ticker) && pfTheme(d) === g && d.rs_ibd != null
+                && (src.rs_ibd == null || d.rs_ibd > src.rs_ibd) && (src.va_rs == null || (d.va_rs != null && d.va_rs > src.va_rs)) && capOk(pfCap(d))
+                && (!isUS || d.ticker.replace(/[^A-Z]/gi, '').length <= 4))
+            .sort((a, b) => (b.va_rs ?? b.rs_ibd) - (a.va_rs ?? a.rs_ibd));
+        const n = uni.filter(d => pfTheme(d) === g).length;
+        return { list: L, n };
     }
 
     // ── SWITCH TABLE ─────────────────────────────────────────────
@@ -7632,18 +7705,188 @@
                 <td class="td-pct">${r.w.toFixed(1)}%</td>
                 <td class="td-pct">${pfPctC(r.va_rs)}</td><td class="td-pct">${pfPctC(r.rs_ibd)}</td><td class="td-pct">${pfPctC(r.pct_4w)}</td><td class="td-pct">${pfPctC(r.pct_6m)}</td>
                 <td class="td-pct">${r.vol60 != null ? Math.round(r.vol60) + '%' : '—'}</td>
-                ${cell(0)}${cell(1)}${cell(2)}</tr>`;
-        }).join('') || '<tr><td colspan="12" class="pf-hint">None.</td></tr>';
+                ${cell(0)}${cell(1)}${cell(2)}
+                <td class="pf-swc">${(() => { const gb = pfGroupBetter(r, held); if (!gb.list.length) return `<span class="pf-swcand"><span>none of ${gb.n - 1} peers</span></span>`;
+                    return `<div class="pf-swcand"><b style="font-size:11px">${gb.list.length}</b><span> of ${gb.n - 1} peers:</span> ${gb.list.slice(0, 3).map(y => `<b style="cursor:pointer" onclick="openNews('${y.ticker}')">${pfShort(y.ticker)}</b> <span>${v(y.va_rs)}/${v(y.rs_ibd)}</span>`).join(' · ')}</div>`; })()}</td></tr>`;
+        }).join('') || '<tr><td colspan="13" class="pf-hint">None.</td></tr>';
+    }
+
+
+
+    // ── ACWI HOLDINGS (iShares CSV via Apps Script proxy, cached 1 day) ──
+    const ACWI_URL = 'https://www.ishares.com/us/products/239600/ishares-msci-acwi-etf/1467271812596.ajax?fileType=csv&fileName=ACWI_holdings&dataType=fund';
+    const ACWI_SECTOR_MAP = { 'information technology': 'Technology', 'financials': 'Financials', 'industrials': 'Industrials', 'health care': 'Healthcare',
+        'consumer discretionary': 'Discretionary', 'communication': 'Communications', 'communication services': 'Communications', 'consumer staples': 'Staples',
+        'energy': 'Energy', 'materials': 'Materials', 'utilities': 'Utilities', 'real estate': 'Real Estate' };
+    const ACWI_EXCH_TV = [['london', 'LON'], ['paris', 'EPA'], ['amsterdam', 'AMS'], ['brussels', 'EBR'], ['borsa italiana', 'BIT'], ['milan', 'BIT'], ['xetra', 'ETR'],
+        ['deutsche', 'ETR'], ['six swiss', 'SWX'], ['swiss', 'SWX'], ['stockholm', 'STO'], ['copenhagen', 'CPH'], ['helsinki', 'HEL'], ['oslo', 'OSL'], ['madrid', 'BME'],
+        ['wiener', 'VIE'], ['vienna', 'VIE'], ['warsaw', 'WSE'], ['tel aviv', 'TLV'], ['lisbon', 'ELI'], ['dublin', 'EURONEXT'], ['irish', 'EURONEXT']];
+    let _acwi = null;   // { date, rows:[{t,name,sector,w,loc,exch,cur}], sectors:{} }
+    function pfParseAcwi(csv) {
+        const lines = String(csv).replace(/^\uFEFF/, '').split(/\r?\n/).map(l => parseCSVRow(l));
+        let date = null, hi = -1;
+        lines.forEach((l, i) => { if (/holdings as of/i.test(l[0] || '')) date = l[1]; if (hi < 0 && String(l[0]).trim() === 'Ticker') hi = i; });
+        if (hi < 0) return null;
+        const H = lines[hi].map(x => String(x).trim()), col = n => H.indexOf(n);
+        const num = v => parseFloat(String(v || '').replace(/,/g, ''));
+        const rows = lines.slice(hi + 1).filter(l => l[col('Asset Class')] === 'Equity').map(l => ({
+            t: String(l[col('Ticker')] || '').trim(), name: l[col('Name')], sector: ACWI_SECTOR_MAP[String(l[col('Sector')] || '').toLowerCase()] || null,
+            w: num(l[col('Weight (%)')]), loc: l[col('Location')], exch: String(l[col('Exchange')] || ''), cur: l[col('Currency')]
+        })).filter(r => r.t && r.sector && r.w > 0);
+        if (rows.length < 200) return null;
+        const sectors = {}; rows.forEach(r => sectors[r.sector] = (sectors[r.sector] || 0) + r.w);
+        return { date, rows, sectors };
+    }
+    async function pfLoadAcwi(force) {
+        try {
+            const c = JSON.parse(localStorage.getItem('acwiHoldings') || 'null');
+            if (c && !force && Date.now() - c.at < 864e5) { _acwi = c.data; pfApplyAcwi(); return; }
+            if (c) { _acwi = c.data; pfApplyAcwi(); }
+        } catch (e) {}
+        try {
+            const csv = await fetchWithProxy(ACWI_URL);
+            const data = pfParseAcwi(csv);
+            if (data) { _acwi = data; pfApplyAcwi();
+                try { localStorage.setItem('acwiHoldings', JSON.stringify({ at: Date.now(), data })); } catch (e) {} }
+        } catch (e) { console.warn('ACWI holdings not loaded', e); }
+    }
+    function pfApplyAcwi() {
+        if (!_acwi) return;
+        Object.keys(ACWI_SECTORS).forEach(k => ACWI_SECTORS[k] = +(_acwi.sectors[k] || 0).toFixed(2));
+        window.ACWI_DATE_LIVE = _acwi.date;
+        _acwiMatch = null;
+        if (pfSub === 'bench') pfRenderBench();
+    }
+    let _acwiMatch = null;
+    function pfAcwiMatch() {
+        if (_acwiMatch) return _acwiMatch;
+        const us = new Map(allData.map(d => [d.ticker.toUpperCase(), d]));
+        const row = new Map((allDataRoW || []).map(d => [d.ticker.toUpperCase(), d]));
+        const rowByBase = {}; (allDataRoW || []).forEach(d => (rowByBase[pfBaseSym(d.ticker)] = rowByBase[pfBaseSym(d.ticker)] || []).push(d));
+        _acwiMatch = _acwi.rows.map(r => {
+            const t = r.t.toUpperCase().replace(/\s+/g, '');
+            let d = null;
+            if (/united states/i.test(r.loc || '') || /nasdaq|nyse|cboe|bats/i.test(r.exch)) {
+                d = us.get(t) || us.get(t.replace(/([A-Z]+)([AB])$/, '$1-$2')) || us.get(t.replace(/([A-Z]+)([AB])$/, '$1.$2')) || us.get(t.replace(/\./g, '-'));
+            } else {
+                const ex = ACWI_EXCH_TV.find(([k]) => r.exch.toLowerCase().includes(k));
+                if (ex) d = row.get(ex[1] + ':' + t) || row.get(ex[1] + ':' + t.replace(/\./g, '_'));
+                if (!d) { const c = (rowByBase[t] || []).filter(x => !r.loc || String(x.country || '').toLowerCase() === String(r.loc).toLowerCase()); if (c.length === 1) d = c[0]; }
+            }
+            return { ...r, d };
+        });
+        return _acwiMatch;
+    }
+
+    // ── VS ACWI: Brinson-Fachler attribution ─────────────────────
+    let pfBenchN = (() => { try { return +localStorage.getItem('pfBenchN') || 21; } catch (e) { return 21; } })();
+    function pfBenchPeriod(n) { pfBenchN = n; try { localStorage.setItem('pfBenchN', n); } catch (e) {} pfRenderBench(); }
+    function pfPeriodRet(tk, n) { const p = pfPrices(tk); return p && p.length > n && p[n] > 0 ? (p[0] / p[n] - 1) * 100 : null; }
+    function pfRenderBench() {
+        try { pfRenderBenchInner(); } catch (e) { console.error(e); const el = document.getElementById('bmNarr'); if (el) el.textContent = 'Error: ' + e.message; }
+    }
+    function pfRenderBenchInner() {
+        if (!pfRows.length || !document.getElementById('bmSec')) return;
+        const n = pfBenchN, minCap = +document.getElementById('bmCap').value;
+        document.querySelectorAll('[data-bp]').forEach(b => b.classList.toggle('on', +b.dataset.bp === n));
+        const label = n === 5 ? '1W' : n === 21 ? '1M' : '3M';
+        const sectors = Object.keys(ACWI_SECTORS), totB = Object.values(ACWI_SECTORS).reduce((a, b) => a + b, 0);
+        const bs = {}; sectors.forEach(k => bs[k] = { cw: 0, crw: 0, n: 0, cov: 0, tot: 0 });
+        const live = !!_acwi;
+        const acwiRet = new Map();   // dashboard object -> {w, r}
+        if (live) {
+            // benchmark sector returns = ACWI-weighted return of the constituents we have prices for
+            pfAcwiMatch().forEach(r => {
+                const b = bs[r.sector]; if (!b) return; b.tot += r.w;
+                if (!r.d) return; const ret = pfPeriodRet(r.d.ticker, n); if (ret == null || !isFinite(ret)) return;
+                b.cw += r.w; b.crw += r.w * ret; b.n++; b.cov += r.w;
+                const prev = acwiRet.get(r.d); acwiRet.set(r.d, { w: (prev ? prev.w : 0) + r.w, r: ret, name: r.name });
+            });
+        } else {
+            // fallback: cap-weighted universe proxy
+            allData.concat(allDataRoW || []).forEach(d => {
+                if (!bs[d.sector]) return; const cap = pfCap(d); if (cap == null || cap < minCap) return;
+                const r = pfPeriodRet(d.ticker, n); if (r == null || !isFinite(r)) return;
+                bs[d.sector].cw += cap; bs[d.sector].crw += cap * r; bs[d.sector].n++;
+            });
+        }
+        const rb = {}; sectors.forEach(k => rb[k] = bs[k].cw ? bs[k].crw / bs[k].cw : 0);
+        const covTot = live ? sectors.reduce((s, k) => s + bs[k].cov, 0) / (sectors.reduce((s, k) => s + bs[k].tot, 0) || 1) * 100 : null;
+        const wb = {}; sectors.forEach(k => wb[k] = ACWI_SECTORS[k] / totB * 100);
+        const Rb = sectors.reduce((s, k) => s + wb[k] / 100 * rb[k], 0);
+        // portfolio (weights in % of total, cash = remainder)
+        const stocks = pfRows.map(r => ({ r, sec: r.sector, ret: pfPeriodRet(r._src.ticker, n) })).filter(x => sectors.includes(x.sec) && x.ret != null);
+        const wp = {}, rp = {}; sectors.forEach(k => { wp[k] = 0; rp[k] = 0; });
+        stocks.forEach(x => { wp[x.sec] += x.r.w; rp[x.sec] += x.r.w * x.ret; });
+        sectors.forEach(k => rp[k] = wp[k] ? rp[k] / wp[k] : null);
+        const invested = stocks.reduce((s, x) => s + x.r.w, 0), cash = Math.max(0, 100 - invested);
+        const Rp = sectors.reduce((s, k) => s + (wp[k] ? wp[k] / 100 * rp[k] : 0), 0);
+        const rowsS = sectors.map(k => {
+            const aw = wp[k] - wb[k], sel = rp[k] == null ? 0 : wb[k] / 100 * (rp[k] - rb[k]);
+            const alloc = aw / 100 * (rb[k] - Rb), inter = rp[k] == null ? 0 : aw / 100 * (rp[k] - rb[k]);
+            return { k, wp: wp[k], wb: wb[k], aw, rp: rp[k], rb: rb[k], alloc, sel, inter, tot: alloc + sel + inter, nB: bs[k].n };
+        });
+        const cashEff = cash / 100 * (0 - Rb);   // cash vs benchmark (allocation to a 0% asset)
+        const A = rowsS.reduce((s, x) => s + x.alloc, 0), S = rowsS.reduce((s, x) => s + x.sel, 0), I = rowsS.reduce((s, x) => s + x.inter, 0);
+        const active = Rp - Rb;
+        const sg = (v, d = 2) => v == null || isNaN(v) ? '—' : (v > 0 ? '+' : '') + v.toFixed(d);
+        const pc = (v, d = 1) => v == null || isNaN(v) ? '—' : (v > 0 ? '+' : '') + v.toFixed(d) + '%';
+        document.getElementById('bmSrc').innerHTML = live
+            ? `ACWI holdings from iShares as of ${_acwi.date || '—'} · ${_acwi.rows.length} stocks · price coverage ${covTot.toFixed(0)}% of index weight (uncovered names are left out of sector returns) · <a href="#" onclick="pfLoadAcwi(true);return false" style="color:var(--accent2)">Reload holdings</a>`
+            : `ACWI holdings not loaded — using the cap-weighted universe proxy and the ${ACWI_DATE} sector snapshot · <a href="#" onclick="pfLoadAcwi(true);return false" style="color:var(--accent2)">Load holdings</a>`;
+        document.getElementById('bmKpis').innerHTML = [
+            pfKpi(pc(Rp, 2), `Portfolio ${label}`), pfKpi(pc(Rb, 2), live ? `ACWI ${label} (constituents)` : `ACWI ${label} (proxy)`), pfKpi(sg(active) + ' pp', 'Active return'),
+            pfKpi(sg(A + cashEff) + ' pp', 'Allocation (incl. cash)'), pfKpi(sg(S) + ' pp', 'Selection'), pfKpi(sg(I) + ' pp', 'Interaction'), pfKpi(sg(cashEff) + ' pp', `Cash ${cash.toFixed(1)}%`)
+        ].join('');
+        document.getElementById('bmSec').innerHTML = [...rowsS].sort((a, b) => b.tot - a.tot).map(x => `<tr>
+            <td class="td-name">${x.k}</td><td class="td-pct">${x.wp.toFixed(1)}%</td><td class="td-pct">${x.wb.toFixed(1)}%</td><td class="td-pct">${sg(x.aw, 1)}</td>
+            <td class="td-pct">${pc(x.rp)}</td><td class="td-pct" title="${x.nB} stocks${live ? ` · coverage ${(bs[x.k].tot ? bs[x.k].cov / bs[x.k].tot * 100 : 0).toFixed(0)}%` : ''}">${pc(x.rb)}</td>
+            <td class="td-pct">${sg(x.alloc)}</td><td class="td-pct">${sg(x.sel)}</td><td class="td-pct">${sg(x.inter)}</td><td class="td-pct" style="font-weight:700">${sg(x.tot)}</td></tr>`).join('')
+            + `<tr><td class="td-name">Cash</td><td class="td-pct">${cash.toFixed(1)}%</td><td class="td-pct">0.0%</td><td class="td-pct">${sg(cash, 1)}</td><td class="td-pct">0.0%</td><td class="td-pct">—</td><td class="td-pct">${sg(cashEff)}</td><td class="td-pct">—</td><td class="td-pct">—</td><td class="td-pct" style="font-weight:700">${sg(cashEff)}</td></tr>`
+            + `<tr style="border-top:2px solid var(--border)"><td class="td-name"><b>Total</b></td><td class="td-pct">100%</td><td class="td-pct">100%</td><td></td><td class="td-pct"><b>${pc(Rp, 2)}</b></td><td class="td-pct"><b>${pc(Rb, 2)}</b></td><td class="td-pct"><b>${sg(A + cashEff)}</b></td><td class="td-pct"><b>${sg(S)}</b></td><td class="td-pct"><b>${sg(I)}</b></td><td class="td-pct"><b>${sg(active)}</b></td></tr>`;
+        // stock effects vs own sector
+        const eff = stocks.map(x => ({ ...x, rbS: rb[x.sec], e: x.r.w / 100 * (x.ret - rb[x.sec]) })).sort((a, b) => b.e - a.e);
+        const line = x => `<tr><td class="td-ticker" style="cursor:pointer" onclick="openNews('${x.r._src.ticker}')"><b>${pfShort(x.r.input)}</b></td><td class="td-name">${x.sec}</td><td class="td-pct">${x.r.w.toFixed(1)}%</td><td class="td-pct">${pc(x.ret)}</td><td class="td-pct">${pc(x.rbS)}</td><td class="td-pct" style="font-weight:700">${sg(x.e)}</td></tr>`;
+        if (live) {
+            const heldD = new Map(pfRows.map(r => [r._src, r]));
+            const act = [...acwiRet.entries()].map(([d, b]) => { const h = heldD.get(d); const wp0 = h ? h.w : 0;
+                return { d, wb: b.w, wp: wp0, r: b.r, e: (wp0 - b.w) / 100 * (b.r - Rb) }; });
+            pfRows.forEach(h => { if (!acwiRet.has(h._src)) { const r = pfPeriodRet(h._src.ticker, n); if (r != null) act.push({ d: h._src, wb: 0, wp: h.w, r, e: h.w / 100 * (r - Rb) }); } });
+            const miss = act.filter(x => x.wp === 0).sort((a, b) => a.e - b.e);
+            const hl = x => `<tr><td class="td-ticker" style="cursor:pointer" onclick="openNews('${x.d.ticker}')"><b>${pfShort(x.d.ticker)}</b></td><td class="td-name">${x.d.sector || ''}</td><td class="td-pct">${x.wb.toFixed(2)}%</td><td class="td-pct">${pc(x.r)}</td><td class="td-pct" style="font-weight:700">${sg(x.e)}</td></tr>`;
+            document.getElementById('bmMiss').innerHTML = miss.slice(0, 8).map(hl).join('');
+            document.getElementById('bmMissPlus').innerHTML = miss.slice(-8).reverse().map(hl).join('');
+            document.getElementById('bmMissWrap').style.display = '';
+        } else { const mw = document.getElementById('bmMissWrap'); if (mw) mw.style.display = 'none'; }
+        document.getElementById('bmTop').innerHTML = eff.slice(0, 8).map(line).join('');
+        document.getElementById('bmBot').innerHTML = eff.slice(-8).reverse().map(line).join('');
+        // narrative
+        const byAlloc = [...rowsS].sort((a, b) => b.alloc - a.alloc), bySel = [...rowsS].sort((a, b) => b.sel - a.sel);
+        const nm = x => `${x.k} (${x.aw > 0 ? 'overweight' : 'underweight'} ${Math.abs(x.aw).toFixed(1)} pts, sector ${pc(x.rb)} vs ACWI ${pc(Rb)}): ${sg(x.alloc)} pp`;
+        const ns = x => `${x.k} (your stocks ${pc(x.rp)} vs sector ${pc(x.rb)}): ${sg(x.sel)} pp`;
+        const L = [];
+        L.push(`<b>Result.</b> Over ${label} the portfolio returned ${pc(Rp, 2)} versus an estimated ${pc(Rb, 2)} for ACWI: ${active >= 0 ? 'outperformance' : 'underperformance'} of ${Math.abs(active).toFixed(2)} pp.`);
+        const parts = [['sector allocation', A + cashEff], ['stock selection', S], ['interaction', I]].sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+        L.push(`<b>Main driver:</b> ${parts[0][0]} (${sg(parts[0][1])} pp), then ${parts[1][0]} (${sg(parts[1][1])} pp) and ${parts[2][0]} (${sg(parts[2][1])} pp).`);
+        L.push(`<b>Allocation — helped:</b> ${byAlloc.filter(x => x.alloc > 0.005).slice(0, 3).map(nm).join('; ') || 'nothing material'}. <b>Hurt:</b> ${byAlloc.filter(x => x.alloc < -0.005).slice(-3).reverse().map(nm).join('; ') || 'nothing material'}.`);
+        L.push(`<b>Selection — helped:</b> ${bySel.filter(x => x.sel > 0.005).slice(0, 3).map(ns).join('; ') || 'nothing material'}. <b>Hurt:</b> ${bySel.filter(x => x.sel < -0.005).slice(-3).reverse().map(ns).join('; ') || 'nothing material'}.`);
+        L.push(`<b>Stocks.</b> Best vs their sector: ${eff.slice(0, 3).map(x => `${pfShort(x.r.input)} ${sg(x.e)}`).join(', ')}. Worst: ${eff.slice(-3).reverse().map(x => `${pfShort(x.r.input)} ${sg(x.e)}`).join(', ')}.`);
+        if (live) { const mm = [...acwiRet.entries()].filter(([d]) => !pfRows.some(r => r._src === d)).map(([d, b]) => ({ d, e: -b.w / 100 * (b.r - Rb), r: b.r, w: b.w })).sort((a, b) => a.e - b.e);
+            if (mm.length) L.push(`<b>Not owning index names.</b> Hurt: ${mm.slice(0, 4).map(x => `${pfShort(x.d.ticker)} (${x.w.toFixed(1)}% of ACWI, ${pc(x.r)}) ${sg(x.e)}`).join(', ')}. Helped: ${mm.slice(-3).reverse().map(x => `${pfShort(x.d.ticker)} (${pc(x.r)}) ${sg(x.e)}`).join(', ')}.`); }
+        if (cash > 0.5) L.push(`<b>Cash</b> ${cash.toFixed(1)}%: ${sg(cashEff)} pp (${Rb >= 0 ? 'a drag in a rising market' : 'a cushion in a falling market'}).`);
+        document.getElementById('bmNarr').innerHTML = '<ul style="padding:0;margin:0">' + L.map(x => `<li>${x}</li>`).join('') + '</ul>';
     }
 
     function pfCandidates(r, held) {
         const src = r._src, isUS = allData.includes(src);
         const universe = isUS ? allData : (allDataRoW || []);
         const cap = pfCap(src);
+        const capMode = document.getElementById('swCap') ? document.getElementById('swCap').value : 'third';
+        const capOk = c => c != null && (capMode === 'third' ? (cap ? c >= cap / 3 : c >= 5) : capMode === 'same' ? (cap ? c >= cap : c >= 5) : c >= +capMode);
         const pool = universe.filter(d => d !== src && !held.has(d.ticker) && d.sector && d.sector === src.sector)
             .filter(d => !isUS || d.ticker.replace(/[^A-Z]/gi, '').length <= 4)   // skip US tickers > 4 letters (OTC ADRs)
             .map(d => ({ d, s: pfScore(d), cap: pfCap(d), vol: pfVol(d.ticker, 60) }))
-            .filter(x => x.cap != null && (cap ? x.cap >= cap / 3 : x.cap >= 5))
+            .filter(x => capOk(x.cap))
             .filter(x => x.d.rs_ibd != null && (src.rs_ibd == null || x.d.rs_ibd > src.rs_ibd))
             .filter(x => src.va_rs == null || (x.d.va_rs != null && x.d.va_rs > src.va_rs))
             .sort((a, b) => ((b.d.va_rs ?? b.d.rs_ibd) - (a.d.va_rs ?? a.d.rs_ibd)) || (b.d.rs_ibd - a.d.rs_ibd))
