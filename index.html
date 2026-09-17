@@ -1516,9 +1516,10 @@
         <div class="pf-top">
             <div class="pf-input-box">
                 <div class="pf-h">HOLDINGS</div>
-                <div class="pf-hint">One line per position: <b>TICKER WEIGHT</b> (e.g. <code>NVDA 6.5</code>). Weights in %. If the total is below 100, the remainder is shown as cash.</div>
+                <div class="pf-hint">One line per position: <b>TICKER WEIGHT</b> (e.g. <code>NVDA 6.5</code>). Auto-loaded from the portfolio Google Sheet (col A ticker, col B weight %). Bloomberg tickers (AMZN US, ISP IM…) are mapped automatically. You can also edit below and press Analyse. Remainder below 100% = cash.</div>
                 <textarea id="pfInput" spellcheck="false" placeholder="NVDA 6&#10;MSFT 5&#10;ANET 4&#10;..."></textarea>
                 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;">
+                    <button class="btn" onclick="pfLoadSheet()">Load from Sheet</button>
                     <button class="btn" onclick="pfSave()">Analyse</button>
                     <button class="btn" style="background:var(--muted)" onclick="pfExportCSV()">Export CSV</button>
                     <span id="pfStatus" style="font-size:10px;color:var(--muted)"></span>
@@ -6408,14 +6409,17 @@
     let pfRows = [];
     let pfSortCol = 'w', pfSortDir = 'desc';
 
+    const PF_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vROi8XZ0SjZZ-c-Vto1RFXcUjdXyIE8ybmPnUSl9XQWs2HxMhGUY2lJ70_TpIHNRw1mjTxAbap1Xda0/pub?gid=1062773788&single=true&output=csv';
+
     function pfParse(text) {
         const out = {};
         (text || '').split(/\n/).forEach(line => {
-            const parts = line.trim().split(/[\s,;\t]+/).filter(Boolean);
-            if (!parts.length) return;
-            const t = parts[0].toUpperCase().replace(/[^A-Z0-9.\-]/g, '');
-            if (!t) return;
-            const w = parts[1] != null ? parseFloat(String(parts[1]).replace('%', '').replace(',', '.')) : NaN;
+            line = line.trim();
+            if (!line) return;
+            const m = line.match(/^(.+?)[\s;\t,]+(-?\d+(?:[.,]\d+)?)\s*%?$/);
+            const t = (m ? m[1] : line).toUpperCase().replace(/["']/g, '').replace(/\s+/g, ' ').trim();
+            if (!t || /^(STOCK|TICKER|TOTAL|CASH)( WEIGHT)?$/.test(t)) return;
+            const w = m ? parseFloat(m[2].replace(',', '.')) : NaN;
             if (!(t in out)) out[t] = null;
             if (!isNaN(w) && w > 0) out[t] = (out[t] || 0) + w;
         });
@@ -6429,6 +6433,44 @@
         const k = sum > 100 ? 100 / sum : 1;
         list.forEach(x => x.w = x.raw * k);
         return list;
+    }
+
+
+    const PF_BBG_SUFFIX = { US:'', UW:'', UN:'', IM:'.MI', BB:'.BR', LN:'.L', FP:'.PA', SW:'.SW', SE:'.SW', VX:'.SW', GR:'.DE', GY:'.DE', GF:'.F',
+        NA:'.AS', SM:'.MC', SQ:'.MC', SS:'.ST', DC:'.CO', NO:'.OL', FH:'.HE', ID:'.IR', PL:'.LS', AV:'.VI', JP:'.T', JT:'.T', HK:'.HK',
+        CN:'.TO', CT:'.TO', AU:'.AX', AT:'.AX', KS:'.KS', TT:'.TW', SP:'.SI', IN:'.NS', BZ:'.SA', MM:'.MX' };
+    function pfResolve(t, map) {
+        if (map[t]) return map[t];
+        const parts = t.split(' ');
+        const base = parts[0].replace(/\//g, '.'), ex = parts[1];
+        const tries = [base, t.replace(/ /g, '.'), t.replace(/ /g, '')];
+        if (ex && PF_BBG_SUFFIX[ex] !== undefined) tries.unshift(base + PF_BBG_SUFFIX[ex]);
+        if (ex) tries.push(base + '.' + ex, base + '-' + ex, base + ':' + ex);
+        for (const k of tries) if (map[k]) return map[k];
+        // last resort: RoW entry whose base symbol matches (only if unique)
+        const hits = Object.keys(map).filter(k => k.split(/[.\s:-]/)[0] === base && k !== base);
+        return hits.length === 1 ? map[hits[0]] : null;
+    }
+
+    async function pfLoadSheet(silent) {
+        pfStatus('Loading sheet…');
+        let csv = null;
+        try {
+            const r = await fetch(PF_SHEET_URL + '&t=' + Date.now());
+            if (r.ok) { const t = await r.text(); if (!/<html/i.test(t)) csv = t; }
+        } catch (e) {}
+        if (!csv) { try { csv = await fetchWithProxy(PF_SHEET_URL); } catch (e) {} }
+        if (!csv || /<html/i.test(csv)) { pfStatus('Sheet not reachable — check the tab is still published (CSV)'); return false; }
+        const lines = parseCSVLines(csv).slice(1)
+            .map(r => [String(r[0] || '').trim(), String(r[1] || '').trim()])
+            .filter(([t, w]) => t && w !== '' && !isNaN(parseFloat(w.replace(',', '.'))))
+            .map(([t, w]) => `${t} ${w}`);
+        if (!lines.length) { pfStatus('Sheet empty'); return false; }
+        document.getElementById('pfInput').value = lines.join('\n');
+        try { localStorage.setItem(PF_KEY, lines.join('\n')); } catch (e) {}
+        window._pfSheetAt = new Date();
+        renderPortfolio();
+        return true;
     }
 
     async function pfSave() {
@@ -6451,7 +6493,7 @@
             if (doc.exists && doc.data().text && !el.value) el.value = doc.data().text;
             else if (doc.exists && doc.data().text) el.value = doc.data().text;
         } catch (e) {}
-        if (activeTab === 'portfolio') renderPortfolio();
+        if (!(await pfLoadSheet(true)) && activeTab === 'portfolio') renderPortfolio();
     }
 
     function pfWavg(rows, key) {
@@ -6497,15 +6539,15 @@
         (allDataRoW || []).forEach(d => { if (!map[d.ticker]) map[d.ticker] = d; });
         const missing = [];
         pfRows = holdings.map(h => {
-            const d = map[h.ticker];
+            const d = pfResolve(h.ticker, map);
             if (!d) { missing.push(h.ticker); return null; }
-            const r = Object.assign({}, d, { w: h.w, _src: d });
+            const r = Object.assign({}, d, { w: h.w, _src: d, input: h.ticker });
             r.rsScore = pfRsScore(d); r.fundScore = pfFundScore(d); r.score = pfScore(d);
             return r;
         }).filter(Boolean);
         window._pfCash = Math.max(0, 100 - holdings.reduce((s, h) => s + h.w, 0));
         window._pfUnmatched = holdings.filter(h => missing.includes(h.ticker)).reduce((s, h) => s + h.w, 0);
-        pfStatus(`${pfRows.length} matched${missing.length ? ' · not found: ' + missing.join(', ') : ''}`);
+        pfStatus(`${window._pfSheetAt ? 'Sheet ' + window._pfSheetAt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}) + ' · ' : ''}${pfRows.length} matched${missing.length ? ' · not found: ' + missing.join(', ') : ''}`);
         pfRenderKpis();
         pfRenderTable();
         pfRenderWeights();
