@@ -1560,7 +1560,7 @@
         <div class="pf-h">WEIGHTS</div>
         <div class="pf-grid3">
             <div class="pf-card"><div class="pf-sub">By sector</div><div id="pfWSector"></div></div>
-            <div class="pf-card"><div class="pf-sub">By country</div><div id="pfWCountry"></div></div>
+            <div class="pf-card"><div class="pf-sub">By <select id="pfGeoMode" onchange="pfRenderWeights()"><option value="region" selected>region</option><option value="country">country</option></select></div><div id="pfWCountry"></div></div>
             <div class="pf-card"><div class="pf-sub">By group</div><div id="pfWGroup"></div></div>
             <div class="pf-card"><div class="pf-sub">By percentile
                 <select id="pfBucketMetric" onchange="pfRenderBuckets()">
@@ -6500,6 +6500,34 @@
     const PF_BBG_SUFFIX = { US:'', UW:'', UN:'', IM:'.MI', BB:'.BR', LN:'.L', FP:'.PA', SW:'.SW', SE:'.SW', VX:'.SW', GR:'.DE', GY:'.DE', GF:'.F',
         NA:'.AS', SM:'.MC', SQ:'.MC', SS:'.ST', DC:'.CO', NO:'.OL', FH:'.HE', ID:'.IR', PL:'.LS', AV:'.VI', JP:'.T', JT:'.T', HK:'.HK',
         CN:'.TO', CT:'.TO', AU:'.AX', AT:'.AX', KS:'.KS', TT:'.TW', SP:'.SI', IN:'.NS', BZ:'.SA', MM:'.MX' };
+
+    // US-listed stocks domiciled outside the US (ADRs etc.). Sheet column C, if filled, overrides this.
+    const PF_DOMICILE = {
+        TSM:'Taiwan', MUFG:'Japan', SMFG:'Japan', MFG:'Japan', SONY:'Japan', TM:'Japan', HMC:'Japan', NMR:'Japan',
+        MELI:'Uruguay', CPNG:'South Korea', NU:'Brazil', VALE:'Brazil', PBR:'Brazil', ITUB:'Brazil', BBD:'Brazil', XP:'Brazil', STNE:'Brazil', PAGS:'Brazil',
+        BABA:'China', PDD:'China', JD:'China', BIDU:'China', NTES:'China', TCOM:'China', BILI:'China', LI:'China', NIO:'China', XPEV:'China', YUMC:'China', BEKE:'China', TME:'China', ZTO:'China',
+        HDB:'India', IBN:'India', INFY:'India', WIT:'India', MMYT:'India',
+        SE:'Singapore', GRAB:'Singapore', ASML:'Netherlands', NVO:'Denmark', SAP:'Germany', SHEL:'United Kingdom', BP:'United Kingdom', AZN:'United Kingdom', GSK:'United Kingdom',
+        UL:'United Kingdom', ARM:'United Kingdom', RELX:'United Kingdom', BTI:'United Kingdom', DEO:'United Kingdom', HSBC:'United Kingdom', BCS:'United Kingdom', LYG:'United Kingdom', RIO:'United Kingdom',
+        TTE:'France', SNY:'France', NVS:'Switzerland', UBS:'Switzerland', ABBNY:'Switzerland', SPOT:'Sweden', ERIC:'Sweden', NOK:'Finland',
+        STLA:'Netherlands', ING:'Netherlands', RACE:'Italy', E:'Italy', BHP:'Australia', SHOP:'Canada', RY:'Canada', TD:'Canada', ENB:'Canada', CNQ:'Canada', CP:'Canada', CNI:'Canada', SU:'Canada', BN:'Canada', BAM:'Canada', MFC:'Canada',
+        TEVA:'Israel', CHKP:'Israel', CYBR:'Israel', WIX:'Israel', MNDY:'Israel', NICE:'Israel', GLBE:'Israel',
+        KB:'South Korea', SHG:'South Korea', PKX:'South Korea', AMX:'Mexico', FMX:'Mexico', CX:'Mexico', ACN:'Ireland', MDT:'Ireland', ETN:'Ireland', STX:'Ireland', CRH:'Ireland', FLUT:'Ireland', ALLE:'Ireland', JCI:'Ireland', TT:'Ireland',
+        LIN:'Ireland', AON:'Ireland', WTW:'Ireland', CB:'Switzerland', GRMN:'Switzerland', TEL:'Switzerland', LOGI:'Switzerland', GFS:'United States', NXPI:'Netherlands', LYB:'Netherlands', SPCX:'United States'
+    };
+    // MSCI-style regions
+    const PF_REGION = c => {
+        const x = String(c || '').toLowerCase();
+        if (['united states'].includes(x)) return 'United States';
+        if (['canada'].includes(x)) return 'Canada';
+        if (['japan'].includes(x)) return 'Japan';
+        if (['australia','hong kong','singapore','new zealand'].includes(x)) return 'Pacific ex Japan';
+        if (['united kingdom','france','germany','italy','spain','netherlands','belgium','switzerland','sweden','denmark','norway','finland','ireland','portugal','austria','israel','poland'].includes(x))
+            return x === 'poland' ? 'Emerging Markets' : 'Europe & Israel';
+        if (['china','taiwan','south korea','india','brazil','mexico','uruguay','argentina','chile','peru','colombia','indonesia','thailand','malaysia','philippines','south africa','saudi arabia','uae','turkey','greece','qatar','kuwait'].includes(x))
+            return 'Emerging Markets';
+        return x ? 'Other' : '(n/a)';
+    };
     const PF_BBG_COUNTRY = { US:'United States', UW:'United States', UN:'United States', IM:'Italy', BB:'Belgium', LN:'United Kingdom',
         FP:'France', SW:'Switzerland', SE:'Switzerland', VX:'Switzerland', GR:'Germany', GY:'Germany', NA:'Netherlands', SM:'Spain',
         SS:'Sweden', DC:'Denmark', NO:'Norway', FH:'Finland', ID:'Ireland', PL:'Portugal', AV:'Austria', JP:'Japan', JT:'Japan',
@@ -6553,7 +6581,11 @@
         } catch (e) {}
         if (!csv) { try { csv = await fetchWithProxy(PF_SHEET_URL); } catch (e) {} }
         if (!csv || /<html/i.test(csv)) { pfStatus('Sheet not reachable — check the tab is still published (CSV)'); return false; }
-        const lines = parseCSVLines(csv).slice(1)
+        const rowsCsv = parseCSVLines(csv).slice(1);
+        window._pfCountryOverride = {};
+        rowsCsv.forEach(r => { const t = String(r[0] || '').trim().toUpperCase().replace(/\s+/g, ' '), c = String(r[2] || '').trim();
+            if (t && c && isNaN(parseFloat(c))) window._pfCountryOverride[t] = c; });
+        const lines = rowsCsv
             .map(r => [String(r[0] || '').trim(), String(r[1] || '').trim()])
             .filter(([t, w]) => t && w !== '' && !isNaN(parseFloat(w.replace(',', '.'))))
             .map(([t, w]) => `${t} ${w}`);
@@ -6637,7 +6669,12 @@
             const ex = h.ticker.split(' ')[1];
             const r = Object.assign({}, d, { w: h.w, _src: d, input: h.ticker });
             if (!r.group) r.group = r.sector ? `RoW · ${r.sector}` : '(n/a)';
-            r.country = PF_BBG_COUNTRY[ex] || d.country || (allData.includes(d) ? 'United States' : '(n/a)');
+            const base0 = h.ticker.split(' ')[0];
+            r.country = (window._pfCountryOverride || {})[h.ticker]
+                || (['US','UW','UN'].includes(ex) || !ex ? PF_DOMICILE[base0] : null)
+                || (PF_BBG_COUNTRY[ex] && !['US','UW','UN'].includes(ex) ? PF_BBG_COUNTRY[ex] : null)
+                || d.country || (allData.includes(d) ? 'United States' : '(n/a)');
+            r.region = PF_REGION(r.country);
             r.rsScore = pfRsScore(d); r.fundScore = pfFundScore(d); r.score = pfScore(d);
             r.vol60 = pfVol(d.ticker, 60); r.dvol60 = pfDownVol(d.ticker, 60);
             return r;
@@ -6852,7 +6889,7 @@
     function pfRenderWeights() {
         document.getElementById('pfWSector').innerHTML = pfBars(pfGroupBy('sector'), true);
         document.getElementById('pfWGroup').innerHTML = pfBars(pfGroupBy('group'), true);
-        document.getElementById('pfWCountry').innerHTML = pfBars(pfGroupBy('country'), true);
+        document.getElementById('pfWCountry').innerHTML = pfBars(pfGroupBy(document.getElementById('pfGeoMode').value), true);
         pfRenderBuckets();
     }
     function pfRenderBuckets() {
@@ -7036,8 +7073,8 @@
 
     function pfExportCSV() {
         if (!window._pfRecos) return;
-        const h = ['ticker','name','sector','group','weight','rs_ibd','va_rs','pct_4w','pct_6m','ret_1w','ret_3m','ma20_dist','high52_dist','sales_cq','eps_cq','forward_pe','vol60','downside_vol60','score','verdict','candidates'];
-        const lines = [h.join(',')].concat(window._pfRecos.map(({ r, v, cand }) => [pfShort(r.input), `"${r.name || ''}"`, `"${r.sector || ''}"`, `"${r.group || ''}"`,
+        const h = ['ticker','name','country','region','sector','group','weight','rs_ibd','va_rs','pct_4w','pct_6m','ret_1w','ret_3m','ma20_dist','high52_dist','sales_cq','eps_cq','forward_pe','vol60','downside_vol60','score','verdict','candidates'];
+        const lines = [h.join(',')].concat(window._pfRecos.map(({ r, v, cand }) => [pfShort(r.input), `"${r.name || ''}"`, `"${r.country || ''}"`, `"${r.region || ''}"`, `"${r.sector || ''}"`, `"${r.group || ''}"`,
             r.w.toFixed(2), r.rs_ibd, r.va_rs, r.pct_4w, r.pct_6m, r.ret_5d, r.ret_3m, r.ma20_dist, r.high52_dist, r.sales_cq, r.eps_cq, r.forward_pe, r.vol60 != null ? r.vol60.toFixed(1) : null, r.dvol60 != null ? r.dvol60.toFixed(1) : null, r.score, v,
             `"${cand.c.map(x => pfShort(x.d.ticker)).join(' ')}"`].map(x => x == null ? '' : x).join(',')));
         const a = document.createElement('a');
