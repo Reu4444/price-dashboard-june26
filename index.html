@@ -732,8 +732,15 @@
     .pf-bar .p{text-align:right;font-weight:700}
     .pf-bar .r{text-align:right;font-size:10px}
     #pfTable th{cursor:pointer;white-space:nowrap}
-    .pf-alerts{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;align-items:start}
-    @media(max-width:1200px){.pf-alerts{grid-template-columns:repeat(2,1fr)}}
+    .pf-alerts{display:block;gap:10px;margin-bottom:16px;align-items:start}
+    .pf-alerts-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;align-items:start}
+    @media(max-width:1300px){.pf-alerts-grid{grid-template-columns:repeat(3,1fr)}}
+    .pf-alert.hot{color:#b91c1c;border-color:#b91c1c}
+    .pf-atable{width:100%;background:var(--bg2)}
+    .pf-atable .th-c,.pf-atable .td-c{text-align:center}
+    .pf-atable td.td-c{font-size:13px}
+    .pf-atable tr.hot td,.pf-atable tr.hot td b{color:#b91c1c}
+    .pf-hot{color:#b91c1c;font-size:12px;margin-bottom:8px}
     .pf-acol{background:var(--bg2);border:1px solid var(--border);padding:8px;display:flex;flex-direction:column;gap:4px;max-height:320px;overflow:auto}
     .pf-acol-t{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.08em;color:var(--text);display:flex;justify-content:space-between}
     .pf-acol-t span{font-family:Arial,sans-serif;font-size:11px;color:var(--muted)}
@@ -1633,6 +1640,13 @@
             <label>Non-US weight ≈ <select id="cpRow" onchange="pfRenderClaude()"><option value="0">0%</option><option value="15">15%</option><option value="25" selected>25%</option><option value="35">35%</option></select></label>
             <label>Weighting <select id="cpWt" onchange="pfRenderClaude()"><option value="iv" selected>Inverse vol</option><option value="eq">Equal</option></select></label>
             <a href="#" onclick="pfClaudeCSV();return false" style="color:var(--accent2);text-decoration:none">Export CSV</a>
+        </div>
+        <div class="pf-card" style="max-height:none;margin-bottom:12px"><div class="pf-sub">Holdings <span id="cpSum" style="font-family:Arial;font-size:11px;color:var(--muted)"></span></div>
+            <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr>
+                <th>#</th><th>TICKER</th><th>NAME</th><th>STATUS</th><th>THEME</th><th>SECTOR</th><th>REGION</th>
+                <th class="th-pct">WEIGHT</th><th class="th-pct">RS IBD</th><th class="th-pct">VA RS</th><th class="th-pct">PCT 4W</th>
+                <th class="th-pct">SALES 2027</th><th class="th-pct">EPS 2027</th><th class="th-pct">FWD P/E</th><th class="th-pct">VOL 60D</th><th class="th-pct">FROM 52WH</th><th class="th-pct">CAP</th>
+            </tr></thead><tbody id="cpHold"></tbody></table></div>
         </div>
         <div class="pf-grid2" style="grid-template-columns:1.1fr 1fr">
             <div class="pf-card" style="max-height:none"><div class="pf-sub">Analysis</div><div id="cpNarr" class="pf-narr"></div></div>
@@ -6607,9 +6621,17 @@
         if (!csv) { try { csv = await fetchWithProxy(PF_SHEET_URL); } catch (e) {} }
         if (!csv || /<html/i.test(csv)) { pfStatus('Sheet not reachable — check the tab is still published (CSV)'); return false; }
         const rowsCsv = parseCSVLines(csv).slice(1);
-        window._pfCountryOverride = {};
-        rowsCsv.forEach(r => { const t = String(r[0] || '').trim().toUpperCase().replace(/\s+/g, ' '), c = String(r[2] || '').trim();
-            if (t && c && isNaN(parseFloat(c))) window._pfCountryOverride[t] = c; });
+        window._pfCountryOverride = {}; window._pfPerf = {};
+        rowsCsv.forEach(r => {
+            const t = String(r[0] || '').trim().toUpperCase().replace(/\s+/g, ' ');
+            if (!t) return;
+            [r[2], r[3]].forEach(v => {
+                const c = String(v ?? '').trim(); if (!c) return;
+                const n = parseFloat(c.replace('%', '').replace(',', '.'));
+                if (!isNaN(n) && /^[-+\d.,\s%]+$/.test(c)) { if (window._pfPerf[t] == null) window._pfPerf[t] = n; }
+                else window._pfCountryOverride[t] = c;
+            });
+        });
         const lines = rowsCsv
             .map(r => [String(r[0] || '').trim(), String(r[1] || '').trim()])
             .filter(([t, w]) => t && w !== '' && !isNaN(parseFloat(w.replace(',', '.'))))
@@ -6700,6 +6722,7 @@
                 || (PF_BBG_COUNTRY[ex] && !['US','UW','UN'].includes(ex) ? PF_BBG_COUNTRY[ex] : null)
                 || d.country || (allData.includes(d) ? 'United States' : '(n/a)');
             r.region = PF_REGION(r.country);
+            r.perf = (window._pfPerf || {})[h.ticker] ?? null;
             r.rsScore = pfRsScore(d); r.fundScore = pfFundScore(d); r.score = pfScore(d);
             r.vol60 = pfVol(d.ticker, 60); r.dvol60 = pfDownVol(d.ticker, 60);
             return r;
@@ -6931,39 +6954,52 @@
             `<div class="pf-hint" style="margin-top:8px">${b.filter(x => x.names).map(x => `<b>${x.k}</b>: ${x.names}`).join('<br>')}</div>`;
     }
 
-    function pfRenderAlerts(missing) {
-        const C = { rs: [], ma200: [], ma50: [], ema20: [], off52: [] };
-        const add = (cat, txt, k) => C[cat].push({ txt, k: k || 0 });
-        const v = x => x == null ? '—' : x;
-        pfRows.forEach(r => {
-            const t = pfShort(r.input);
-            // 1) relative strength: weak level (RS IBD < 30) or deterioration (4W vs 6M ≤ -25)
-            const decay = r.pct_4w != null && r.pct_6m != null ? r.pct_4w - r.pct_6m : null;
-            if ((r.rs_ibd != null && r.rs_ibd < 30) || (decay != null && decay <= -25))
-                add('rs', `<b>${t}</b> RS IBD ${v(r.rs_ibd)} · 4W ${v(r.pct_4w)} · 6M ${v(r.pct_6m)}${decay != null && decay <= -25 ? ` · deteriorating ${decay}` : ''}`,
-                    Math.min(r.rs_ibd ?? 100, 100 + (decay ?? 0)));
-            // 2–4) moving-average ladder, each stock only in its most serious bucket
-            if (r.above200 === false) add('ma200', `<b>${t}</b> ${pfMaDist(r, 200)}`, pfMaDistV(r, 200));
-            else if (r.above50 === false) add('ma50', `<b>${t}</b> ${pfMaDist(r, 50)}`, pfMaDistV(r, 50));
-            else if (r.ema10_above === false && r.ma20_dist != null && r.ma20_dist < 0) add('ema20', `<b>${t}</b> ${r.ma20_dist.toFixed(1)}% vs 20 EMA`, r.ma20_dist);
-            // 5) far from 52W high
-            if (r.high52_dist != null && r.high52_dist < -25) add('off52', `<b>${t}</b> ${Math.round(r.high52_dist)}%`, r.high52_dist);
+    // group weak: median Pct 4W < 50 AND median Pct 6M < 50
+    function pfGroupStats() {
+        const m = {};
+        allData.concat(allDataRoW || []).forEach(d => { const t = pfTheme(d); if (t !== '(n/a)') (m[t] = m[t] || []).push(d); });
+        const out = {};
+        Object.entries(m).forEach(([t, a]) => {
+            const p4 = pfMedian(a.map(d => d.pct_4w)), p6 = pfMedian(a.map(d => d.pct_6m));
+            out[t] = { p4, p6, weak: p4 != null && p6 != null && p4 < 50 && p6 < 50 };
         });
-        const titles = {
-            rs: ['Relative strength', 'RS IBD < 30 or 4W − 6M ≤ −25'],
-            ma200: ['Below 200 MA', 'problem'],
-            ma50: ['Below 50 MA', 'start of a problem'],
-            ema20: ['Below 20 EMA, 10 EMA < 20 EMA', 'not a problem yet — monitor'],
-            off52: ['Off 52W high < −25%', ''],
-        };
-        const total = Object.values(C).reduce((s, a) => s + a.length, 0);
-        document.getElementById('pfAlertsWrap').style.display = total ? '' : 'none';
-        document.getElementById('pfAlerts').innerHTML = Object.entries(C).map(([k, a]) => {
-            a.sort((x, y) => x.k - y.k);
-            return `<div class="pf-acol"><div class="pf-acol-t">${titles[k][0]} <span>${a.length}</span></div>
-                ${titles[k][1] ? `<div class="pf-hint" style="margin:0 0 2px">${titles[k][1]}</div>` : ''}
-                ${a.map(x => `<div class="pf-alert">${x.txt}</div>`).join('') || '<div class="pf-hint">None</div>'}</div>`;
-        }).join('');
+        return out;
+    }
+    function pfRenderAlerts(missing) {
+        const G = pfGroupStats();
+        const ck = b => b ? '✓' : '';
+        const rows = pfRows.map(r => {
+            const decay = r.pct_4w != null && r.pct_6m != null ? r.pct_4w - r.pct_6m : null;
+            const g = G[pfTheme(r._src)] || {};
+            const f = {
+                rw: (r.rs_ibd != null && r.rs_ibd < 30) || (decay != null && decay <= -25),
+                ma50: r.above50 === false,
+                ma200: r.above200 === false,
+                off52: r.high52_dist != null && r.high52_dist < -25,
+                grp: !!g.weak,
+            };
+            const n = Object.values(f).filter(Boolean).length;
+            return { r, f, n, decay, g };
+        }).filter(x => x.n > 0).sort((a, b) => b.n - a.n || b.r.w - a.r.w);
+        document.getElementById('pfAlertsWrap').style.display = rows.length ? '' : 'none';
+        const v = x => x == null ? '—' : x;
+        document.getElementById('pfAlerts').innerHTML = `<div class="table-wrap"><table class="pf-gt pf-atable"><thead><tr>
+            <th>STOCK</th><th>GROUP</th><th class="th-pct">WEIGHT</th><th class="th-pct">PERF</th>
+            <th class="th-c">RELATIVE WEAKNESS</th><th class="th-c">&lt; 50 MA</th><th class="th-c">&lt; 200 MA</th><th class="th-c">OFF 52W HIGH &lt; −25%</th>
+            <th class="th-c">GROUP WEAK</th><th class="th-c">FLAGS</th></tr></thead><tbody>
+            ${rows.map(x => { const r = x.r, hot = x.n >= 3; return `<tr class="${hot ? 'hot' : ''}">
+                <td class="td-ticker" style="cursor:pointer" onclick="openNews('${r._src.ticker}')"><b>${pfShort(r.input)}</b></td>
+                <td class="td-name">${pfTheme(r._src)}</td>
+                <td class="td-pct">${r.w.toFixed(1)}%</td>
+                <td class="td-pct">${r.perf != null ? r.perf.toFixed(1) + '%' : '—'}</td>
+                <td class="td-c" title="RS IBD ${v(r.rs_ibd)} · 4W ${v(r.pct_4w)} · 6M ${v(r.pct_6m)}">${ck(x.f.rw)}</td>
+                <td class="td-c" title="${pfMaDist(r, 50)}">${ck(x.f.ma50)}</td>
+                <td class="td-c" title="${pfMaDist(r, 200)}">${ck(x.f.ma200)}</td>
+                <td class="td-c" title="${r.high52_dist != null ? r.high52_dist.toFixed(1) + '%' : ''}">${ck(x.f.off52)}</td>
+                <td class="td-c" title="group Pct 4W ${x.g.p4 != null ? Math.round(x.g.p4) : '—'} · Pct 6M ${x.g.p6 != null ? Math.round(x.g.p6) : '—'}">${ck(x.f.grp)}</td>
+                <td class="td-c"><b>${x.n}/5</b></td></tr>`; }).join('')}
+            </tbody></table></div>
+            <div class="pf-hint" style="margin-top:4px">Relative weakness = RS IBD &lt; 30 or Pct 4W at least 25 points below Pct 6M. Group weak = group Pct 4W &lt; 50 and Pct 6M &lt; 50 (median of the group's members). Red = 3 or more flags. Hover a tick for the underlying value.</div>`;
     }
     function pfMaDistV(r, n) {
         const p = pfPrices(r._src.ticker), m = pfSma(r._src.ticker, n);
@@ -7147,6 +7183,22 @@
             ['Above 50 MA', C.a50, M.a50, 0, '%'], ['Above 200 MA', C.a200, M.a200, 0, '%'], ['From 52W high', C.h52, M.h52, 1, '%'],
             ['Portfolio vol 60D', C.pv, M.pv, 1, '%'], ['Stock vol 60D', C.sv, M.sv, 1, '%'], ['3M (holdings)', C.r3, M.r3, 1, '%'], ['12M (holdings)', C.r12, M.r12, 1, '%']
         ];
+        const heldSet = new Set(pfRows.map(r => r._src));
+        const regionOf = r => { const cur = pfRows.find(x => x._src === r._src); if (cur) return cur.region || ''; return allData.includes(r._src) ? PF_REGION(PF_DOMICILE[r.ticker] || 'United States') : PF_REGION(r.country); };
+        const hold = [..._cp.rows].sort((a, b) => b.w - a.w);
+        const secW = {}; hold.forEach(r => secW[r.sector || '?'] = (secW[r.sector || '?'] || 0) + r.w);
+        document.getElementById('cpSum').textContent = `${hold.length} positions · invested ${hold.reduce((s, r) => s + r.w, 0).toFixed(1)}% · ` +
+            Object.entries(secW).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v.toFixed(0)}%`).join(' · ');
+        const g0 = v => v == null || isNaN(v) ? '—' : (v > 0 ? '+' : '') + Math.round(v) + '%';
+        document.getElementById('cpHold').innerHTML = hold.map((r, i) => `<tr>
+            <td class="td-pct">${i + 1}</td>
+            <td class="td-ticker" style="cursor:pointer;color:var(--accent2)" onclick="openNews('${r.ticker}')">${pfShort(r.input)}</td>
+            <td class="td-name">${(r.name || '').slice(0, 30)}</td><td class="td-name">${heldSet.has(r._src) ? 'Held' : 'New'}</td>
+            <td class="td-name">${r.theme}</td><td class="td-name">${r.sector || ''}</td><td class="td-name">${regionOf(r)}</td>
+            <td class="td-pct" style="font-weight:700">${r.w.toFixed(1)}%</td><td class="td-pct">${r.rs_ibd ?? '—'}</td><td class="td-pct">${r.va_rs ?? '—'}</td><td class="td-pct">${r.pct_4w ?? '—'}</td>
+            <td class="td-pct">${g0(r.ny_yoy_s)}</td><td class="td-pct">${g0(r.ny_yoy)}</td><td class="td-pct">${r.forward_pe > 0 ? r.forward_pe.toFixed(1) : '—'}</td>
+            <td class="td-pct">${r.vol60 != null ? Math.round(r.vol60) + '%' : '—'}</td><td class="td-pct">${r.high52_dist != null ? r.high52_dist.toFixed(1) + '%' : '—'}</td>
+            <td class="td-pct">${pfCap(r._src) != null ? Math.round(pfCap(r._src)) : '—'}</td></tr>`).join('');
         document.getElementById('cpCmp').innerHTML = rows.map(([l, a, b, d, u]) =>
             `<tr><td class="td-name">${l}</td><td class="td-pct">${f(a, d, u)}</td><td class="td-pct" style="font-weight:700">${f(b, d, u)}</td><td class="td-pct">${a == null || b == null ? '—' : sg(b - a, d)}</td></tr>`).join('');
         // themes
