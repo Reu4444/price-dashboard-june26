@@ -703,6 +703,12 @@
     .pf-grid3{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
     @media(max-width:1300px){.pf-grid3{grid-template-columns:repeat(2,1fr)}}@media(max-width:800px){.pf-grid3{grid-template-columns:1fr}}
     .pf-card{background:var(--bg2);border:1px solid var(--border);padding:12px;max-height:420px;overflow:auto}
+    .pf-charts .pf-card{max-height:none}
+    .pf-grid2{display:grid;grid-template-columns:1fr 1.25fr;gap:12px}
+    @media(max-width:1200px){.pf-grid2{grid-template-columns:1fr}}
+    .pf-gt td,.pf-gt th{font-size:11px;padding:4px 6px;white-space:nowrap}
+    .pf-gt td.lead{white-space:normal;min-width:140px}
+    .pf-cv{position:relative;height:260px}
     .pf-bar{display:grid;grid-template-columns:minmax(90px,38%) 1fr 46px 34px;gap:6px;align-items:center;font-size:11px;margin-bottom:4px}
     .pf-bar .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .pf-bar .t{background:var(--bg3);height:10px;position:relative}
@@ -715,13 +721,13 @@
     .pf-acol-t{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.08em;color:var(--text);display:flex;justify-content:space-between}
     .pf-acol-t span{font-family:Arial,sans-serif;font-size:11px;color:var(--muted)}
     .pf-alert{font-size:11px;padding:4px 8px;border:1px solid var(--faint);background:var(--bg2)}
-    .pf-alert.hi{border-color:#b91c1c;color:#b91c1c}
-    .pf-alert.md{border-color:#b45309;color:#b45309}
+    .pf-alert.hi{border-left:3px solid var(--text);color:var(--text)}
+    .pf-alert.md{color:var(--text)}
     .pf-reco{background:var(--bg2);border:1px solid var(--border);border-left-width:4px;padding:10px 12px;margin-bottom:8px}
-    .pf-reco.HOLD{border-left-color:#15803d}.pf-reco.WATCH{border-left-color:#b45309}.pf-reco.SWITCH{border-left-color:#b91c1c}
+    .pf-reco.HOLD,.pf-reco.WATCH,.pf-reco.SWITCH{border-left-color:var(--border)}
     .pf-reco .hd{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
-    .pf-verdict{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.1em;padding:1px 8px;color:#fff}
-    .pf-verdict.HOLD{background:#15803d}.pf-verdict.WATCH{background:#b45309}.pf-verdict.SWITCH{background:#b91c1c}
+    .pf-verdict{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.1em;padding:1px 8px;color:var(--text);border:1px solid var(--text);background:transparent}
+    
     .pf-why{font-size:12px;color:var(--muted);margin:6px 0;line-height:1.5}
     .pf-cands{display:flex;flex-wrap:wrap;gap:6px}
     .pf-cand{font-size:11px;border:1px solid var(--faint);padding:4px 8px;background:var(--bg)}
@@ -1561,15 +1567,38 @@
         </tr></thead><tbody id="pfBody"></tbody></table></div>
 
         <div class="pf-h" style="margin-top:22px;">WEIGHTS</div>
-        <div class="pf-grid3">
+        <div class="pf-grid3 pf-charts">
+            <div class="pf-card"><div class="pf-sub">Sector</div><div class="pf-cv"><canvas id="pfChSector"></canvas></div></div>
+            <div class="pf-card"><div class="pf-sub">Country</div><div class="pf-cv"><canvas id="pfChCountry"></canvas></div></div>
+            <div class="pf-card"><div class="pf-sub">Group (top 10)</div><div class="pf-cv"><canvas id="pfChGroup"></canvas></div></div>
+            <div class="pf-card"><div class="pf-sub">Percentile buckets</div><div class="pf-cv"><canvas id="pfChBucket"></canvas></div></div>
+        </div>
+        <div class="pf-grid3" style="margin-top:12px">
             <div class="pf-card"><div class="pf-sub">By sector</div><div id="pfWSector"></div></div>
             <div class="pf-card"><div class="pf-sub">By country</div><div id="pfWCountry"></div></div>
             <div class="pf-card"><div class="pf-sub">By group</div><div id="pfWGroup"></div></div>
             <div class="pf-card"><div class="pf-sub">By percentile
-                <select id="pfBucketMetric" onchange="pfRenderBuckets()">
+                <select id="pfBucketMetric" onchange="pfRenderBuckets();pfRenderCharts()">
                     <option value="rs_ibd">RS IBD</option><option value="va_rs">VA RS</option>
                     <option value="pct_4w">Pct 4W</option><option value="pct_6m">Pct 6M</option>
                 </select></div><div id="pfWBucket"></div></div>
+        </div>
+
+        <div class="pf-h" style="margin-top:22px;">GAPS — WHAT THE PORTFOLIO DOESN'T OWN</div>
+        <div class="pf-grid2">
+            <div class="pf-card" style="max-height:560px">
+                <div class="pf-sub">Strong groups not held
+                    <select id="pfGapMinN" onchange="pfRenderGaps()"><option value="3">≥ 3 stocks</option><option value="5" selected>≥ 5 stocks</option><option value="10">≥ 10 stocks</option></select></div>
+                <div class="pf-hint">US groups ranked by median RS IBD of their members. Leaders = top 3 by score.</div>
+                <div class="table-wrap"><table class="pf-gt"><thead><tr><th>GROUP</th><th>SECTOR</th><th class="th-pct">N</th><th class="th-pct">MED RS</th><th class="th-pct">MED 4W</th><th class="th-pct">SALES CQ</th><th>LEADERS</th></tr></thead><tbody id="pfGapGroups"></tbody></table></div>
+            </div>
+            <div class="pf-card" style="max-height:560px">
+                <div class="pf-sub">Large-cap leaders not held
+                    <span><select id="pfGapCap" onchange="pfRenderGaps()"><option value="20">Cap ≥ 20B</option><option value="50" selected>Cap ≥ 50B</option><option value="100">Cap ≥ 100B</option><option value="200">Cap ≥ 200B</option></select>
+                    <select id="pfGapUni" onchange="pfRenderGaps()"><option value="all">US + RoW</option><option value="us">US</option><option value="row">RoW</option></select></span></div>
+                <div class="pf-hint">RS IBD ≥ 70, sorted by composite score. ● = group/sector already held. RoW cap in EUR.</div>
+                <div class="table-wrap"><table class="pf-gt"><thead><tr><th>TICKER</th><th>NAME</th><th>GROUP</th><th class="th-pct">CAP</th><th class="th-pct">RS</th><th class="th-pct">VA</th><th class="th-pct">4W</th><th class="th-pct">SALES</th><th class="th-pct">EPS</th><th class="th-pct">SCORE</th></tr></thead><tbody id="pfGapStocks"></tbody></table></div>
+            </div>
         </div>
 
         <div class="pf-h" style="margin-top:22px;">SWITCH RECOMMENDATIONS</div>
@@ -6415,6 +6444,11 @@
 
     
     // ── PORTFOLIO ────────────────────────────────────────────────
+    // neutral (no colour) formatters for the Portfolio tab
+    const pfN = v => v == null ? '<span style="color:var(--muted)">—</span>' : null;
+    const pfPctN = v => pfN(v) || `<span style="font-weight:700">${v}</span>`;
+    const pfGrowN = v => pfN(v) || `${v > 0 ? '+' : ''}${Math.round(v)}%`;
+    const pfRetN = v => pfN(v) || `${v > 0 ? '+' : ''}${(Math.round(v * 10) / 10).toFixed(1)}%`;
     const PF_KEY = 'portfolioHoldings';
     let pfRows = [];
     let pfSortCol = 'w', pfSortDir = 'desc';
@@ -6584,6 +6618,7 @@
             if (!d) { missing.push(h.ticker); return null; }
             const ex = h.ticker.split(' ')[1];
             const r = Object.assign({}, d, { w: h.w, _src: d, input: h.ticker });
+            if (!r.group) r.group = r.sector ? `RoW · ${r.sector}` : '(n/a)';
             r.country = PF_BBG_COUNTRY[ex] || d.country || (allData.includes(d) ? 'United States' : '(n/a)');
             r.rsScore = pfRsScore(d); r.fundScore = pfFundScore(d); r.score = pfScore(d);
             return r;
@@ -6596,6 +6631,7 @@
         pfRenderTable();
         pfRenderWeights();
         pfRenderAlerts(missing);
+        pfRenderGaps();
         pfRenderRecos();
     }
 
@@ -6604,8 +6640,8 @@
     }
     const pfFmt = (v, d = 0, suf = '') => v == null ? '—' : (Math.round(v * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d) + suf;
     const pfSigned = (v, d = 1) => v == null ? '—' : (v > 0 ? '+' : '') + v.toFixed(d) + '%';
-    const pfCol = v => v == null ? 'var(--muted)' : v >= 70 ? '#15803d' : v >= 30 ? 'var(--text)' : '#b91c1c';
-    const pfRetCol = v => v == null ? 'var(--muted)' : v > 0 ? '#15803d' : v < 0 ? '#b91c1c' : 'var(--text)';
+    const pfCol = v => v == null ? 'var(--muted)' : 'var(--text)';
+    const pfRetCol = v => v == null ? 'var(--muted)' : 'var(--text)';
 
     function pfSma(tk, n) {
         const p = (rawPrices && rawPrices[tk]) || (rawPricesRoW && rawPricesRoW[tk]);
@@ -6643,8 +6679,8 @@
         const peW = pe.reduce((s, r) => s + r.w, 0);
         const hPE = peW ? peW / pe.reduce((s, r) => s + r.w / r.forward_pe, 0) : null;
         const g = k => pfWmedian(R, k);
-        const shareCol = v => v == null ? 'var(--muted)' : v >= 60 ? '#15803d' : v < 40 ? '#b91c1c' : 'var(--text)';
-        const growCol = v => v == null ? 'var(--muted)' : v >= 20 ? '#15803d' : v < 0 ? '#b91c1c' : 'var(--text)';
+        const shareCol = () => 'var(--text)';
+        const growCol = () => 'var(--text)';
         const sc = pfWavg(R, 'score');
         const sec = (title, cards) => `<div class="pf-sec"><div class="pf-sec-t">${title}</div><div class="pf-sec-c">${cards.join('')}</div></div>`;
         el.innerHTML = [
@@ -6662,8 +6698,8 @@
                 pfKpi(pfFmt(pfWavg(R, 'pct_12m')), 'Pct 12M', pfCol(pfWavg(R, 'pct_12m'))),
                 pfKpi(pfFmt(pfWavg(R, 'rs_ibd')), 'RS IBD', pfCol(pfWavg(R, 'rs_ibd'))),
                 pfKpi(pfFmt(pfWavg(R, 'va_rs')), 'VA RS', pfCol(pfWavg(R, 'va_rs'))),
-                pfKpi(pfFmt(wIn(r => r.rs_ibd >= 80), 0, '%'), 'Weight RS IBD ≥ 80', '#15803d'),
-                pfKpi(pfFmt(wIn(r => r.rs_ibd != null && r.rs_ibd < 30), 0, '%'), 'Weight RS IBD < 30', '#b91c1c'),
+                pfKpi(pfFmt(wIn(r => r.rs_ibd >= 80), 0, '%'), 'Weight RS IBD ≥ 80'),
+                pfKpi(pfFmt(wIn(r => r.rs_ibd != null && r.rs_ibd < 30), 0, '%'), 'Weight RS IBD < 30'),
             ]),
             sec('3 · Fundamentals <span>(weighted median)</span>', [
                 pfKpi(pfSigned(g('sales_cq'), 0), 'Sales growth CQ', growCol(g('sales_cq'))),
@@ -6708,14 +6744,14 @@
             <td class="td-ticker" style="color:var(--accent2);cursor:pointer" onclick="openNews('${d.ticker}','${(d.name || '').replace(/'/g, "\\'")}')">${d.input || d.ticker}</td>
             <td class="td-name">${d.name || ''}</td><td class="td-name">${d.country || ''}</td><td class="td-name">${d.sector || ''}</td><td class="td-name">${d.group || ''}</td>
             <td class="td-pct" style="font-weight:700">${d.w.toFixed(1)}</td>
-            <td class="td-pct" style="${bL}">${pctCell(d.rs_ibd)}</td><td class="td-pct">${pctCell(d.va_rs)}</td>
-            <td class="td-pct">${pctCell(d.pct_4w)}</td><td class="td-pct">${pctCell(d.pct_6m)}</td>
-            <td class="td-pct" style="${bL};color:${pfRetCol(d.ret_5d)}">${fr(d.ret_5d)}</td>
-            <td class="td-pct" style="color:${pfRetCol(d.ret_3m)}">${fr(d.ret_3m)}</td>
-            <td class="td-pct">${distCell(d.ma20_dist)}</td><td class="td-pct">${distCell52w(d.high52_dist)}</td>
-            <td class="td-pct" style="${bL}">${salesCell(d.sales_cq)}</td><td class="td-pct">${epsCell(d.eps_cq)}</td>
+            <td class="td-pct" style="${bL}">${pfPctN(d.rs_ibd)}</td><td class="td-pct">${pfPctN(d.va_rs)}</td>
+            <td class="td-pct">${pfPctN(d.pct_4w)}</td><td class="td-pct">${pfPctN(d.pct_6m)}</td>
+            <td class="td-pct" style="${bL};color:${pfRetCol(d.ret_5d)}">${pfRetN(d.ret_5d)}</td>
+            <td class="td-pct" style="color:${pfRetCol(d.ret_3m)}">${pfRetN(d.ret_3m)}</td>
+            <td class="td-pct">${pfGrowN(d.ma20_dist)}</td><td class="td-pct">${pfGrowN(d.high52_dist)}</td>
+            <td class="td-pct" style="${bL}">${pfGrowN(d.sales_cq)}</td><td class="td-pct">${pfGrowN(d.eps_cq)}</td>
             <td class="td-pct">${d.forward_pe != null ? d.forward_pe.toFixed(1) : '—'}</td>
-            <td class="td-pct" style="${bL}">${pctCell(d.score)}</td></tr>`).join('');
+            <td class="td-pct" style="${bL}">${pfPctN(d.score)}</td></tr>`).join('');
     }
 
     function pfBars(entries, withRs) {
@@ -6735,10 +6771,57 @@
         return Object.values(m).map(e => ({ ...e, rs: pfWavg(e.rows, 'rs_ibd'), names: e.rows.map(r => r.ticker).join(', ') }))
             .sort((a, b) => b.w - a.w);
     }
+    const PF_PALETTE = ['#0f172a','#1e3a5f','#0369a1','#3b82a6','#64748b','#7aa5c2','#94a3b8','#334155','#a8bccb','#475569','#cbd5e1','#5b7a93'];
+    const _pfCharts = {};
+    function pfChart(id, cfg) {
+        if (typeof Chart === 'undefined') return;
+        const el = document.getElementById(id); if (!el) return;
+        if (_pfCharts[id]) _pfCharts[id].destroy();
+        _pfCharts[id] = new Chart(el, cfg);
+    }
+    function pfDonut(id, entries, maxSlices) {
+        let e = entries.filter(x => x.w > 0);
+        if (maxSlices && e.length > maxSlices) {
+            const rest = e.slice(maxSlices - 1);
+            e = e.slice(0, maxSlices - 1).concat([{ k: `Other (${rest.length})`, w: rest.reduce((s, x) => s + x.w, 0) }]);
+        }
+        const cash = window._pfCash || 0;
+        if (cash > 0.05) e = e.concat([{ k: 'Cash', w: cash, cash: true }]);
+        pfChart(id, {
+            type: 'doughnut',
+            data: { labels: e.map(x => x.k), datasets: [{ data: e.map(x => +x.w.toFixed(2)),
+                backgroundColor: e.map((x, i) => x.cash ? '#e2e8f0' : x.k.startsWith('Other') ? '#cbd5e1' : PF_PALETTE[i % PF_PALETTE.length]),
+                borderColor: '#fff', borderWidth: 1 }] },
+            options: { maintainAspectRatio: false, cutout: '58%',
+                plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 },
+                    generateLabels: ch => ch.data.labels.map((l, i) => ({ text: `${l}  ${ch.data.datasets[0].data[i].toFixed(1)}%`,
+                        fillStyle: ch.data.datasets[0].backgroundColor[i], strokeStyle: '#fff', index: i })) } },
+                    tooltip: { callbacks: { label: c => ` ${c.label}: ${c.parsed.toFixed(1)}%` } } } }
+        });
+    }
+    function pfRenderCharts() {
+        pfDonut('pfChSector', pfGroupBy('sector'), 10);
+        pfDonut('pfChCountry', pfGroupBy('country'), 8);
+        pfDonut('pfChGroup', pfGroupBy('group'), 11);
+        const key = document.getElementById('pfBucketMetric').value;
+        const b = [['0–19', 0, 20], ['20–39', 20, 40], ['40–59', 40, 60], ['60–79', 60, 80], ['80–100', 80, 101]]
+            .map(([k, lo, hi]) => ({ k, w: pfRows.filter(r => r[key] != null && r[key] >= lo && r[key] < hi).reduce((s, r) => s + r.w, 0) }));
+        const label = document.getElementById('pfBucketMetric').selectedOptions[0].text;
+        pfChart('pfChBucket', {
+            type: 'bar',
+            data: { labels: b.map(x => x.k), datasets: [{ data: b.map(x => +x.w.toFixed(2)),
+                backgroundColor: '#64748b' }] },
+            options: { maintainAspectRatio: false,
+                plugins: { legend: { display: false }, title: { display: true, text: label + ' percentile — % of weight', font: { size: 11 } },
+                    tooltip: { callbacks: { label: c => ` ${c.parsed.y.toFixed(1)}%` } } },
+                scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%', font: { size: 10 } } }, x: { ticks: { font: { size: 10 } } } } }
+        });
+    }
     function pfRenderWeights() {
         document.getElementById('pfWSector').innerHTML = pfBars(pfGroupBy('sector'), true);
         document.getElementById('pfWGroup').innerHTML = pfBars(pfGroupBy('group'), true);
         document.getElementById('pfWCountry').innerHTML = pfBars(pfGroupBy('country'), true);
+        pfRenderCharts();
         pfRenderBuckets();
     }
     function pfRenderBuckets() {
@@ -6777,6 +6860,53 @@
             return `<div class="pf-acol"><div class="pf-acol-t">${titles[k]} <span>${a.length}</span></div>
                 ${a.map(x => `<div class="pf-alert ${x.sev}">${x.txt}</div>`).join('')}</div>`;
         }).join('');
+    }
+
+
+    function pfMedian(arr) {
+        const v = arr.filter(x => x != null && !isNaN(x)).sort((a, b) => a - b);
+        if (!v.length) return null;
+        const m = Math.floor(v.length / 2);
+        return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2;
+    }
+    function pfRenderGaps() {
+        if (!pfRows.length) return;
+        const heldT = new Set(pfRows.map(r => r._src.ticker));
+        const heldG = new Set(pfRows.map(r => r.group).filter(Boolean));
+        const heldS = new Set(pfRows.map(r => r.sector).filter(Boolean));
+        // Groups not held
+        const minN = +document.getElementById('pfGapMinN').value;
+        const gm = {};
+        allData.forEach(d => { if (d.group) (gm[d.group] = gm[d.group] || []).push(d); });
+        const groups = Object.entries(gm).filter(([g, a]) => a.length >= minN && !heldG.has(g)).map(([g, a]) => ({
+            g, sector: a[0].sector, n: a.length, rs: pfMedian(a.map(d => d.rs_ibd)), p4: pfMedian(a.map(d => d.pct_4w)),
+            sales: pfMedian(a.map(d => d.sales_cq)),
+            leaders: a.map(d => ({ d, s: pfScore(d) })).filter(x => x.s != null).sort((x, y) => y.s - x.s).slice(0, 3)
+        })).filter(x => x.rs != null).sort((a, b) => b.rs - a.rs).slice(0, 20);
+        document.getElementById('pfGapGroups').innerHTML = groups.map(x => `<tr>
+            <td class="td-name" style="font-weight:700">${x.g}</td><td class="td-name">${x.sector || ''}</td>
+            <td class="td-pct">${x.n}</td><td class="td-pct">${pfPctN(Math.round(x.rs))}</td><td class="td-pct">${pfPctN(x.p4 != null ? Math.round(x.p4) : null)}</td>
+            <td class="td-pct">${pfGrowN(x.sales)}</td>
+            <td class="lead">${x.leaders.map(l => `<b style="color:var(--accent2);cursor:pointer" onclick="openNews('${l.d.ticker}')">${l.d.ticker}</b> <span style="color:var(--muted)">${l.s}</span>`).join(' · ')}</td></tr>`).join('')
+            || '<tr><td colspan="7" class="pf-hint">No strong group missing.</td></tr>';
+        // Large caps not held
+        const cap = +document.getElementById('pfGapCap').value;
+        const uni = document.getElementById('pfGapUni').value;
+        const pool = [];
+        if (uni !== 'row') allData.forEach(d => pool.push({ d, cap: parseFloat(d.mktcap), row: false }));
+        if (uni !== 'us') (allDataRoW || []).forEach(d => pool.push({ d, cap: parseFloat(d.mktcap_eur || d.mktcap), row: true }));
+        const stocks = pool.filter(x => !heldT.has(x.d.ticker) && x.cap >= cap && x.d.rs_ibd != null && x.d.rs_ibd >= 70)
+            .map(x => ({ ...x, s: pfScore(x.d), grp: x.d.group || (x.d.sector ? `RoW · ${x.d.sector}` : '') }))
+            .filter(x => x.s != null).sort((a, b) => b.s - a.s).slice(0, 30);
+        document.getElementById('pfGapStocks').innerHTML = stocks.map(x => {
+            const d = x.d, inTheme = heldG.has(x.grp) || (!d.group && heldS.has(d.sector));
+            return `<tr><td class="td-ticker" style="color:var(--accent2);cursor:pointer" onclick="openNews('${d.ticker}','${(d.name || '').replace(/'/g, "\\'")}')">${d.ticker}</td>
+            <td class="td-name">${d.name || ''}</td>
+            <td class="td-name">${inTheme ? '<span title="group already held">●</span> ' : ''}${x.grp}</td>
+            <td class="td-pct">${Math.round(x.cap)}</td>
+            <td class="td-pct">${pfPctN(d.rs_ibd)}</td><td class="td-pct">${pfPctN(d.va_rs)}</td><td class="td-pct">${pfPctN(d.pct_4w)}</td>
+            <td class="td-pct">${pfGrowN(d.sales_cq)}</td><td class="td-pct">${pfGrowN(d.eps_cq)}</td><td class="td-pct">${pfPctN(x.s)}</td></tr>`;
+        }).join('') || '<tr><td colspan="10" class="pf-hint">None.</td></tr>';
     }
 
     function pfCandidates(r, held) {
@@ -6828,7 +6958,7 @@
             <div class="hd"><span class="pf-verdict ${v}">${v}</span>
                 <b style="color:var(--accent2)">${r.ticker}</b><span style="font-size:12px">${r.name || ''}</span>
                 <span style="font-size:11px;color:var(--muted)">${r.group || r.sector || ''} · ${r.w.toFixed(1)}%</span>
-                <span style="margin-left:auto;font-size:11px">Score ${pctCell(r.score)}</span></div>
+                <span style="margin-left:auto;font-size:11px">Score ${pfPctN(r.score)}</span></div>
             <div class="pf-why">${pfWhy(r, v)}</div>
             ${v !== 'HOLD' ? (cand.c.length
                 ? `<div class="pf-cands"><span style="font-size:11px;color:var(--muted)">Switch into (${cand.scope}):</span>${cand.c.map(x =>
