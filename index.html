@@ -683,26 +683,33 @@
         display: none;
     }
         /* ── PORTFOLIO ── */
-    .pf-top{display:grid;grid-template-columns:minmax(240px,300px) 1fr;gap:18px;margin-bottom:18px}
+    .pf-top{display:block;max-width:520px;margin-bottom:12px}
     @media(max-width:900px){.pf-top{grid-template-columns:1fr}}
     .pf-input-box{background:var(--bg2);border:1px solid var(--border);padding:12px}
-    #pfInput{width:100%;height:170px;font-family:'IBM Plex Mono',monospace;font-size:12px;border:1px solid var(--faint);padding:8px;resize:vertical;background:var(--bg)}
+    #pfInput{width:100%;height:110px;font-family:'IBM Plex Mono',monospace;font-size:12px;border:1px solid var(--faint);padding:8px;resize:vertical;background:var(--bg)}
     .pf-h{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.12em;color:var(--accent2);margin:6px 0 8px}
     .pf-sub{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.1em;color:var(--text);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
     .pf-sub select{font-size:11px}
     .pf-hint{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:6px}
-    .pf-kpis{display:flex;flex-direction:column;gap:6px}
+    .pf-kpis{overflow-x:auto;margin-bottom:18px}
+    .pf-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    @media(max-width:1100px){.pf-actions{grid-template-columns:1fr}}
+    .pf-act{background:var(--bg2);border:1px solid var(--border);padding:8px 10px;font-size:12px;line-height:1.55}
+    .pf-act-t{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.08em;display:flex;justify-content:space-between;margin-bottom:4px}
+    .pf-act-t span{font-family:Arial,sans-serif;font-size:11px;color:var(--muted)}
+    .pf-strip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(72px,1fr);gap:4px}
+    .pf-strip .pf-kpi{padding:5px 6px;white-space:nowrap}
     .pf-sec{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:start}
     @media(max-width:900px){.pf-sec{grid-template-columns:1fr}}
     .pf-sec-t{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.08em;color:var(--accent2);padding-top:6px;border-top:2px solid var(--accent2)}
     .pf-sec-t span{font-family:Arial,sans-serif;font-size:10px;letter-spacing:0;color:var(--muted);display:block}
-    .pf-sec-c{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:5px}
+    .pf-sec-c{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:5px}
     .pf-kpi{background:var(--bg2);border:1px solid var(--faint);padding:5px 8px}
     .pf-kpi .v{font-size:14px;font-weight:700}
     .pf-kpi .l{font-size:9.5px;color:var(--muted);margin-top:1px}
     .pf-grid3{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
     @media(max-width:1300px){.pf-grid3{grid-template-columns:repeat(2,1fr)}}@media(max-width:800px){.pf-grid3{grid-template-columns:1fr}}
-    .pf-card{background:var(--bg2);border:1px solid var(--border);padding:12px;max-height:420px;overflow:auto}
+    .pf-card{background:var(--bg2);border:1px solid var(--border);padding:10px;max-height:300px;overflow:auto}
     .pf-charts .pf-card{max-height:none}
     .pf-grid2{display:grid;grid-template-columns:1fr 1.25fr;gap:12px}
     @media(max-width:1200px){.pf-grid2{grid-template-columns:1fr}}
@@ -1542,14 +1549,13 @@
                     <span id="pfStatus" style="font-size:10px;color:var(--muted)"></span>
                 </div>
             </div>
-            <div class="pf-kpis" id="pfKpis"></div>
         </div>
+        <div class="pf-kpis" id="pfKpis"></div>
 
-        <div id="pfAlertsWrap" style="display:none">
-            <div class="pf-h">ALERTS</div>
-            <div id="pfAlerts" class="pf-alerts"></div>
+        <div id="pfActionsWrap" style="display:none;margin-bottom:16px">
+            <div class="pf-h">CONCLUSIONS</div>
+            <div id="pfActions" class="pf-actions"></div>
         </div>
-
         <div class="pf-h">WEIGHTS</div>
         <div class="pf-grid3">
             <div class="pf-card"><div class="pf-sub">By sector</div><div id="pfWSector"></div></div>
@@ -1560,6 +1566,29 @@
                     <option value="rs_ibd">RS IBD</option><option value="va_rs">VA RS</option>
                     <option value="pct_4w">Pct 4W</option><option value="pct_6m">Pct 6M</option>
                 </select></div><div id="pfWBucket"></div></div>
+        </div>
+
+
+        <div id="pfAlertsWrap" style="display:none">
+            <div class="pf-h" style="margin-top:16px">ALERTS</div>
+            <div id="pfAlerts" class="pf-alerts"></div>
+        </div>
+
+        <div class="pf-h" style="margin-top:22px;">GAPS — WHAT THE PORTFOLIO DOESN'T OWN</div>
+        <div class="pf-grid2">
+            <div class="pf-card" style="max-height:560px">
+                <div class="pf-sub">Strong groups not held
+                    <select id="pfGapMinN" onchange="pfRenderGaps()"><option value="3">≥ 3 stocks</option><option value="5" selected>≥ 5 stocks</option><option value="10">≥ 10 stocks</option></select></div>
+                <div class="pf-hint">US groups ranked by median RS IBD of their members. Leaders = top 3 by the ranking measure.</div>
+                <div class="table-wrap"><table class="pf-gt"><thead><tr><th>GROUP</th><th>SECTOR</th><th class="th-pct">N</th><th class="th-pct">MED RS</th><th class="th-pct">MED 4W</th><th class="th-pct">SALES CQ</th><th>LEADERS</th></tr></thead><tbody id="pfGapGroups"></tbody></table></div>
+            </div>
+            <div class="pf-card" style="max-height:560px">
+                <div class="pf-sub">Large-cap leaders not held
+                    <span><select id="pfGapCap" onchange="pfRenderGaps()"><option value="20">Cap ≥ 20B</option><option value="50" selected>Cap ≥ 50B</option><option value="100">Cap ≥ 100B</option><option value="200">Cap ≥ 200B</option></select>
+                    <select id="pfGapUni" onchange="pfRenderGaps()"><option value="all">US + RoW</option><option value="us">US</option><option value="row">RoW</option></select></span></div>
+                <div class="pf-hint">RS IBD ≥ 70, sorted by the ranking measure (VA RS by default). ● = group/sector already held. RoW cap in EUR.</div>
+                <div class="table-wrap"><table class="pf-gt"><thead><tr><th>TICKER</th><th>NAME</th><th>GROUP</th><th class="th-pct">CAP</th><th class="th-pct">RS</th><th class="th-pct">VA</th><th class="th-pct">4W</th><th class="th-pct">SALES</th><th class="th-pct">EPS</th><th class="th-pct">VOL</th><th class="th-pct">SCORE</th></tr></thead><tbody id="pfGapStocks"></tbody></table></div>
+            </div>
         </div>
 
         <div class="pf-h" style="margin-top:22px;">HOLDINGS STATISTICS</div>
@@ -1582,23 +1611,6 @@
             <th class="th-pct" onclick="pfSort('dvol60')">DOWN VOL</th>
             <th class="th-pct" style="border-left:1px solid var(--border2);color:#6d28d9" onclick="pfSort('score')">SCORE</th>
         </tr></thead><tbody id="pfBody"></tbody></table></div>
-
-        <div class="pf-h" style="margin-top:22px;">GAPS — WHAT THE PORTFOLIO DOESN'T OWN</div>
-        <div class="pf-grid2">
-            <div class="pf-card" style="max-height:560px">
-                <div class="pf-sub">Strong groups not held
-                    <select id="pfGapMinN" onchange="pfRenderGaps()"><option value="3">≥ 3 stocks</option><option value="5" selected>≥ 5 stocks</option><option value="10">≥ 10 stocks</option></select></div>
-                <div class="pf-hint">US groups ranked by median RS IBD of their members. Leaders = top 3 by the ranking measure.</div>
-                <div class="table-wrap"><table class="pf-gt"><thead><tr><th>GROUP</th><th>SECTOR</th><th class="th-pct">N</th><th class="th-pct">MED RS</th><th class="th-pct">MED 4W</th><th class="th-pct">SALES CQ</th><th>LEADERS</th></tr></thead><tbody id="pfGapGroups"></tbody></table></div>
-            </div>
-            <div class="pf-card" style="max-height:560px">
-                <div class="pf-sub">Large-cap leaders not held
-                    <span><select id="pfGapCap" onchange="pfRenderGaps()"><option value="20">Cap ≥ 20B</option><option value="50" selected>Cap ≥ 50B</option><option value="100">Cap ≥ 100B</option><option value="200">Cap ≥ 200B</option></select>
-                    <select id="pfGapUni" onchange="pfRenderGaps()"><option value="all">US + RoW</option><option value="us">US</option><option value="row">RoW</option></select></span></div>
-                <div class="pf-hint">RS IBD ≥ 70, sorted by the ranking measure (VA RS by default). ● = group/sector already held. RoW cap in EUR.</div>
-                <div class="table-wrap"><table class="pf-gt"><thead><tr><th>TICKER</th><th>NAME</th><th>GROUP</th><th class="th-pct">CAP</th><th class="th-pct">RS</th><th class="th-pct">VA</th><th class="th-pct">4W</th><th class="th-pct">SALES</th><th class="th-pct">EPS</th><th class="th-pct">VOL</th><th class="th-pct">SCORE</th></tr></thead><tbody id="pfGapStocks"></tbody></table></div>
-            </div>
-        </div>
 
         <div class="pf-h" style="margin-top:22px;">SWITCH RECOMMENDATIONS</div>
         <div class="pf-hint" style="margin-bottom:8px;">Score = 70% relative strength (RS IBD 35 · VA RS 25 · Pct 6M 20 · Pct 4W 20) + 30% fundamentals (Sales CQ and EPS CQ growth percentiles). Switch candidates: same group first, then same sector, RS IBD ≥ 70 and ranking measure (VA RS or score, see selector) ≥ holding +15. Rule-based, not investment advice.</div>
@@ -6634,6 +6646,7 @@
         pfRenderAlerts(missing);
         pfRenderGaps();
         pfRenderRecos();
+        pfRenderActions();
     }
 
     function pfKpi(v, l, color) {
@@ -6711,50 +6724,29 @@
         const growCol = () => 'var(--text)';
         const sc = pfWavg(R, 'score');
         const sec = (title, cards) => `<div class="pf-sec"><div class="pf-sec-t">${title}</div><div class="pf-sec-c">${cards.join('')}</div></div>`;
-        el.innerHTML = [
-            sec('1 · Portfolio construction', [
-                pfKpi(R.length, 'Positions'),
-                pfKpi(pfFmt(inv, 1, '%'), 'Invested (matched)'),
-                pfKpi(pfFmt(top5 / inv * 100, 0, '%'), 'Top-5 weight'),
-            ]),
-            sec('2 · Relative strength', [
-                pfKpi(pfFmt(pfWavg(R, 'pct_4w')), 'Pct 4W', pfCol(pfWavg(R, 'pct_4w'))),
-                pfKpi(pfFmt(pfWavg(R, 'pct_6m')), 'Pct 6M', pfCol(pfWavg(R, 'pct_6m'))),
-                pfKpi(pfFmt(pfWavg(R, 'pct_12m')), 'Pct 12M', pfCol(pfWavg(R, 'pct_12m'))),
-                pfKpi(pfFmt(pfWavg(R, 'rs_ibd')), 'RS IBD', pfCol(pfWavg(R, 'rs_ibd'))),
-                pfKpi(pfFmt(pfWavg(R, 'va_rs')), 'VA RS', pfCol(pfWavg(R, 'va_rs'))),
-                pfKpi(pfFmt(wIn(r => r.rs_ibd >= 80), 0, '%'), 'Weight RS IBD ≥ 80'),
-                pfKpi(pfFmt(wIn(r => r.rs_ibd != null && r.rs_ibd < 30), 0, '%'), 'Weight RS IBD < 30'),
-            ]),
-            sec('3 · Fundamentals <span>(median)</span>', [
-                pfKpi(pfSigned(g('sales_cq'), 0), 'Sales growth CQ', growCol(g('sales_cq'))),
-                pfKpi(pfSigned(g('sales_nq'), 0), 'Sales growth NQ', growCol(g('sales_nq'))),
-                pfKpi(pfSigned(g('ny_yoy_s'), 0), 'Sales growth 2027', growCol(g('ny_yoy_s'))),
-                pfKpi(pfSigned(g('eps_cq'), 0), 'EPS growth CQ', growCol(g('eps_cq'))),
-                pfKpi(pfSigned(g('eps_nq'), 0), 'EPS growth NQ', growCol(g('eps_nq'))),
-                pfKpi(pfSigned(g('ny_yoy'), 0), 'EPS growth 2027', growCol(g('ny_yoy'))),
-                pfKpi(pfFmt(hPE, 1, 'x'), 'Fwd P/E'),
-            ]),
-            sec('4 · Technicals <span>(% of weight)</span>', [
-                pfKpi(pfFmt(wShare(r => r.above20), 0, '%'), 'Above 20 EMA', shareCol(wShare(r => r.above20))),
-                pfKpi(pfFmt(wShare(r => r.above50), 0, '%'), 'Above 50 MA', shareCol(wShare(r => r.above50))),
-                pfKpi(pfFmt(wShare(r => r.above200), 0, '%'), 'Above 200 MA', shareCol(wShare(r => r.above200))),
-                pfKpi(pfSigned(pfWavg(R, 'high52_dist')), 'Distance from 52W high'),
-            ]),
-            (() => {
-                const pv = pfPortVol(R, 60), wv = pfWavg(R, 'vol60');
-                return sec('5 · Volatility <span>(annualised)</span>', [
-                    pfKpi(pfFmt(pv, 1, '%'), 'Portfolio vol 60D'),
-                    pfKpi(pfFmt(wv, 1, '%'), 'Average stock vol 60D'),
-                ]);
-            })(),
-            sec('6 · Returns <span>(average)</span>', [
-                pfKpi(pfSigned(pfWavg(R, 'ret_5d')), '5D', pfRetCol(pfWavg(R, 'ret_5d'))),
-                pfKpi(pfSigned(pfWavg(R, 'm1')), '1M', pfRetCol(pfWavg(R, 'm1'))),
-                pfKpi(pfSigned(pfWavg(R, 'ret_3m')), '3M', pfRetCol(pfWavg(R, 'ret_3m'))),
-                pfKpi(pfSigned(pfWavg(R, 'ret_12m')), '12M', pfRetCol(pfWavg(R, 'ret_12m'))),
-            ]),
-        ].join('');
+        const top10 = [...R].sort((a, b) => b.w - a.w).slice(0, 10).reduce((s, r) => s + r.w, 0);
+        const pv = pfPortVol(R, 60), wv = pfWavg(R, 'vol60');
+        el.innerHTML = `<div class="pf-strip">${[
+            pfKpi(R.length, 'Positions'),
+            pfKpi(pfFmt(inv, 1, '%'), 'Invested'),
+            pfKpi(pfFmt(top10 / inv * 100, 0, '%'), 'Top 10 weight'),
+            pfKpi(pfFmt(pfWavg(R, 'pct_4w')), 'Pct 4W'),
+            pfKpi(pfFmt(pfWavg(R, 'pct_6m')), 'Pct 6M'),
+            pfKpi(pfFmt(pfWavg(R, 'rs_ibd')), 'RS IBD'),
+            pfKpi(pfFmt(pfWavg(R, 'va_rs')), 'VA RS'),
+            pfKpi(pfSigned(g('ny_yoy_s'), 0), 'Sales 2027'),
+            pfKpi(pfSigned(g('ny_yoy'), 0), 'EPS 2027'),
+            pfKpi(pfFmt(hPE, 1, 'x'), 'Fwd P/E'),
+            pfKpi(pfFmt(wShare(r => r.above50), 0, '%'), 'Above 50 MA'),
+            pfKpi(pfFmt(wShare(r => r.above200), 0, '%'), 'Above 200 MA'),
+            pfKpi(pfSigned(pfWavg(R, 'high52_dist')), 'From 52W high'),
+            pfKpi(pfFmt(pv, 1, '%'), 'Portfolio vol 60D'),
+            pfKpi(pfFmt(wv, 1, '%'), 'Stock vol 60D'),
+            pfKpi(pfSigned(pfWavg(R, 'ret_5d')), '5D'),
+            pfKpi(pfSigned(pfWavg(R, 'm1')), '1M'),
+            pfKpi(pfSigned(pfWavg(R, 'ret_3m')), '3M'),
+            pfKpi(pfSigned(pfWavg(R, 'ret_12m')), '12M'),
+        ].join('')}</div>`;
     }
 
     function pfSort(col) {
@@ -6954,6 +6946,22 @@
             <td class="td-pct">${pfPctN(d.rs_ibd)}</td><td class="td-pct">${pfPctN(d.va_rs)}</td><td class="td-pct">${pfPctN(d.pct_4w)}</td>
             <td class="td-pct">${pfGrowN(d.sales_cq)}</td><td class="td-pct">${pfGrowN(d.eps_cq)}</td><td class="td-pct">${x.vol != null ? Math.round(x.vol) + '%' : '—'}</td><td class="td-pct">${pfPctN(x.s)}</td></tr>`;
         }).join('') || '<tr><td colspan="11" class="pf-hint">None.</td></tr>';
+    }
+
+
+    function pfRenderActions() {
+        const L = window._pfRecos || [];
+        const wrap = document.getElementById('pfActionsWrap');
+        if (!L.length) { wrap.style.display = 'none'; return; }
+        wrap.style.display = '';
+        const by = v => L.filter(x => x.v === v);
+        const wsum = a => a.reduce((s, x) => s + x.r.w, 0).toFixed(1);
+        const line = x => `<div><b>${pfShort(x.r.input)}</b> <span style="color:var(--muted)">${x.r.w.toFixed(1)}% · VA ${x.r.va_rs ?? '—'} · RS ${x.r.rs_ibd ?? '—'}</span>${x.cand.c.length ? ` → ${x.cand.c.map(c => pfShort(c.d.ticker)).join(', ')}` : ''}</div>`;
+        const col = (v, title, a) => `<div class="pf-act"><div class="pf-act-t">${title} <span>${a.length} · ${wsum(a)}%</span></div>${a.map(line).join('') || '<span class="pf-hint">None</span>'}</div>`;
+        const sw = by('SWITCH'), wa = by('WATCH'), ho = by('HOLD');
+        document.getElementById('pfActions').innerHTML =
+            col('SWITCH', 'Switch', sw) + col('WATCH', 'Watch', wa) +
+            `<div class="pf-act"><div class="pf-act-t">Hold <span>${ho.length} · ${wsum(ho)}%</span></div>${ho.map(x => pfShort(x.r.input)).join(', ') || '<span class="pf-hint">None</span>'}</div>`;
     }
 
     function pfCandidates(r, held) {
