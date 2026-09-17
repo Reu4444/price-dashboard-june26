@@ -1560,7 +1560,7 @@
         <div class="pf-h">WEIGHTS</div>
         <div class="pf-grid3">
             <div class="pf-card"><div class="pf-sub">By sector</div><div id="pfWSector"></div></div>
-            <div class="pf-card"><div class="pf-sub">By <select id="pfGeoMode" onchange="pfRenderWeights()"><option value="region" selected>region</option><option value="country">country</option></select></div><div id="pfWCountry"></div></div>
+            <div class="pf-card"><div class="pf-sub"><span id="pfGeoTitle">By region</span><select id="pfGeoMode" onchange="document.getElementById('pfGeoTitle').textContent = 'By ' + this.value; pfRenderWeights()"><option value="region" selected>Region</option><option value="country">Country</option></select></div><div id="pfWCountry"></div></div>
             <div class="pf-card"><div class="pf-sub">By group</div><div id="pfWGroup"></div></div>
             <div class="pf-card"><div class="pf-sub">By percentile
                 <select id="pfBucketMetric" onchange="pfRenderBuckets()">
@@ -6515,17 +6515,14 @@
         KB:'South Korea', SHG:'South Korea', PKX:'South Korea', AMX:'Mexico', FMX:'Mexico', CX:'Mexico', ACN:'Ireland', MDT:'Ireland', ETN:'Ireland', STX:'Ireland', CRH:'Ireland', FLUT:'Ireland', ALLE:'Ireland', JCI:'Ireland', TT:'Ireland',
         LIN:'Ireland', AON:'Ireland', WTW:'Ireland', CB:'Switzerland', GRMN:'Switzerland', TEL:'Switzerland', LOGI:'Switzerland', GFS:'United States', NXPI:'Netherlands', LYB:'Netherlands', SPCX:'United States'
     };
-    // MSCI-style regions
+    // Regions: United States, Canada, Europe, Asia, Emerging Markets
     const PF_REGION = c => {
         const x = String(c || '').toLowerCase();
-        if (['united states'].includes(x)) return 'United States';
-        if (['canada'].includes(x)) return 'Canada';
-        if (['japan'].includes(x)) return 'Japan';
-        if (['australia','hong kong','singapore','new zealand'].includes(x)) return 'Pacific ex Japan';
-        if (['united kingdom','france','germany','italy','spain','netherlands','belgium','switzerland','sweden','denmark','norway','finland','ireland','portugal','austria','israel','poland'].includes(x))
-            return x === 'poland' ? 'Emerging Markets' : 'Europe & Israel';
-        if (['china','taiwan','south korea','india','brazil','mexico','uruguay','argentina','chile','peru','colombia','indonesia','thailand','malaysia','philippines','south africa','saudi arabia','uae','turkey','greece','qatar','kuwait'].includes(x))
-            return 'Emerging Markets';
+        if (x === 'united states') return 'United States';
+        if (x === 'canada') return 'Canada';
+        if (['united kingdom','france','germany','italy','spain','netherlands','belgium','switzerland','sweden','denmark','norway','finland','ireland','portugal','austria','poland','luxembourg'].includes(x)) return 'Europe';
+        if (['japan','taiwan','south korea','china','hong kong','india','singapore','australia','new zealand','indonesia','thailand','malaysia','philippines','vietnam'].includes(x)) return 'Asia';
+        if (['israel','brazil','mexico','uruguay','argentina','chile','peru','colombia','south africa','saudi arabia','uae','turkey','greece','qatar','kuwait','egypt'].includes(x)) return 'Emerging Markets';
         return x ? 'Other' : '(n/a)';
     };
     const PF_BBG_COUNTRY = { US:'United States', UW:'United States', UN:'United States', IM:'Italy', BB:'Belgium', LN:'United Kingdom',
