@@ -697,6 +697,13 @@
     .pf-act{background:var(--bg2);border:1px solid var(--border);padding:8px 10px;font-size:12px;line-height:1.55}
     .pf-act-t{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.08em;display:flex;justify-content:space-between;margin-bottom:4px}
     .pf-act-t span{font-family:Arial,sans-serif;font-size:11px;color:var(--muted)}
+    .pf-bar-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;font-size:11px;color:var(--muted);margin-bottom:8px}
+    .pf-ctrls{display:flex;gap:14px;align-items:center}
+    .pf-ctrls a{color:var(--accent2);text-decoration:none}
+    .pf-ctrls select{font-size:11px}
+    .pf-edit{display:none;margin-bottom:10px;max-width:420px}
+    .pf-edit.open{display:block}
+    .pf-edit textarea{width:100%;height:140px;font-family:'IBM Plex Mono',monospace;font-size:11px;border:1px solid var(--faint);padding:6px;margin-bottom:6px}
     .pf-strip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(72px,1fr);gap:4px}
     .pf-strip .pf-kpi{padding:5px 6px;white-space:nowrap}
     .pf-sec{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:start}
@@ -1535,27 +1542,21 @@
 
     <!-- TAB: PORTFOLIO -->
     <div class="tab-content" id="tab-portfolio" style="padding:20px 24px;box-sizing:border-box;">
-        <div class="pf-top">
-            <div class="pf-input-box">
-                <div class="pf-h">HOLDINGS</div>
-                <div class="pf-hint">One line per position: <b>TICKER WEIGHT</b> (e.g. <code>NVDA 6.5</code>). Auto-loaded from the portfolio Google Sheet (col A ticker, col B weight %). Bloomberg tickers (AMZN US, ISP IM…) are mapped automatically. You can also edit below and press Analyse. Remainder below 100% = cash.</div>
-                <textarea id="pfInput" spellcheck="false" placeholder="NVDA 6&#10;MSFT 5&#10;ANET 4&#10;..."></textarea>
-                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;">
-                    <label style="font-size:11px;color:var(--muted);display:flex;gap:6px;align-items:center;width:100%;margin-bottom:4px">Rank leaders by
-                        <select id="pfRankBy" onchange="renderPortfolio()"><option value="va" selected>VA RS (low-vol leaders)</option><option value="score">Composite score</option></select></label>
-                    <button class="btn" onclick="pfLoadSheet()">Load from Sheet</button>
-                    <button class="btn" onclick="pfSave()">Analyse</button>
-                    <button class="btn" style="background:var(--muted)" onclick="pfExportCSV()">Export CSV</button>
-                    <span id="pfStatus" style="font-size:10px;color:var(--muted)"></span>
-                </div>
-            </div>
+        <div class="pf-bar-top">
+            <span id="pfStatus"></span>
+            <span class="pf-ctrls">
+                <label>Rank leaders by <select id="pfRankBy" onchange="renderPortfolio()"><option value="va" selected>VA RS</option><option value="score">Composite score</option></select></label>
+                <a href="#" onclick="pfLoadSheet();return false">Reload sheet</a>
+                <a href="#" onclick="pfExportCSV();return false">Export CSV</a>
+                <a href="#" onclick="document.getElementById('pfEdit').classList.toggle('open');return false">Edit manually</a>
+            </span>
+        </div>
+        <div id="pfEdit" class="pf-edit">
+            <textarea id="pfInput" spellcheck="false" placeholder="AMZN US 5.9&#10;ISP IM 4.3"></textarea>
+            <button class="btn" onclick="pfSave()">Analyse</button>
         </div>
         <div class="pf-kpis" id="pfKpis"></div>
 
-        <div id="pfActionsWrap" style="display:none;margin-bottom:16px">
-            <div class="pf-h">CONCLUSIONS</div>
-            <div id="pfActions" class="pf-actions"></div>
-        </div>
         <div class="pf-h">WEIGHTS</div>
         <div class="pf-grid3">
             <div class="pf-card"><div class="pf-sub">By sector</div><div id="pfWSector"></div></div>
@@ -1612,8 +1613,12 @@
             <th class="th-pct" style="border-left:1px solid var(--border2);color:#6d28d9" onclick="pfSort('score')">SCORE</th>
         </tr></thead><tbody id="pfBody"></tbody></table></div>
 
+        <div id="pfActionsWrap" style="display:none;margin:22px 0 10px">
+            <div class="pf-h">CONCLUSIONS</div>
+            <div id="pfActions" class="pf-actions"></div>
+        </div>
         <div class="pf-h" style="margin-top:22px;">SWITCH RECOMMENDATIONS</div>
-        <div class="pf-hint" style="margin-bottom:8px;">Score = 70% relative strength (RS IBD 35 · VA RS 25 · Pct 6M 20 · Pct 4W 20) + 30% fundamentals (Sales CQ and EPS CQ growth percentiles). Switch candidates: same group first, then same sector, RS IBD ≥ 70 and ranking measure (VA RS or score, see selector) ≥ holding +15. Rule-based, not investment advice.</div>
+        <div class="pf-hint" style="margin-bottom:8px;">Score = 70% relative strength (RS IBD 35 · VA RS 25 · Pct 6M 20 · Pct 4W 20) + 30% fundamentals (Sales CQ and EPS CQ growth percentiles). Switch candidates: same universe (US for US, RoW for RoW), same sector, market cap ≥ 1/3 of the holding, RS IBD and VA RS both better than the holding (RS IBD only for RoW). Sorted by VA RS. Rule-based, not investment advice.</div>
         <div id="pfRecos"></div>
     </div>
 
@@ -6561,6 +6566,7 @@
     }
 
     async function pfSave() {
+        window._pfSheetAt = null;
         const text = document.getElementById('pfInput').value;
         try { localStorage.setItem(PF_KEY, text); } catch (e) {}
         try {
@@ -6639,7 +6645,7 @@
         window._pfCash = Math.max(0, 100 - holdings.reduce((s, h) => s + h.w, 0));
         window._pfUnmatched = holdings.filter(h => missing.includes(h.ticker)).reduce((s, h) => s + h.w, 0);
         const rowPending = missing.some(t => { const e = t.split(' ')[1]; return e && !['US','UW','UN'].includes(e); }) && !(allDataRoW || []).length;
-        pfStatus(`${window._pfSheetAt ? 'Sheet ' + window._pfSheetAt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}) + ' · ' : ''}${pfRows.length} matched${missing.length ? ' · not found: ' + missing.join(', ') : ''}${rowPending ? ' · RoW data still loading…' : ` · RoW universe ${(allDataRoW || []).length}`}`);
+        pfStatus(`${window._pfSheetAt ? 'Portfolio loaded from Google Sheet on ' + window._pfSheetAt.toLocaleString('en-GB', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : 'Portfolio entered manually'} · ${pfRows.length} matched${missing.length ? ' · not found: ' + missing.join(', ') : ''}${rowPending ? ' · RoW data still loading…' : ` · RoW universe ${(allDataRoW || []).length}`}`);
         pfRenderKpis();
         pfRenderTable();
         pfRenderWeights();
@@ -6726,6 +6732,7 @@
         const sec = (title, cards) => `<div class="pf-sec"><div class="pf-sec-t">${title}</div><div class="pf-sec-c">${cards.join('')}</div></div>`;
         const top10 = [...R].sort((a, b) => b.w - a.w).slice(0, 10).reduce((s, r) => s + r.w, 0);
         const pv = pfPortVol(R, 60), wv = pfWavg(R, 'vol60');
+        window._pfAvgVol = wv;
         el.innerHTML = `<div class="pf-strip">${[
             pfKpi(R.length, 'Positions'),
             pfKpi(pfFmt(inv, 1, '%'), 'Invested'),
@@ -6964,18 +6971,21 @@
             `<div class="pf-act"><div class="pf-act-t">Hold <span>${ho.length} · ${wsum(ho)}%</span></div>${ho.map(x => pfShort(x.r.input)).join(', ') || '<span class="pf-hint">None</span>'}</div>`;
     }
 
+    // Switch candidates: same universe (US↔US, RoW↔RoW), same sector, market cap ≥ 1/3 of the holding,
+    // RS IBD better AND VA RS better than the holding (VA RS only where available, i.e. US).
+    function pfCap(d) { const v = parseFloat(allData.includes(d) ? d.mktcap : (d.mktcap_eur || d.mktcap)); return isNaN(v) ? null : v; }
     function pfCandidates(r, held) {
-        const pool = allData.filter(d => !held.has(d.ticker) && d.rs_ibd != null && d.rs_ibd >= 70);
-        const base = pfRankVal(r._src) || 0;
-        const pick = f => pool.filter(f).map(d => ({ d, s: pfScore(d), rk: pfRankVal(d) }))
-            .filter(x => x.rk != null && x.s != null && x.rk >= base + 15).sort((a, b) => b.rk - a.rk).slice(0, 3);
-        let c = r.group ? pick(d => d.group === r.group) : [];
-        let scope = 'group';
-        if (c.length < 2 && r.sector) {
-            const extra = pick(d => d.sector === r.sector && !c.some(x => x.d === d));
-            c = c.concat(extra).slice(0, 3); if (!c.length || extra.length) scope = c.length && r.group && c[0].d.group === r.group ? 'group/sector' : 'sector';
-        }
-        return { c, scope };
+        const src = r._src, isUS = allData.includes(src);
+        const universe = isUS ? allData : (allDataRoW || []);
+        const cap = pfCap(src);
+        const pool = universe.filter(d => d !== src && !held.has(d.ticker) && d.sector && d.sector === src.sector)
+            .map(d => ({ d, s: pfScore(d), cap: pfCap(d), vol: pfVol(d.ticker, 60) }))
+            .filter(x => x.cap != null && (cap ? x.cap >= cap / 3 : x.cap >= 5))
+            .filter(x => x.d.rs_ibd != null && (src.rs_ibd == null || x.d.rs_ibd > src.rs_ibd))
+            .filter(x => src.va_rs == null || (x.d.va_rs != null && x.d.va_rs > src.va_rs))
+            .sort((a, b) => ((b.d.va_rs ?? b.d.rs_ibd) - (a.d.va_rs ?? a.d.rs_ibd)) || (b.d.rs_ibd - a.d.rs_ibd))
+            .slice(0, 3);
+        return { c: pool, scope: 'same sector' };
     }
 
     function pfVerdict(r) {
@@ -7019,8 +7029,8 @@
             <div class="pf-why">${pfWhy(r, v)}</div>
             ${v !== 'HOLD' ? (cand.c.length
                 ? `<div class="pf-cands"><span style="font-size:11px;color:var(--muted)">Switch into (${cand.scope}):</span>${cand.c.map(x =>
-                    `<span class="pf-cand"><b>${pfShort(x.d.ticker)}</b> VA ${x.d.va_rs ?? '—'} · score ${x.s} · RS ${x.d.rs_ibd} · vol ${pfVol(x.d.ticker, 60) != null ? Math.round(pfVol(x.d.ticker, 60)) + '%' : '—'} · S ${x.d.sales_cq != null ? Math.round(x.d.sales_cq) + '%' : '—'} · E ${x.d.eps_cq != null ? Math.round(x.d.eps_cq) + '%' : '—'}</span>`).join('')}</div>`
-                : '<div class="pf-hint">No stronger candidate in group/sector — consider trimming rather than switching.</div>') : ''}
+                    `<span class="pf-cand"><b>${pfShort(x.d.ticker)}</b> ${x.d.name ? x.d.name.slice(0, 22) : ''} · cap ${Math.round(x.cap)}${x.d.currency ? ' ' + x.d.currency : ''} · VA ${x.d.va_rs ?? '—'} · RS ${x.d.rs_ibd} · vol ${x.vol != null ? Math.round(x.vol) + '%' : '—'} · S ${x.d.sales_cq != null ? Math.round(x.d.sales_cq) + '%' : '—'} · E ${x.d.eps_cq != null ? Math.round(x.d.eps_cq) + '%' : '—'}</span>`).join('')}</div>`
+                : '<div class="pf-hint">No stronger candidate in the same sector with comparable size — consider trimming rather than switching.</div>') : ''}
         </div>`).join('') || '<div class="pf-hint">Enter holdings and press Analyse.</div>';
     }
 
