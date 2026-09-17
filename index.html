@@ -1590,14 +1590,14 @@
             <div class="pf-card" style="max-height:560px">
                 <div class="pf-sub">Strong groups not held
                     <select id="pfGapMinN" onchange="pfRenderGaps()"><option value="3">≥ 3 stocks</option><option value="5" selected>≥ 5 stocks</option><option value="10">≥ 10 stocks</option></select></div>
-                <div class="pf-hint">US groups ranked by median RS IBD of their members. Leaders = top 3 by the ranking measure.</div>
-                <div class="table-wrap"><table class="pf-gt"><thead><tr><th>GROUP</th><th>SECTOR</th><th class="th-pct">N</th><th class="th-pct">MED RS</th><th class="th-pct">MED 4W</th><th class="th-pct">SALES CQ</th><th>LEADERS</th></tr></thead><tbody id="pfGapGroups"></tbody></table></div>
+                <div class="pf-hint">US groups ranked by the average of Pct 4W and Pct 6M (averages of members, same method as the Groups tab). Leaders = top 3 by the ranking measure.</div>
+                <div class="table-wrap"><table class="pf-gt"><thead><tr><th>GROUP</th><th>SECTOR</th><th class="th-pct">N</th><th class="th-pct">PCT 4W</th><th class="th-pct">PCT 6M</th><th class="th-pct">RS IBD</th><th class="th-pct">SALES CQ</th><th>LEADERS</th></tr></thead><tbody id="pfGapGroups"></tbody></table></div>
             </div>
             <div class="pf-card" style="max-height:560px">
                 <div class="pf-sub">Large-cap leaders not held
                     <span><select id="pfGapCap" onchange="pfRenderGaps()"><option value="20">Cap ≥ 20B</option><option value="50" selected>Cap ≥ 50B</option><option value="100">Cap ≥ 100B</option><option value="200">Cap ≥ 200B</option></select>
                     <select id="pfGapUni" onchange="pfRenderGaps()"><option value="all">US + RoW</option><option value="us">US</option><option value="row">RoW</option></select></span></div>
-                <div class="pf-hint">RS IBD ≥ 70, sorted by the ranking measure (VA RS by default). ● = group/sector already held. RoW cap in EUR.</div>
+                <div class="pf-hint">RS IBD ≥ 70, sorted by the ranking measure (VA RS by default). ● = group already held. RoW cap in EUR.</div>
                 <div class="table-wrap"><table class="pf-gt"><thead><tr><th>TICKER</th><th>NAME</th><th>GROUP</th><th class="th-pct">CAP</th><th class="th-pct">RS</th><th class="th-pct">VA</th><th class="th-pct">4W</th><th class="th-pct">SALES</th><th class="th-pct">EPS</th><th class="th-pct">VOL</th><th class="th-pct">SCORE</th></tr></thead><tbody id="pfGapStocks"></tbody></table></div>
             </div>
         </div>
@@ -1607,29 +1607,27 @@
             <th onclick="pfSort('ticker')">TICKER</th><th onclick="pfSort('name')">NAME</th>
             <th onclick="pfSort('country')">COUNTRY</th><th onclick="pfSort('sector')">SECTOR</th><th onclick="pfSort('group')">GROUP</th>
             <th class="th-pct" onclick="pfSort('w')">WT %</th>
-            <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('rs_ibd')">RS IBD</th>
-            <th class="th-pct" onclick="pfSort('va_rs')">VA RS</th>
-            <th class="th-pct" onclick="pfSort('pct_4w')">PCT 4W</th>
+            <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('pct_4w')">PCT 4W</th>
             <th class="th-pct" onclick="pfSort('pct_6m')">PCT 6M</th>
+            <th class="th-pct" onclick="pfSort('rs_ibd')">RS IBD</th>
+            <th class="th-pct" onclick="pfSort('va_rs')">VA RS</th>
             <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('ret_5d')">1W</th>
             <th class="th-pct" onclick="pfSort('ret_3m')">3M</th>
-            <th class="th-pct" onclick="pfSort('ma20_dist')">vs EMA20</th>
+            <th class="th-pct" onclick="pfSort('ma200_dist')">vs 200 MA</th>
             <th class="th-pct" onclick="pfSort('high52_dist')">vs 52WH</th>
-            <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('sales_cq')">SALES CQ</th>
-            <th class="th-pct" onclick="pfSort('eps_cq')">EPS CQ</th>
+            <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('ny_yoy_s')">SALES 2027</th>
+            <th class="th-pct" onclick="pfSort('ny_yoy')">EPS 2027</th>
             <th class="th-pct" onclick="pfSort('forward_pe')">FWD PE</th>
             <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('vol60')">VOL 60D</th>
-            <th class="th-pct" onclick="pfSort('dvol60')">DOWN VOL</th>
             <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('score')">SCORE</th>
         </tr></thead><tbody id="pfBody"></tbody></table></div>
 
         <div id="pfActionsWrap" style="display:none;margin:22px 0 10px">
-            <div class="pf-h">CONCLUSIONS</div>
+            <div class="pf-h">SWITCH</div>
+            <div class="pf-hint" style="margin-bottom:6px">Candidates: same universe (US / RoW), same sector, market cap ≥ 1/3 of the holding, RS IBD and VA RS both better than the holding (RS IBD only for RoW). Sorted by VA RS.</div>
             <div id="pfActions" class="pf-actions"></div>
         </div>
-        <div class="pf-h" style="margin-top:22px;">SWITCH RECOMMENDATIONS</div>
-        <div class="pf-hint" style="margin-bottom:8px;">Score = 70% relative strength (RS IBD 35 · VA RS 25 · Pct 6M 20 · Pct 4W 20) + 30% fundamentals (Sales CQ and EPS CQ growth percentiles). Switch candidates: same universe (US for US, RoW for RoW), same sector, market cap ≥ 1/3 of the holding, RS IBD and VA RS both better than the holding (RS IBD only for RoW). Sorted by VA RS. Rule-based, not investment advice.</div>
-        <div id="pfRecos"></div>
+        <div id="pfRecos" style="display:none"></div>
 
         <div class="pf-h" style="margin-top:28px;" id="pfClaudeAnchor">CLAUDE PORTFOLIO</div>
         <div class="pf-bar-top" style="justify-content:flex-start;gap:14px">
@@ -1655,8 +1653,8 @@
         </div>
         <div class="pf-grid2" style="margin-top:12px;grid-template-columns:1fr 1.3fr">
             <div class="pf-card" style="max-height:520px"><div class="pf-sub">Themes</div>
-                <div class="pf-hint">Theme score = 40% median VA RS (RS IBD for RoW) + 30% breadth (% of members with RS IBD ≥ 70) + 30% median Pct 4W. Top 15 = themes that work.</div>
-                <div class="table-wrap"><table class="pf-gt"><thead><tr><th>#</th><th>THEME</th><th class="th-pct">SCORE</th><th class="th-pct">MED VA</th><th class="th-pct">BREADTH</th><th class="th-pct">CURRENT</th><th class="th-pct">CLAUDE</th></tr></thead><tbody id="cpThemes"></tbody></table></div></div>
+                <div class="pf-hint">Theme score = 40% average VA RS (RS IBD for RoW) + 30% breadth (% of members with RS IBD ≥ 70) + 30% average Pct 4W. Top 15 = themes that work.</div>
+                <div class="table-wrap"><table class="pf-gt"><thead><tr><th>#</th><th>THEME</th><th class="th-pct">SCORE</th><th class="th-pct">AVG VA</th><th class="th-pct">BREADTH</th><th class="th-pct">CURRENT</th><th class="th-pct">CLAUDE</th></tr></thead><tbody id="cpThemes"></tbody></table></div></div>
             <div class="pf-card" style="max-height:520px"><div class="pf-sub">Trades to get there <span id="cpTurn" style="font-family:Arial;font-size:11px;color:var(--muted)"></span></div>
                 <div class="table-wrap"><table class="pf-gt"><thead><tr><th>ACTION</th><th>TICKER</th><th>NAME</th><th>THEME</th><th class="th-pct">CURRENT</th><th class="th-pct">CLAUDE</th><th class="th-pct">RS</th><th class="th-pct">VA</th><th class="th-pct">VOL</th></tr></thead><tbody id="cpTrades"></tbody></table></div></div>
         </div>
@@ -6505,6 +6503,7 @@
     // neutral (no colour) formatters for the Portfolio tab
     const pfN = v => v == null ? '<span style="color:var(--muted)">—</span>' : null;
     const pfPctN = v => pfN(v) || `<span style="font-weight:700">${v}</span>`;
+    const pfPctC = v => v == null ? '<span style="color:var(--muted)">—</span>' : `<span style="font-weight:700;color:${v < 30 ? '#b91c1c' : v > 70 ? '#15803d' : 'var(--text)'}">${v}</span>`;
     const pfGrowN = v => pfN(v) || `${v > 0 ? '+' : ''}${Math.round(v)}%`;
     const pfRetN = v => pfN(v) || `${v > 0 ? '+' : ''}${(Math.round(v * 10) / 10).toFixed(1)}%`;
     const pfShort = t => pfBaseSym(String(t || '').split(' ')[0]);
@@ -6725,6 +6724,7 @@
             r.perf = (window._pfPerf || {})[h.ticker] ?? null;
             r.rsScore = pfRsScore(d); r.fundScore = pfFundScore(d); r.score = pfScore(d);
             r.vol60 = pfVol(d.ticker, 60); r.dvol60 = pfDownVol(d.ticker, 60);
+            { const p0 = pfPrices(d.ticker), m200 = pfSma(d.ticker, 200); r.ma200_dist = p0 && m200 ? (p0[0] / m200 - 1) * 100 : null; }
             return r;
         }).filter(Boolean);
         window._pfCash = Math.max(0, 100 - holdings.reduce((s, h) => s + h.w, 0));
@@ -6861,14 +6861,14 @@
             <td class="td-ticker" style="color:var(--accent2);cursor:pointer" onclick="openNews('${d.ticker}','${(d.name || '').replace(/'/g, "\\'")}')">${pfShort(d.input || d.ticker)}</td>
             <td class="td-name">${d.name || ''}</td><td class="td-name">${d.country || ''}</td><td class="td-name">${d.sector || ''}</td><td class="td-name">${d.group || ''}</td>
             <td class="td-pct" style="font-weight:700">${d.w.toFixed(1)}</td>
-            <td class="td-pct" style="${bL}">${pfPctN(d.rs_ibd)}</td><td class="td-pct">${pfPctN(d.va_rs)}</td>
-            <td class="td-pct">${pfPctN(d.pct_4w)}</td><td class="td-pct">${pfPctN(d.pct_6m)}</td>
+            <td class="td-pct" style="${bL}">${pfPctC(d.pct_4w)}</td><td class="td-pct">${pfPctC(d.pct_6m)}</td>
+            <td class="td-pct">${pfPctC(d.rs_ibd)}</td><td class="td-pct">${pfPctC(d.va_rs)}</td>
             <td class="td-pct" style="${bL};color:${pfRetCol(d.ret_5d)}">${pfRetN(d.ret_5d)}</td>
             <td class="td-pct" style="color:${pfRetCol(d.ret_3m)}">${pfRetN(d.ret_3m)}</td>
-            <td class="td-pct">${pfGrowN(d.ma20_dist)}</td><td class="td-pct">${pfGrowN(d.high52_dist)}</td>
-            <td class="td-pct" style="${bL}">${pfGrowN(d.sales_cq)}</td><td class="td-pct">${pfGrowN(d.eps_cq)}</td>
+            <td class="td-pct">${pfGrowN(d.ma200_dist)}</td><td class="td-pct">${pfGrowN(d.high52_dist)}</td>
+            <td class="td-pct" style="${bL}">${pfGrowN(d.ny_yoy_s)}</td><td class="td-pct">${pfGrowN(d.ny_yoy)}</td>
             <td class="td-pct">${d.forward_pe != null ? d.forward_pe.toFixed(1) : '—'}</td>
-            <td class="td-pct" style="${bL}">${d.vol60 != null ? d.vol60.toFixed(0) + '%' : '—'}</td><td class="td-pct">${d.dvol60 != null ? d.dvol60.toFixed(0) + '%' : '—'}</td>
+            <td class="td-pct" style="${bL}">${d.vol60 != null ? d.vol60.toFixed(0) + '%' : '—'}</td>
             <td class="td-pct" style="${bL}">${pfPctN(d.score)}</td></tr>`).join('');
     }
 
@@ -6954,13 +6954,13 @@
             `<div class="pf-hint" style="margin-top:8px">${b.filter(x => x.names).map(x => `<b>${x.k}</b>: ${x.names}`).join('<br>')}</div>`;
     }
 
-    // group weak: median Pct 4W < 50 AND median Pct 6M < 50
+    // group weak: average Pct 4W < 50 AND average Pct 6M < 50 (same method as the Groups tab)
     function pfGroupStats() {
         const m = {};
         allData.concat(allDataRoW || []).forEach(d => { const t = pfTheme(d); if (t !== '(n/a)') (m[t] = m[t] || []).push(d); });
         const out = {};
         Object.entries(m).forEach(([t, a]) => {
-            const p4 = pfMedian(a.map(d => d.pct_4w)), p6 = pfMedian(a.map(d => d.pct_6m));
+            const p4 = pfAvg(a.map(d => d.pct_4w)), p6 = pfAvg(a.map(d => d.pct_6m));
             out[t] = { p4, p6, weak: p4 != null && p6 != null && p4 < 50 && p6 < 50 };
         });
         return out;
@@ -6999,7 +6999,7 @@
                 <td class="td-c" title="group Pct 4W ${x.g.p4 != null ? Math.round(x.g.p4) : '—'} · Pct 6M ${x.g.p6 != null ? Math.round(x.g.p6) : '—'}">${ck(x.f.grp)}</td>
                 <td class="td-c"><b>${x.n}/5</b></td></tr>`; }).join('')}
             </tbody></table></div>
-            <div class="pf-hint" style="margin-top:4px">Relative weakness = RS IBD &lt; 30 or Pct 4W at least 25 points below Pct 6M. Group weak = group Pct 4W &lt; 50 and Pct 6M &lt; 50 (median of the group's members). Red = 3 or more flags. Hover a tick for the underlying value.</div>`;
+            <div class="pf-hint" style="margin-top:4px">Relative weakness = RS IBD &lt; 30 or Pct 4W at least 25 points below Pct 6M. Group weak = group Pct 4W &lt; 50 and Pct 6M &lt; 50 (average of the group's members, as in the Groups tab). Red = 3 or more flags. Hover a tick for the underlying value.</div>`;
     }
     function pfMaDistV(r, n) {
         const p = pfPrices(r._src.ticker), m = pfSma(r._src.ticker, n);
@@ -7008,6 +7008,7 @@
     function pfMaDist(r, n) { return `${pfMaDistV(r, n).toFixed(1)}% vs ${n} MA`; }
 
 
+    function pfAvg(arr) { const v = arr.filter(x => x != null && !isNaN(x)); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; }
     function pfMedian(arr) {
         const v = arr.filter(x => x != null && !isNaN(x)).sort((a, b) => a - b);
         if (!v.length) return null;
@@ -7024,16 +7025,16 @@
         const gm = {};
         allData.forEach(d => { if (d.group) (gm[d.group] = gm[d.group] || []).push(d); });
         const groups = Object.entries(gm).filter(([g, a]) => a.length >= minN && !heldG.has(g)).map(([g, a]) => ({
-            g, sector: a[0].sector, n: a.length, rs: pfMedian(a.map(d => d.rs_ibd)), p4: pfMedian(a.map(d => d.pct_4w)),
+            g, sector: a[0].sector, n: a.length, rs: pfAvg(a.map(d => d.rs_ibd)), p4: pfAvg(a.map(d => d.pct_4w)), p6: pfAvg(a.map(d => d.pct_6m)),
             sales: pfMedian(a.map(d => d.sales_cq)),
             leaders: a.map(d => ({ d, s: pfRankVal(d) })).filter(x => x.s != null).sort((x, y) => y.s - x.s).slice(0, 3)
-        })).filter(x => x.rs != null).sort((a, b) => b.rs - a.rs).slice(0, 20);
+        })).filter(x => x.p4 != null && x.p6 != null).map(x => ({ ...x, strength: (x.p4 + x.p6) / 2 })).sort((a, b) => b.strength - a.strength).slice(0, 20);
         document.getElementById('pfGapGroups').innerHTML = groups.map(x => `<tr>
             <td class="td-name" style="font-weight:700">${x.g}</td><td class="td-name">${x.sector || ''}</td>
-            <td class="td-pct">${x.n}</td><td class="td-pct">${pfPctN(Math.round(x.rs))}</td><td class="td-pct">${pfPctN(x.p4 != null ? Math.round(x.p4) : null)}</td>
+            <td class="td-pct">${x.n}</td><td class="td-pct">${pfPctN(Math.round(x.p4))}</td><td class="td-pct">${pfPctN(Math.round(x.p6))}</td><td class="td-pct">${x.rs != null ? Math.round(x.rs) : '—'}</td>
             <td class="td-pct">${pfGrowN(x.sales)}</td>
             <td class="lead">${x.leaders.map(l => `<b style="color:var(--accent2);cursor:pointer" onclick="openNews('${l.d.ticker}')">${pfShort(l.d.ticker)}</b> <span style="color:var(--muted)">${l.s}</span>`).join(' · ')}</td></tr>`).join('')
-            || '<tr><td colspan="7" class="pf-hint">No strong group missing.</td></tr>';
+            || '<tr><td colspan="8" class="pf-hint">No strong group missing.</td></tr>';
         // Large caps not held
         const cap = +document.getElementById('pfGapCap').value;
         const uni = document.getElementById('pfGapUni').value;
@@ -7080,9 +7081,9 @@
         const m = {};
         allData.concat(allDataRoW || []).forEach(d => { const t = pfTheme(d); if (t !== '(n/a)') (m[t] = m[t] || []).push(d); });
         return Object.entries(m).filter(([, a]) => a.length >= 3).map(([t, a]) => {
-            const va = pfMedian(a.map(d => d.va_rs ?? d.rs_ibd));
+            const va = pfAvg(a.map(d => d.va_rs ?? d.rs_ibd));
             const breadth = a.filter(d => d.rs_ibd >= 70).length / a.length * 100;
-            const p4 = pfMedian(a.map(d => d.pct_4w));
+            const p4 = pfAvg(a.map(d => d.pct_4w));
             const score = va == null ? null : Math.round(0.4 * va + 0.3 * breadth + 0.3 * (p4 ?? 50));
             return { t, n: a.length, va, breadth, p4, score };
         }).filter(x => x.score != null).sort((a, b) => b.score - a.score);
