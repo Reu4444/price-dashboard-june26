@@ -737,6 +737,8 @@
     @media(max-width:1300px){.pf-alerts-grid{grid-template-columns:repeat(3,1fr)}}
     .pf-alert.hot{color:#b91c1c;border-color:#b91c1c}
     .pf-atable{width:100%;background:var(--bg2)}
+    .pf-asum{font-size:12px;line-height:1.7;margin-bottom:8px}
+    .pf-new{font-size:9px;border:1px solid var(--text);padding:0 3px;font-weight:700}
     .pf-atable .th-c,.pf-atable .td-c{text-align:center}
     .pf-atable td.td-c{font-size:13px}
     .pf-atable tr.hot td,.pf-atable tr.hot td b{color:#b91c1c}
@@ -6656,6 +6658,7 @@
     function pfStatus(s) { const el = document.getElementById('pfStatus'); if (el) el.textContent = s; }
 
     async function pfLoad() {
+        await pfAlertHistLoadRemote();
         const el = document.getElementById('pfInput');
         if (!el) return;
         try { el.value = localStorage.getItem(PF_KEY) || ''; } catch (e) {}
@@ -6965,41 +6968,101 @@
         });
         return out;
     }
+    // Alert history (for "new" / "no longer flagged"): one snapshot per day, localStorage + Firestore
+    const PF_AH_KEY = 'pfAlertHistory';
+    function pfAlertHistGet() { try { return JSON.parse(localStorage.getItem(PF_AH_KEY) || '[]'); } catch (e) { return []; } }
+    async function pfAlertHistLoadRemote() {
+        try {
+            const doc = await firestoreDB.collection('portfolio').doc('alertHistory').get();
+            if (doc.exists && Array.isArray(doc.data().h)) {
+                const loc = pfAlertHistGet(), m = {};
+                loc.concat(doc.data().h).forEach(x => m[x.d] = x);
+                localStorage.setItem(PF_AH_KEY, JSON.stringify(Object.values(m).sort((a, b) => a.d.localeCompare(b.d)).slice(-120)));
+            }
+        } catch (e) {}
+    }
+    function pfAlertHistSave(tickers) {
+        const today = new Date().toISOString().slice(0, 10);
+        let h = pfAlertHistGet().filter(x => x.d !== today);
+        h.push({ d: today, t: tickers }); h = h.sort((a, b) => a.d.localeCompare(b.d)).slice(-120);
+        try { localStorage.setItem(PF_AH_KEY, JSON.stringify(h)); } catch (e) {}
+        try { firestoreDB.collection('portfolio').doc('alertHistory').set({ h }); } catch (e) {}
+        return h;
+    }
+    function pfAlertHistPrev(h) {
+        const cutoff = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+        const older = h.filter(x => x.d <= cutoff);
+        if (older.length) return older[older.length - 1];
+        const today = new Date().toISOString().slice(0, 10);
+        const before = h.filter(x => x.d < today);
+        return before.length ? before[0] : null;
+    }
+    let pfAlertsShowAll = false;
+
     function pfRenderAlerts(missing) {
         const G = pfGroupStats();
+        const held = new Set(pfRows.map(r => r.ticker));
         const ck = b => b ? '✓' : '';
-        const rows = pfRows.map(r => {
-            const decay = r.pct_4w != null && r.pct_6m != null ? r.pct_4w - r.pct_6m : null;
+        const all = pfRows.map(r => {
             const g = G[pfTheme(r._src)] || {};
+            const near = r.high52_dist != null && r.high52_dist > -5;   // within 5% of 52W high → never flagged
+            const trend = r.above200 === false ? '< 200' : r.above50 === false ? '< 50' : '';
             const f = {
-                rw: (r.rs_ibd != null && r.rs_ibd < 30) || (decay != null && decay <= -25),
-                ma50: r.above50 === false,
-                ma200: r.above200 === false,
+                perf: r.perf != null && r.perf < -10,
+                rw: (r.rs_ibd != null && r.rs_ibd < 50) || (r.pct_4w != null && r.pct_6m != null && r.pct_4w < 50 && r.pct_6m < 50),
+                trend: !!trend,
                 off52: r.high52_dist != null && r.high52_dist < -25,
                 grp: !!g.weak,
             };
-            const n = Object.values(f).filter(Boolean).length;
-            return { r, f, n, decay, g };
-        }).filter(x => x.n > 0).sort((a, b) => b.n - a.n || b.r.w - a.r.w);
+            const n = near ? 0 : Object.values(f).filter(Boolean).length;
+            return { r, f, n, g, trend, risk: r.w * n };
+        });
+        const rows = all.filter(x => x.n > 0).sort((a, b) => b.risk - a.risk || b.n - a.n);
+        const red = rows.filter(x => x.n >= 3);
+        // history
+        const hist = pfAlertHistSave(rows.map(x => x.r.input));
+        const prev = pfAlertHistPrev(hist);
+        const prevSet = new Set(prev ? prev.t : []);
+        const gone = prev ? prev.t.filter(t => !rows.some(x => x.r.input === t) && pfRows.some(r => r.input === t)) : [];
         document.getElementById('pfAlertsWrap').style.display = rows.length ? '' : 'none';
+        // summary
+        const redW = red.reduce((s, x) => s + x.r.w, 0);
+        const weakGroups = {};
+        all.filter(x => x.f.grp).forEach(x => { const t = pfTheme(x.r._src); (weakGroups[t] = weakGroups[t] || { w: 0, t: [] }).w += x.r.w; weakGroups[t].t.push(pfShort(x.r.input)); });
+        const wg = Object.entries(weakGroups).sort((a, b) => b[1].w - a[1].w).slice(0, 4)
+            .map(([k, v]) => `${k}: ${v.t.join(', ')} = ${v.w.toFixed(1)}%`).join(' · ');
+        const summary = `<div class="pf-asum">
+            <div><b>${red.length} stocks with 3+ flags = ${redW.toFixed(1)}% of the portfolio</b> · ${rows.length} flagged in total = ${rows.reduce((s, x) => s + x.r.w, 0).toFixed(1)}%</div>
+            ${wg ? `<div>Weak groups owned — ${wg}</div>` : ''}
+            ${prev ? `<div>Since ${new Date(prev.d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}: new ${rows.filter(x => !prevSet.has(x.r.input)).map(x => pfShort(x.r.input)).join(', ') || 'none'} · no longer flagged ${gone.map(pfShort).join(', ') || 'none'}</div>` : '<div>History starts today — new / no longer flagged will appear from the next session.</div>'}
+        </div>`;
+        const visible = pfAlertsShowAll ? rows : rows.filter(x => x.n >= 2);
+        const hidden = rows.length - visible.length;
         const v = x => x == null ? '—' : x;
-        document.getElementById('pfAlerts').innerHTML = `<div class="table-wrap"><table class="pf-gt pf-atable"><thead><tr>
+        document.getElementById('pfAlerts').innerHTML = summary + `<div class="table-wrap"><table class="pf-gt pf-atable"><thead><tr>
             <th>STOCK</th><th>GROUP</th><th class="th-pct">WEIGHT</th><th class="th-pct">PERF</th>
-            <th class="th-c">RELATIVE WEAKNESS</th><th class="th-c">&lt; 50 MA</th><th class="th-c">&lt; 200 MA</th><th class="th-c">OFF 52W HIGH &lt; −25%</th>
-            <th class="th-c">GROUP WEAK</th><th class="th-c">FLAGS</th></tr></thead><tbody>
-            ${rows.map(x => { const r = x.r, hot = x.n >= 3; return `<tr class="${hot ? 'hot' : ''}">
-                <td class="td-ticker" style="cursor:pointer" onclick="openNews('${r._src.ticker}')"><b>${pfShort(r.input)}</b></td>
+            <th class="th-c">PERF &lt; −10%</th><th class="th-c">RELATIVE WEAKNESS</th><th class="th-c">TREND</th><th class="th-c">OFF 52W HIGH &lt; −25%</th>
+            <th class="th-c">GROUP WEAK</th><th class="th-c">FLAGS</th><th class="th-pct">RISK</th><th>SWITCH TO</th></tr></thead><tbody>
+            ${visible.map(x => {
+                const r = x.r, hot = x.n >= 3, isNew = prev && !prevSet.has(r.input);
+                const cand = hot ? pfCandidates(r, held).c[0] : null;
+                return `<tr class="${hot ? 'hot' : ''}">
+                <td class="td-ticker" style="cursor:pointer" onclick="openNews('${r._src.ticker}')"><b>${pfShort(r.input)}</b>${isNew ? ' <span class="pf-new">NEW</span>' : ''}</td>
                 <td class="td-name">${pfTheme(r._src)}</td>
                 <td class="td-pct">${r.w.toFixed(1)}%</td>
                 <td class="td-pct">${r.perf != null ? r.perf.toFixed(1) + '%' : '—'}</td>
+                <td class="td-c">${ck(x.f.perf)}</td>
                 <td class="td-c" title="RS IBD ${v(r.rs_ibd)} · 4W ${v(r.pct_4w)} · 6M ${v(r.pct_6m)}">${ck(x.f.rw)}</td>
-                <td class="td-c" title="${pfMaDist(r, 50)}">${ck(x.f.ma50)}</td>
-                <td class="td-c" title="${pfMaDist(r, 200)}">${ck(x.f.ma200)}</td>
+                <td class="td-c" title="${pfMaDist(r, 50)} · ${pfMaDist(r, 200)}">${x.trend}</td>
                 <td class="td-c" title="${r.high52_dist != null ? r.high52_dist.toFixed(1) + '%' : ''}">${ck(x.f.off52)}</td>
                 <td class="td-c" title="group Pct 4W ${x.g.p4 != null ? Math.round(x.g.p4) : '—'} · Pct 6M ${x.g.p6 != null ? Math.round(x.g.p6) : '—'}">${ck(x.f.grp)}</td>
-                <td class="td-c"><b>${x.n}/5</b></td></tr>`; }).join('')}
+                <td class="td-c"><b>${x.n}/5</b></td>
+                <td class="td-pct">${x.risk.toFixed(1)}</td>
+                <td class="td-name">${cand ? `<b>${pfShort(cand.d.ticker)}</b> <span style="color:var(--muted)">RS ${cand.d.rs_ibd} · VA ${cand.d.va_rs ?? '—'}</span>` : (hot ? '<span style="color:var(--muted)">—</span>' : '')}</td></tr>`; }).join('')}
             </tbody></table></div>
-            <div class="pf-hint" style="margin-top:4px">Relative weakness = RS IBD &lt; 30 or Pct 4W at least 25 points below Pct 6M. Group weak = group Pct 4W &lt; 50 and Pct 6M &lt; 50 (average of the group's members, as in the Groups tab). Red = 3 or more flags. Hover a tick for the underlying value.</div>`;
+            ${hidden ? `<div class="pf-hint" style="margin-top:4px"><a href="#" onclick="pfAlertsShowAll=true;pfRenderAlerts([]);return false" style="color:var(--accent2)">Show ${hidden} stocks with only 1 flag</a></div>`
+                     : (pfAlertsShowAll ? `<div class="pf-hint" style="margin-top:4px"><a href="#" onclick="pfAlertsShowAll=false;pfRenderAlerts([]);return false" style="color:var(--accent2)">Hide stocks with only 1 flag</a></div>` : '')}
+            <div class="pf-hint" style="margin-top:4px">Stocks within 5% of their 52W high are never flagged. Relative weakness = RS IBD &lt; 50, or Pct 4W and Pct 6M both &lt; 50. Trend = below 50 MA or below 200 MA (one flag). Group weak = group Pct 4W &lt; 50 and Pct 6M &lt; 50 (average of members). Risk = weight × flags. Red = 3+ flags; Switch to = best candidate (same universe, same sector, cap ≥ 1/3, better RS IBD and VA RS).</div>`;
     }
     function pfMaDistV(r, n) {
         const p = pfPrices(r._src.ticker), m = pfSma(r._src.ticker, n);
