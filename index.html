@@ -2603,6 +2603,7 @@
                 });
                 if (priceSubTab === 'row')
                     renderRoW();
+                if (activeTab === 'portfolio') renderPortfolio();
             }
 
             // ── Save PROCESSED data to IndexedDB cache ──
@@ -3905,7 +3906,7 @@
             tr.innerHTML = `
                 <td class="sticky-0 watch-toggle" style="text-align:center;cursor:pointer;font-size:11px;width:22px;padding:4px 3px;color:${inW ? '#06b6d4' : '#475569'}" data-ticker="${d.ticker}">${inW ? '★' : '☆'}</td>
                 <td class="sticky-1" style="text-align:center;width:22px;padding:4px 3px;"><a href="https://www.tradingview.com/chart/?symbol=${d.ticker}" target="_blank" style="color:#475569;font-size:8px;text-decoration:none;font-weight:600;" onmouseover="this.style.color='#06b6d4'" onmouseout="this.style.color='#475569'">TV</a></td>
-                <td class="td-ticker sticky-2" style="cursor:pointer;color:var(--accent2);min-width:44px;" onclick="openNews('${d.ticker}','${(d.name || '').replace(/'/g, "\\'")}')">${d.input || d.ticker}</td>
+                <td class="td-ticker sticky-2" style="cursor:pointer;color:var(--accent2);min-width:44px;" onclick="openNews('${d.ticker}','${(d.name || '').replace(/'/g, "\\'")}')">${d.ticker}</td>
                 <td class="td-name sticky-3" style="min-width:100px;">${d.name || ''}</td>
                 <td class="td-name">${d.country || ''}</td>
                 <td class="td-name">${d.currency || ''}</td>
@@ -5616,7 +5617,7 @@
             tr.innerHTML = `
       <td class="watch-toggle" style="text-align:center;cursor:pointer;font-size:11px;width:22px;padding:4px 3px;color:${inW ? '#06b6d4' : '#475569'}" data-ticker="${d.ticker}">${inW ? '★' : '☆'}</td>
       <td style="text-align:center;width:22px;padding:4px 3px"><a href="https://www.tradingview.com/chart/?symbol=${d.ticker}" target="_blank" style="color:#475569;font-size:8px;text-decoration:none;font-weight:600" onmouseover="this.style.color='#06b6d4'" onmouseout="this.style.color='#475569'">TV</a></td>
-      <td class="td-ticker" style="cursor:pointer;color:var(--accent2);min-width:44px;" onclick="openNews('${d.ticker}','${(d.name || '').replace(/'/g, "\\'")}')">${d.input || d.ticker}</td>
+      <td class="td-ticker" style="cursor:pointer;color:var(--accent2);min-width:44px;" onclick="openNews('${d.ticker}','${(d.name || '').replace(/'/g, "\\'")}')">${d.ticker}</td>
       <td class="td-name" style="color:var(--text);font-size:12px;">${d.name || ''}</td>
       <td class="td-name" style="font-size:11px;">${d.country || '<span style="color:var(--muted)">—</span>'}</td>
       <td class="td-name" style="font-size:11px;font-family:'IBM Plex Mono',monospace;">${d.currency || '<span style="color:var(--muted)">—</span>'}</td>
@@ -6444,7 +6445,7 @@
         FP:'France', SW:'Switzerland', SE:'Switzerland', VX:'Switzerland', GR:'Germany', GY:'Germany', NA:'Netherlands', SM:'Spain',
         SS:'Sweden', DC:'Denmark', NO:'Norway', FH:'Finland', ID:'Ireland', PL:'Portugal', AV:'Austria', JP:'Japan', JT:'Japan',
         HK:'Hong Kong', CN:'Canada', CT:'Canada', AU:'Australia', AT:'Australia', KS:'South Korea', TT:'Taiwan', SP:'Singapore',
-        IN:'India', BZ:'Brazil', MM:'Mexico' };
+        IN:'India', BZ:'Brazil', MM:'Mexico', IT:'Israel', PW:'Poland' };
     const PF_COUNTRY_ALIAS = { 'united kingdom':['uk','gb','great britain','england'], 'united states':['us','usa'], 'switzerland':['ch'],
         'italy':['it'], 'belgium':['be'], 'france':['fr'], 'germany':['de'], 'netherlands':['nl','the netherlands'], 'spain':['es'] };
     function pfCountryOk(d, ex) {
@@ -6452,19 +6453,35 @@
         const dc = String(d.country || '').toLowerCase().trim(); if (!dc) return true;
         return dc === c.toLowerCase() || (PF_COUNTRY_ALIAS[c.toLowerCase()] || []).includes(dc);
     }
+    // "MIL:ISP" -> ISP, "ISP.MI" -> ISP, "ISP IM" -> ISP, "BRK-B" stays
+    const PF_BBG_TV = { IM:'BIT', BB:'EBR', LN:'LON', FP:'EPA', SW:'SWX', SE:'SWX', VX:'SWX', GR:'ETR', GY:'ETR', NA:'AMS', SM:'BME', SQ:'BME',
+        SS:'STO', DC:'CPH', NO:'OSL', FH:'HEL', IT:'TLV', PW:'WSE', AV:'VIE', ID:'EURONEXT', PL:'EURONEXT', JP:'TSE', JT:'TSE', HK:'HKEX',
+        CN:'TSX', CT:'TSX', AU:'ASX', AT:'ASX' };
+    function pfBaseSym(tk) {
+        let x = String(tk || '').toUpperCase().trim();
+        if (x.includes(':')) x = x.split(':').pop();
+        x = x.split(' ')[0];
+        const dot = x.lastIndexOf('.');
+        if (dot > 0 && x.length - dot <= 3) x = x.slice(0, dot);
+        return x;
+    }
     function pfResolve(t, map) {
         if (map[t]) return map[t];
         const parts = t.split(' ');
         const base = parts[0].replace(/\//g, '.'), ex = parts[1];
         if (!ex || ['US','UW','UN'].includes(ex)) return allData.find(d => d.ticker === base || d.ticker === base.replace('.', '-') || d.ticker === base.replace('.', '')) || null;
-        const rowHits = (allDataRoW || []).filter(d => d.ticker.split(/[.\s:-]/)[0] === base && pfCountryOk(d, ex));
+        if (PF_BBG_TV[ex] && map[PF_BBG_TV[ex] + ':' + base]) return map[PF_BBG_TV[ex] + ':' + base];
+        const norm = x => x.replace(/[-.\/\s]/g, '');
+        const baseHits = (allDataRoW || []).filter(d => { const b = pfBaseSym(d.ticker); return b === base || norm(b) === norm(base); });
+        const rowHits = baseHits.filter(d => pfCountryOk(d, ex));
         if (rowHits.length === 1) return rowHits[0];
+        if (!rowHits.length && baseHits.length === 1) return baseHits[0];
         const tries = [base, t.replace(/ /g, '.'), t.replace(/ /g, '')];
         if (ex && PF_BBG_SUFFIX[ex] !== undefined) tries.unshift(base + PF_BBG_SUFFIX[ex]);
         if (ex) tries.push(base + '.' + ex, base + '-' + ex, base + ':' + ex);
         for (const k of tries) if (map[k]) return map[k];
         // last resort: RoW entry whose base symbol matches (only if unique)
-        const hits = Object.keys(map).filter(k => k.split(/[.\s:-]/)[0] === base && k !== base);
+        const hits = Object.keys(map).filter(k => pfBaseSym(k) === base && k !== base);
         return hits.length === 1 ? map[hits[0]] : null;
     }
 
@@ -6565,7 +6582,8 @@
         }).filter(Boolean);
         window._pfCash = Math.max(0, 100 - holdings.reduce((s, h) => s + h.w, 0));
         window._pfUnmatched = holdings.filter(h => missing.includes(h.ticker)).reduce((s, h) => s + h.w, 0);
-        pfStatus(`${window._pfSheetAt ? 'Sheet ' + window._pfSheetAt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}) + ' · ' : ''}${pfRows.length} matched${missing.length ? ' · not found: ' + missing.join(', ') : ''}`);
+        const rowPending = missing.some(t => { const e = t.split(' ')[1]; return e && !['US','UW','UN'].includes(e); }) && !(allDataRoW || []).length;
+        pfStatus(`${window._pfSheetAt ? 'Sheet ' + window._pfSheetAt.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}) + ' · ' : ''}${pfRows.length} matched${missing.length ? ' · not found: ' + missing.join(', ') : ''}${rowPending ? ' · RoW data still loading…' : ` · RoW universe ${(allDataRoW || []).length}`}`);
         pfRenderKpis();
         pfRenderTable();
         pfRenderWeights();
