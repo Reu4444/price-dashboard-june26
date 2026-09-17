@@ -1599,7 +1599,7 @@
                 <div class="pf-sub">Large-cap leaders not held
                     <span><select id="pfGapCap" onchange="pfRenderGaps()"><option value="20">Cap ≥ 20B</option><option value="50" selected>Cap ≥ 50B</option><option value="100">Cap ≥ 100B</option><option value="200">Cap ≥ 200B</option></select>
                     <select id="pfGapUni" onchange="pfRenderGaps()"><option value="all">US + RoW</option><option value="us">US</option><option value="row">RoW</option></select></span></div>
-                <div class="pf-hint">RS IBD ≥ 70, sorted by the ranking measure (VA RS by default). ● = group already held. RoW cap in EUR.</div>
+                <div class="pf-hint">RS IBD ≥ 70, sorted by the ranking measure (VA RS by default). US tickers of 5+ letters (OTC ADRs) excluded. ● = group already held. RoW cap in EUR.</div>
                 <div class="table-wrap"><table class="pf-gt"><thead><tr><th>TICKER</th><th>NAME</th><th>GROUP</th><th class="th-pct">CAP</th><th class="th-pct">RS</th><th class="th-pct">VA</th><th class="th-pct">4W</th><th class="th-pct">SALES</th><th class="th-pct">EPS</th><th class="th-pct">VOL</th><th class="th-pct">SCORE</th></tr></thead><tbody id="pfGapStocks"></tbody></table></div>
             </div>
         </div>
@@ -1626,15 +1626,16 @@
 
         <div id="pfActionsWrap" style="display:none;margin:22px 0 10px">
             <div class="pf-h">SWITCH</div>
-            <div class="pf-hint" style="margin-bottom:6px">Candidates: same universe (US / RoW), same sector, market cap ≥ 1/3 of the holding, RS IBD and VA RS both better than the holding (RS IBD only for RoW). Sorted by VA RS.</div>
+            <div class="pf-hint" style="margin-bottom:6px">Candidates: same universe (US / RoW), same sector, market cap ≥ 1/3 of the holding, RS IBD and VA RS both better than the holding (RS IBD only for RoW), US tickers of 5+ letters (OTC ADRs) excluded. Sorted by VA RS.</div>
             <div id="pfActions" class="pf-actions"></div>
         </div>
         <div id="pfRecos" style="display:none"></div>
 
         <div class="pf-h" style="margin-top:28px;" id="pfClaudeAnchor">CLAUDE PORTFOLIO</div>
         <div class="pf-bar-top" style="justify-content:flex-start;gap:14px">
-            <label>Positions <select id="cpN" onchange="pfRenderClaude()"><option>20</option><option>25</option><option selected>30</option><option>35</option><option>40</option></select></label>
-            <label>Max weight <select id="cpMaxW" onchange="pfRenderClaude()"><option value="4">4%</option><option value="5" selected>5%</option><option value="6">6%</option><option value="8">8%</option></select></label>
+            <label>Max positions <select id="cpN" onchange="pfRenderClaude()"><option>15</option><option>20</option><option>25</option><option selected>30</option></select></label>
+            <label>Min weight <select id="cpMinW" onchange="pfRenderClaude()"><option value="1">1%</option><option value="2" selected>2%</option><option value="3">3%</option></select></label>
+            <label>Max weight <select id="cpMaxW" onchange="pfRenderClaude()"><option value="4">4%</option><option value="5">5%</option><option value="6" selected>6%</option><option value="8">8%</option></select></label>
             <label>Sector cap <select id="cpSecCap" onchange="pfRenderClaude()"><option value="25">25%</option><option value="30" selected>30%</option><option value="35">35%</option><option value="100">none</option></select></label>
             <label>Min cap <select id="cpCap" onchange="pfRenderClaude()"><option value="10">10B</option><option value="20" selected>20B</option><option value="50">50B</option></select></label>
             <label>Non-US weight ≈ <select id="cpRow" onchange="pfRenderClaude()"><option value="0">0%</option><option value="15">15%</option><option value="25" selected>25%</option><option value="35">35%</option></select></label>
@@ -1645,7 +1646,7 @@
             <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr>
                 <th>#</th><th>TICKER</th><th>NAME</th><th>STATUS</th><th>THEME</th><th>SECTOR</th><th>REGION</th>
                 <th class="th-pct">WEIGHT</th><th class="th-pct">RS IBD</th><th class="th-pct">VA RS</th><th class="th-pct">PCT 4W</th>
-                <th class="th-pct">SALES 2027</th><th class="th-pct">EPS 2027</th><th class="th-pct">FWD P/E</th><th class="th-pct">VOL 60D</th><th class="th-pct">FROM 52WH</th><th class="th-pct">CAP</th>
+                <th class="th-pct">SALES 2027</th><th class="th-pct">EPS 2027</th><th class="th-pct">FWD P/E</th><th class="th-pct">VOL 60D</th><th class="th-pct">MAX DD 12M</th><th class="th-pct">RESILIENCE</th><th class="th-pct">FROM 52WH</th><th class="th-pct">CAP</th>
             </tr></thead><tbody id="cpHold"></tbody></table></div>
         </div>
         <div class="pf-grid2" style="grid-template-columns:1.1fr 1fr">
@@ -1660,7 +1661,7 @@
             <div class="pf-card" style="max-height:520px"><div class="pf-sub">Trades to get there <span id="cpTurn" style="font-family:Arial;font-size:11px;color:var(--muted)"></span></div>
                 <div class="table-wrap"><table class="pf-gt"><thead><tr><th>ACTION</th><th>TICKER</th><th>NAME</th><th>THEME</th><th class="th-pct">CURRENT</th><th class="th-pct">CLAUDE</th><th class="th-pct">RS</th><th class="th-pct">VA</th><th class="th-pct">VOL</th></tr></thead><tbody id="cpTrades"></tbody></table></div></div>
         </div>
-        <div class="pf-hint" style="margin-top:6px">Construction: themes ranked as above; stocks must have market cap ≥ min, RS IBD ≥ 70, VA RS ≥ 70 (RS IBD for RoW), be above the 200 MA and within 20% of the 52W high, and belong to a top-15 theme. Non-US names fill the chosen share of positions (RoW RS is ranked within the RoW universe, so it is capped rather than competing freely). Ranking = 40% VA RS + 25% RS IBD + 15% Pct 4W + 20% fundamentals. Current holdings with RS IBD ≥ 50, VA RS ≥ 50 and above the 200 MA get a small bonus to limit turnover. Max 3 stocks per theme. Weights: inverse 60D volatility (or equal), capped per stock and per sector, invested at the current invested %. Rule-based model, not investment advice; past RS does not guarantee future returns.</div>
+        <div class="pf-hint" style="margin-top:6px"><b>Selection.</b> 1) Themes: top 15 by theme score. 2) Eligible stocks: in a top-15 theme, market cap ≥ min, RS IBD ≥ 70, VA RS ≥ 70 (RS IBD for RoW), above the 50 MA and the 200 MA, within 15% of the 52W high, 12M max drawdown not worse than −35%, 60D vol ≤ 60%, US tickers of 5+ letters excluded. Current holdings with RS IBD ≥ 50, VA RS ≥ 50 and above the 200 MA stay eligible. 3) Ranking = 45% VA RS + 30% resilience + 15% RS IBD + 10% fundamentals (+5 for current holdings). Resilience = average rank (within the eligible pool) of shallow 12M max drawdown, low 120D downside vol and low 60D vol. 4) Up to max positions, max 3 per theme, non-US share by weight. 5) Weights: inverse 60D vol (or equal), capped per stock and per sector, floor at min weight. Rule-based model, not investment advice.</div>
     </div>
 
     <!-- TAB: METHOD -->
@@ -7041,8 +7042,8 @@
         const v = x => x == null ? '—' : x;
         document.getElementById('pfAlerts').innerHTML = summary + `<div class="table-wrap"><table class="pf-gt pf-atable"><thead><tr>
             <th>STOCK</th><th>GROUP</th><th class="th-pct">WEIGHT</th><th class="th-pct">PERF</th>
-            <th class="th-c">PERF &lt; −10%</th><th class="th-c">RELATIVE WEAKNESS</th><th class="th-c">TREND</th><th class="th-c">OFF 52W HIGH &lt; −25%</th>
-            <th class="th-c">GROUP WEAK</th><th class="th-c">FLAGS</th><th class="th-pct">RISK</th><th>SWITCH TO</th></tr></thead><tbody>
+            <th class="th-c">PERF &lt; −10%</th><th class="th-c">RELATIVE WEAKNESS</th><th class="th-c">BELOW MA</th><th class="th-c">OFF 52W HIGH &lt; −25%</th>
+            <th class="th-c">GROUP WEAK</th><th class="th-c">FLAGS</th><th>SWITCH TO</th></tr></thead><tbody>
             ${visible.map(x => {
                 const r = x.r, hot = x.n >= 3, isNew = prev && !prevSet.has(r.input);
                 const cand = hot ? pfCandidates(r, held).c[0] : null;
@@ -7053,16 +7054,15 @@
                 <td class="td-pct">${r.perf != null ? r.perf.toFixed(1) + '%' : '—'}</td>
                 <td class="td-c">${ck(x.f.perf)}</td>
                 <td class="td-c" title="RS IBD ${v(r.rs_ibd)} · 4W ${v(r.pct_4w)} · 6M ${v(r.pct_6m)}">${ck(x.f.rw)}</td>
-                <td class="td-c" title="${pfMaDist(r, 50)} · ${pfMaDist(r, 200)}">${x.trend}</td>
+                <td class="td-c" title="${pfMaDist(r, 50)} · ${pfMaDist(r, 200)}">${ck(x.f.trend)}</td>
                 <td class="td-c" title="${r.high52_dist != null ? r.high52_dist.toFixed(1) + '%' : ''}">${ck(x.f.off52)}</td>
                 <td class="td-c" title="group Pct 4W ${x.g.p4 != null ? Math.round(x.g.p4) : '—'} · Pct 6M ${x.g.p6 != null ? Math.round(x.g.p6) : '—'}">${ck(x.f.grp)}</td>
                 <td class="td-c"><b>${x.n}/5</b></td>
-                <td class="td-pct">${x.risk.toFixed(1)}</td>
                 <td class="td-name">${cand ? `<b>${pfShort(cand.d.ticker)}</b> <span style="color:var(--muted)">RS ${cand.d.rs_ibd} · VA ${cand.d.va_rs ?? '—'}</span>` : (hot ? '<span style="color:var(--muted)">—</span>' : '')}</td></tr>`; }).join('')}
             </tbody></table></div>
             ${hidden ? `<div class="pf-hint" style="margin-top:4px"><a href="#" onclick="pfAlertsShowAll=true;pfRenderAlerts([]);return false" style="color:var(--accent2)">Show ${hidden} stocks with only 1 flag</a></div>`
                      : (pfAlertsShowAll ? `<div class="pf-hint" style="margin-top:4px"><a href="#" onclick="pfAlertsShowAll=false;pfRenderAlerts([]);return false" style="color:var(--accent2)">Hide stocks with only 1 flag</a></div>` : '')}
-            <div class="pf-hint" style="margin-top:4px">Stocks within 5% of their 52W high are never flagged. Relative weakness = RS IBD &lt; 50, or Pct 4W and Pct 6M both &lt; 50. Trend = below 50 MA or below 200 MA (one flag). Group weak = group Pct 4W &lt; 50 and Pct 6M &lt; 50 (average of members). Risk = weight × flags. Red = 3+ flags; Switch to = best candidate (same universe, same sector, cap ≥ 1/3, better RS IBD and VA RS).</div>`;
+            <div class="pf-hint" style="margin-top:4px">Stocks within 5% of their 52W high are never flagged. Relative weakness = RS IBD &lt; 50, or Pct 4W and Pct 6M both &lt; 50. Below MA = below the 50 MA or the 200 MA (one flag). Group weak = group Pct 4W &lt; 50 and Pct 6M &lt; 50 (average of members). Sorted by weight × flags. Red = 3+ flags; Switch to = best candidate (same universe, same sector, cap ≥ 1/3, better RS IBD and VA RS).</div>`;
     }
     function pfMaDistV(r, n) {
         const p = pfPrices(r._src.ticker), m = pfSma(r._src.ticker, n);
@@ -7102,7 +7102,7 @@
         const cap = +document.getElementById('pfGapCap').value;
         const uni = document.getElementById('pfGapUni').value;
         const pool = [];
-        if (uni !== 'row') allData.forEach(d => pool.push({ d, cap: parseFloat(d.mktcap), row: false }));
+        if (uni !== 'row') allData.filter(d => d.ticker.replace(/[^A-Z]/gi, '').length <= 4).forEach(d => pool.push({ d, cap: parseFloat(d.mktcap), row: false }));
         if (uni !== 'us') (allDataRoW || []).forEach(d => pool.push({ d, cap: parseFloat(d.mktcap_eur || d.mktcap), row: true }));
         const stocks = pool.filter(x => !heldT.has(x.d.ticker) && x.cap >= cap && x.d.rs_ibd != null && x.d.rs_ibd >= 70)
             .map(x => ({ ...x, s: pfScore(x.d), rk: pfRankVal(x.d), vol: pfVol(x.d.ticker, 60), grp: x.d.group || (x.d.sector ? `RoW · ${x.d.sector}` : '') }))
@@ -7178,33 +7178,61 @@
         }
         return rows;
     }
+
+    // max drawdown over the last n days (negative %, from price history newest-first)
+    function pfMaxDD(tk, n) {
+        const p = pfPrices(tk); if (!p || p.length < 30) return null;
+        const a = p.slice(0, Math.min(n, p.length)).reverse();
+        let peak = a[0], dd = 0;
+        for (const x of a) { if (x > peak) peak = x; dd = Math.min(dd, x / peak - 1); }
+        return dd * 100;
+    }
+    function pfRankPct(arr, getter, higherIsBetter) {
+        const v = arr.map(getter).filter(x => x != null).sort((a, b) => a - b);
+        return x => { const g = getter(x); if (g == null || !v.length) return 50;
+            let lo = 0; while (lo < v.length && v[lo] <= g) lo++;
+            const pct = lo / v.length * 100; return higherIsBetter ? pct : 100 - pct; };
+    }
     function pfBuildClaude() {
         const N = +document.getElementById('cpN').value, maxW = +document.getElementById('cpMaxW').value;
         const secCap = +document.getElementById('cpSecCap').value, minCap = +document.getElementById('cpCap').value;
         const rowMin = +document.getElementById('cpRow').value, wt = document.getElementById('cpWt').value;
         const themes = pfThemeTable(), top = new Set(themes.slice(0, 15).map(x => x.t));
         const heldT = new Set(pfRows.map(r => r._src.ticker));
-        const cand = allData.map(d => ({ d, us: true })).concat((allDataRoW || []).map(d => ({ d, us: false }))).map(x => {
+        const minW = +document.getElementById('cpMinW').value;
+        let cand = allData.filter(d => d.ticker.replace(/[^A-Z]/gi, '').length <= 4).map(d => ({ d, us: true }))
+            .concat((allDataRoW || []).map(d => ({ d, us: false }))).map(x => {
             const d = x.d, va = d.va_rs ?? d.rs_ibd, above200 = pfAbove(d.ticker, 200), held = heldT.has(d.ticker);
-            const cap = pfCap(d), fund = pfFundScore(d);
+            const cap = pfCap(d);
             const okNew = cap != null && cap >= minCap && d.rs_ibd >= 70 && va >= 70 && above200 === true
-                && (d.high52_dist == null || d.high52_dist >= -20) && top.has(pfTheme(d));
+                && pfAbove(d.ticker, 50) === true && (d.high52_dist == null || d.high52_dist >= -15) && top.has(pfTheme(d));
             const okHeld = held && d.rs_ibd >= 50 && va >= 50 && above200 !== false;
-            const rank = 0.4 * (va ?? 0) + 0.25 * (d.rs_ibd ?? 0) + 0.15 * (d.pct_4w ?? 50) + 0.2 * (fund ?? 50) + (okHeld ? 5 : 0);
-            return { ...x, va, held, cap, rank, ok: okNew || okHeld, theme: pfTheme(d) };
-        }).filter(x => x.ok).sort((a, b) => b.rank - a.rank);
+            return { ...x, va, held, cap, ok: okNew || okHeld, theme: pfTheme(d) };
+        }).filter(x => x.ok);
+        // resilience: shallow 12M drawdown, low 120D downside vol, low 60D vol (ranked within the eligible pool)
+        cand.forEach(x => { x.dd = pfMaxDD(x.d.ticker, 252); x.dv = pfDownVol(x.d.ticker, 120); x.v60 = pfVol(x.d.ticker, 60); });
+        cand = cand.filter(x => x.held || ((x.dd == null || x.dd >= -35) && (x.v60 == null || x.v60 <= 60)));
+        const rDD = pfRankPct(cand, x => x.dd, true), rDV = pfRankPct(cand, x => x.dv, false), rV = pfRankPct(cand, x => x.v60, false);
+        cand.forEach(x => {
+            x.res = Math.round((rDD(x) + rDV(x) + rV(x)) / 3);
+            const fund = pfFundScore(x.d);
+            x.rank = 0.45 * (x.va ?? 0) + 0.15 * (x.d.rs_ibd ?? 0) + 0.30 * x.res + 0.10 * (fund ?? 50) + (x.held ? 5 : 0);
+        });
+        cand.sort((a, b) => b.rank - a.rank);
+        const invested0 = Math.min(100, pfRows.reduce((s, r) => s + r.w, 0)) || 100;
+        const Nmax = Math.min(N, Math.floor(invested0 / minW));
         const pick = [], perTheme = {};
-        const tryAdd = x => { if (pick.length >= N || pick.includes(x) || (perTheme[x.theme] || 0) >= 3) return false; pick.push(x); perTheme[x.theme] = (perTheme[x.theme] || 0) + 1; return true; };
+        const tryAdd = x => { if (pick.length >= Nmax || pick.includes(x) || (perTheme[x.theme] || 0) >= 3) return false; pick.push(x); perTheme[x.theme] = (perTheme[x.theme] || 0) + 1; return true; };
         // non-US target is enforced by number of positions (min and max)
-        const rowQuota = Math.round(N * rowMin / 100);
+        const rowQuota = Math.round(Nmax * rowMin / 100);
         cand.filter(x => !x.us).forEach(x => { if (pick.filter(p => !p.us).length < rowQuota) tryAdd(x); });
         cand.filter(x => x.us).forEach(tryAdd);
-        cand.filter(x => !x.us).forEach(x => { if (pick.length < N) tryAdd(x); });  // only if US names run out
+        cand.filter(x => !x.us).forEach(x => { if (pick.length < Nmax) tryAdd(x); });  // only if US names run out
         const invested = Math.min(100, pfRows.reduce((s, r) => s + r.w, 0)) || 100;
         const rows = pick.map(x => {
             const vol = pfVol(x.d.ticker, 60);
             const cur = pfRows.find(r => r._src === x.d);
-            return Object.assign({}, x.d, { _src: x.d, input: cur ? cur.input : x.d.ticker, theme: x.theme, vol60: vol,
+            return Object.assign({}, x.d, { _src: x.d, input: cur ? cur.input : x.d.ticker, theme: x.theme, vol60: vol, res: x.res, dd: x.dd,
                 raw: wt === 'eq' ? 1 : 1 / Math.max(vol || 25, 8), w: 0, held: x.held });
         });
         rows.forEach(r => r.w = r.raw);
@@ -7215,6 +7243,14 @@
         if (rowR.length) pfCapWeights(rowR, maxW, 100, invested * tRow);
         // re-apply the sector cap on the whole book
         pfCapWeights(rows, maxW, secCap, invested);
+        // minimum weight per line: lift small lines to the floor, fund it from lines above the floor
+        for (let it = 0; it < 30; it++) {
+            const low = rows.filter(r => r.w < minW - 1e-9); if (!low.length) break;
+            const need = low.reduce((s, r) => s + (minW - r.w), 0); low.forEach(r => r.w = minW);
+            const donors = rows.filter(r => r.w > minW + 1e-9); const room = donors.reduce((s, r) => s + (r.w - minW), 0);
+            if (room <= 0) break;
+            donors.forEach(r => r.w -= need * (r.w - minW) / room);
+        }
         rows.forEach(r => { r.above50 = pfAbove(r.ticker, 50); r.above200 = pfAbove(r.ticker, 200); r.dvol60 = pfDownVol(r.ticker, 60); });
         return { rows, themes, top, invested };
     }
@@ -7234,6 +7270,9 @@
     }
     let _cp = null;
     function pfRenderClaude() {
+        try { pfRenderClaudeInner(); } catch (e) { console.error(e); const el = document.getElementById('cpSum'); if (el) el.textContent = 'Error: ' + e.message; }
+    }
+    function pfRenderClaudeInner() {
         if (!pfRows.length || !document.getElementById('cpN')) return;
         pfRows.forEach(r => { if (r.theme === undefined) r.theme = r.group; });
         _cp = pfBuildClaude();
@@ -7251,7 +7290,7 @@
         const regionOf = r => { const cur = pfRows.find(x => x._src === r._src); if (cur) return cur.region || ''; return allData.includes(r._src) ? PF_REGION(PF_DOMICILE[r.ticker] || 'United States') : PF_REGION(r.country); };
         const hold = [..._cp.rows].sort((a, b) => b.w - a.w);
         const secW = {}; hold.forEach(r => secW[r.sector || '?'] = (secW[r.sector || '?'] || 0) + r.w);
-        document.getElementById('cpSum').textContent = `${hold.length} positions · invested ${hold.reduce((s, r) => s + r.w, 0).toFixed(1)}% · ` +
+        document.getElementById('cpSum').textContent = `updated ${new Date().toLocaleTimeString('en-GB')} · ${hold.length} positions · invested ${hold.reduce((s, r) => s + r.w, 0).toFixed(1)}% · ` +
             Object.entries(secW).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v.toFixed(0)}%`).join(' · ');
         const g0 = v => v == null || isNaN(v) ? '—' : (v > 0 ? '+' : '') + Math.round(v) + '%';
         document.getElementById('cpHold').innerHTML = hold.map((r, i) => `<tr>
@@ -7261,7 +7300,7 @@
             <td class="td-name">${r.theme}</td><td class="td-name">${r.sector || ''}</td><td class="td-name">${regionOf(r)}</td>
             <td class="td-pct" style="font-weight:700">${r.w.toFixed(1)}%</td><td class="td-pct">${r.rs_ibd ?? '—'}</td><td class="td-pct">${r.va_rs ?? '—'}</td><td class="td-pct">${r.pct_4w ?? '—'}</td>
             <td class="td-pct">${g0(r.ny_yoy_s)}</td><td class="td-pct">${g0(r.ny_yoy)}</td><td class="td-pct">${r.forward_pe > 0 ? r.forward_pe.toFixed(1) : '—'}</td>
-            <td class="td-pct">${r.vol60 != null ? Math.round(r.vol60) + '%' : '—'}</td><td class="td-pct">${r.high52_dist != null ? r.high52_dist.toFixed(1) + '%' : '—'}</td>
+            <td class="td-pct">${r.vol60 != null ? Math.round(r.vol60) + '%' : '—'}</td><td class="td-pct">${r.dd != null ? r.dd.toFixed(0) + '%' : '—'}</td><td class="td-pct">${r.res ?? '—'}</td><td class="td-pct">${r.high52_dist != null ? r.high52_dist.toFixed(1) + '%' : '—'}</td>
             <td class="td-pct">${pfCap(r._src) != null ? Math.round(pfCap(r._src)) : '—'}</td></tr>`).join('');
         document.getElementById('cpCmp').innerHTML = rows.map(([l, a, b, d, u]) =>
             `<tr><td class="td-name">${l}</td><td class="td-pct">${f(a, d, u)}</td><td class="td-pct" style="font-weight:700">${f(b, d, u)}</td><td class="td-pct">${a == null || b == null ? '—' : sg(b - a, d)}</td></tr>`).join('');
@@ -7320,6 +7359,7 @@
         const universe = isUS ? allData : (allDataRoW || []);
         const cap = pfCap(src);
         const pool = universe.filter(d => d !== src && !held.has(d.ticker) && d.sector && d.sector === src.sector)
+            .filter(d => !isUS || d.ticker.replace(/[^A-Z]/gi, '').length <= 4)   // skip US tickers > 4 letters (OTC ADRs)
             .map(d => ({ d, s: pfScore(d), cap: pfCap(d), vol: pfVol(d.ticker, 60) }))
             .filter(x => x.cap != null && (cap ? x.cap >= cap / 3 : x.cap >= 5))
             .filter(x => x.d.rs_ibd != null && (src.rs_ibd == null || x.d.rs_ibd > src.rs_ibd))
