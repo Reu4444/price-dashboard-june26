@@ -704,6 +704,8 @@
     .pf-edit{display:none;margin-bottom:10px;max-width:420px}
     .pf-edit.open{display:block}
     .pf-edit textarea{width:100%;height:140px;font-family:'IBM Plex Mono',monospace;font-size:11px;border:1px solid var(--faint);padding:6px;margin-bottom:6px}
+    .pf-narr{font-size:12px;line-height:1.6}
+    .pf-narr li{margin:0 0 6px 16px}
     .pf-strip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(72px,1fr);gap:4px}
     .pf-strip .pf-kpi{padding:5px 6px;white-space:nowrap}
     .pf-sec{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:start}
@@ -1546,6 +1548,7 @@
             <span id="pfStatus"></span>
             <span class="pf-ctrls">
                 <label>Rank leaders by <select id="pfRankBy" onchange="renderPortfolio()"><option value="va" selected>VA RS</option><option value="score">Composite score</option></select></label>
+                <a href="#" onclick="document.getElementById('pfClaudeAnchor').scrollIntoView({behavior:'smooth'});return false">Claude portfolio ↓</a>
                 <a href="#" onclick="pfLoadSheet();return false">Reload sheet</a>
                 <a href="#" onclick="pfExportCSV();return false">Export CSV</a>
                 <a href="#" onclick="document.getElementById('pfEdit').classList.toggle('open');return false">Edit manually</a>
@@ -1610,7 +1613,7 @@
             <th class="th-pct" onclick="pfSort('forward_pe')">FWD PE</th>
             <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('vol60')">VOL 60D</th>
             <th class="th-pct" onclick="pfSort('dvol60')">DOWN VOL</th>
-            <th class="th-pct" style="border-left:1px solid var(--border2);color:#6d28d9" onclick="pfSort('score')">SCORE</th>
+            <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('score')">SCORE</th>
         </tr></thead><tbody id="pfBody"></tbody></table></div>
 
         <div id="pfActionsWrap" style="display:none;margin:22px 0 10px">
@@ -1620,6 +1623,30 @@
         <div class="pf-h" style="margin-top:22px;">SWITCH RECOMMENDATIONS</div>
         <div class="pf-hint" style="margin-bottom:8px;">Score = 70% relative strength (RS IBD 35 · VA RS 25 · Pct 6M 20 · Pct 4W 20) + 30% fundamentals (Sales CQ and EPS CQ growth percentiles). Switch candidates: same universe (US for US, RoW for RoW), same sector, market cap ≥ 1/3 of the holding, RS IBD and VA RS both better than the holding (RS IBD only for RoW). Sorted by VA RS. Rule-based, not investment advice.</div>
         <div id="pfRecos"></div>
+
+        <div class="pf-h" style="margin-top:28px;" id="pfClaudeAnchor">CLAUDE PORTFOLIO</div>
+        <div class="pf-bar-top" style="justify-content:flex-start;gap:14px">
+            <label>Positions <select id="cpN" onchange="pfRenderClaude()"><option>20</option><option>25</option><option selected>30</option><option>35</option><option>40</option></select></label>
+            <label>Max weight <select id="cpMaxW" onchange="pfRenderClaude()"><option value="4">4%</option><option value="5" selected>5%</option><option value="6">6%</option><option value="8">8%</option></select></label>
+            <label>Sector cap <select id="cpSecCap" onchange="pfRenderClaude()"><option value="25">25%</option><option value="30" selected>30%</option><option value="35">35%</option><option value="100">none</option></select></label>
+            <label>Min cap <select id="cpCap" onchange="pfRenderClaude()"><option value="10">10B</option><option value="20" selected>20B</option><option value="50">50B</option></select></label>
+            <label>Non-US weight ≈ <select id="cpRow" onchange="pfRenderClaude()"><option value="0">0%</option><option value="15">15%</option><option value="25" selected>25%</option><option value="35">35%</option></select></label>
+            <label>Weighting <select id="cpWt" onchange="pfRenderClaude()"><option value="iv" selected>Inverse vol</option><option value="eq">Equal</option></select></label>
+            <a href="#" onclick="pfClaudeCSV();return false" style="color:var(--accent2);text-decoration:none">Export CSV</a>
+        </div>
+        <div class="pf-grid2" style="grid-template-columns:1.1fr 1fr">
+            <div class="pf-card" style="max-height:none"><div class="pf-sub">Analysis</div><div id="cpNarr" class="pf-narr"></div></div>
+            <div class="pf-card" style="max-height:none"><div class="pf-sub">Current vs Claude</div>
+                <div class="table-wrap"><table class="pf-gt"><thead><tr><th></th><th class="th-pct">CURRENT</th><th class="th-pct">CLAUDE</th><th class="th-pct">CHANGE</th></tr></thead><tbody id="cpCmp"></tbody></table></div></div>
+        </div>
+        <div class="pf-grid2" style="margin-top:12px;grid-template-columns:1fr 1.3fr">
+            <div class="pf-card" style="max-height:520px"><div class="pf-sub">Themes</div>
+                <div class="pf-hint">Theme score = 40% median VA RS (RS IBD for RoW) + 30% breadth (% of members with RS IBD ≥ 70) + 30% median Pct 4W. Top 15 = themes that work.</div>
+                <div class="table-wrap"><table class="pf-gt"><thead><tr><th>#</th><th>THEME</th><th class="th-pct">SCORE</th><th class="th-pct">MED VA</th><th class="th-pct">BREADTH</th><th class="th-pct">CURRENT</th><th class="th-pct">CLAUDE</th></tr></thead><tbody id="cpThemes"></tbody></table></div></div>
+            <div class="pf-card" style="max-height:520px"><div class="pf-sub">Trades to get there <span id="cpTurn" style="font-family:Arial;font-size:11px;color:var(--muted)"></span></div>
+                <div class="table-wrap"><table class="pf-gt"><thead><tr><th>ACTION</th><th>TICKER</th><th>NAME</th><th>THEME</th><th class="th-pct">CURRENT</th><th class="th-pct">CLAUDE</th><th class="th-pct">RS</th><th class="th-pct">VA</th><th class="th-pct">VOL</th></tr></thead><tbody id="cpTrades"></tbody></table></div></div>
+        </div>
+        <div class="pf-hint" style="margin-top:6px">Construction: themes ranked as above; stocks must have market cap ≥ min, RS IBD ≥ 70, VA RS ≥ 70 (RS IBD for RoW), be above the 200 MA and within 20% of the 52W high, and belong to a top-15 theme. Non-US names fill the chosen share of positions (RoW RS is ranked within the RoW universe, so it is capped rather than competing freely). Ranking = 40% VA RS + 25% RS IBD + 15% Pct 4W + 20% fundamentals. Current holdings with RS IBD ≥ 50, VA RS ≥ 50 and above the 200 MA get a small bonus to limit turnover. Max 3 stocks per theme. Weights: inverse 60D volatility (or equal), capped per stock and per sector, invested at the current invested %. Rule-based model, not investment advice; past RS does not guarantee future returns.</div>
     </div>
 
     <!-- TAB: METHOD -->
@@ -1968,11 +1995,11 @@
         return map;
     }
 
-    // colA=ticker, colB=name, colC=country, colD=currency, colE=mktcap, colF=mktcap_eur, colG=sector
+    // colA=ticker, colB=name, colC=country, colD=currency, colE=mktcap, colF=mktcap_eur, colG=sector, colH=group (optional)
     function parseInfoRowJSON(data) {
         const map = {};
         for (let i = 1; i < data.length; i++) {
-            const [ticker, name, country, currency, mktcap, mktcap_eur, sector] = data[i];
+            const [ticker, name, country, currency, mktcap, mktcap_eur, sector, group] = data[i];
             if (!ticker)
                 continue;
             const mc = parseFloat(String(mktcap || '').replace(/,/g, ''));
@@ -1984,6 +2011,7 @@
                 mktcap: isNaN(mc) ? '' : String(mc),
                 mktcap_eur: isNaN(mcEur) ? '' : String(mcEur),
                 sector: String(sector || ''),
+                group: String(group || '').trim(),
             };
         }
         return map;
@@ -2570,7 +2598,7 @@
                     obj.mktcap = info.mktcap || '';
                     obj.mktcap_eur = info.mktcap_eur || '';
                     obj.sector = info.sector || '';
-                    obj.group = '';
+                    obj.group = info.group || '';
                     allDataRoW.push(obj);
                 }
                 // Compute percentiles + IBD RS on the RoW pool separately
@@ -6687,6 +6715,7 @@
         pfRenderGaps();
         pfRenderRecos();
         pfRenderActions();
+        pfRenderClaude();
     }
 
     function pfKpi(v, l, color) {
@@ -7008,6 +7037,168 @@
     // Switch candidates: same universe (US↔US, RoW↔RoW), same sector, market cap ≥ 1/3 of the holding,
     // RS IBD better AND VA RS better than the holding (VA RS only where available, i.e. US).
     function pfCap(d) { const v = parseFloat(allData.includes(d) ? d.mktcap : (d.mktcap_eur || d.mktcap)); return isNaN(v) ? null : v; }
+
+    // ── CLAUDE PORTFOLIO ─────────────────────────────────────────
+    const pfTheme = d => d.group || (d.sector ? `RoW · ${d.sector}` : '(n/a)');
+    function pfThemeTable() {
+        const m = {};
+        allData.concat(allDataRoW || []).forEach(d => { const t = pfTheme(d); if (t !== '(n/a)') (m[t] = m[t] || []).push(d); });
+        return Object.entries(m).filter(([, a]) => a.length >= 3).map(([t, a]) => {
+            const va = pfMedian(a.map(d => d.va_rs ?? d.rs_ibd));
+            const breadth = a.filter(d => d.rs_ibd >= 70).length / a.length * 100;
+            const p4 = pfMedian(a.map(d => d.pct_4w));
+            const score = va == null ? null : Math.round(0.4 * va + 0.3 * breadth + 0.3 * (p4 ?? 50));
+            return { t, n: a.length, va, breadth, p4, score };
+        }).filter(x => x.score != null).sort((a, b) => b.score - a.score);
+    }
+    function pfCapWeights(rows, maxW, secCap, total) {
+        // iterative capping: stock cap then sector cap, redistributing the excess pro rata to uncapped names
+        for (let it = 0; it < 50; it++) {
+            let changed = false;
+            const sum = rows.reduce((s, r) => s + r.w, 0);
+            rows.forEach(r => r.w = r.w / sum * total);
+            const over = rows.filter(r => r.w > maxW + 1e-9);
+            if (over.length) {
+                let excess = 0; over.forEach(r => { excess += r.w - maxW; r.w = maxW; r.capped = true; });
+                const free = rows.filter(r => !r.capped); const fs = free.reduce((s, r) => s + r.w, 0);
+                if (fs > 0) free.forEach(r => r.w += excess * r.w / fs);
+                changed = true;
+            }
+            const sec = {}; rows.forEach(r => sec[r.sector || '?'] = (sec[r.sector || '?'] || 0) + r.w);
+            for (const [k, v] of Object.entries(sec)) {
+                const lim = secCap / 100 * total;
+                if (v > lim + 1e-6) {
+                    const inS = rows.filter(r => (r.sector || '?') === k), out = rows.filter(r => (r.sector || '?') !== k && !r.capped);
+                    const excess = v - lim; inS.forEach(r => r.w *= lim / v);
+                    const os = out.reduce((s, r) => s + r.w, 0); if (os > 0) out.forEach(r => r.w += excess * r.w / os);
+                    changed = true;
+                }
+            }
+            if (!changed) break;
+        }
+        return rows;
+    }
+    function pfBuildClaude() {
+        const N = +document.getElementById('cpN').value, maxW = +document.getElementById('cpMaxW').value;
+        const secCap = +document.getElementById('cpSecCap').value, minCap = +document.getElementById('cpCap').value;
+        const rowMin = +document.getElementById('cpRow').value, wt = document.getElementById('cpWt').value;
+        const themes = pfThemeTable(), top = new Set(themes.slice(0, 15).map(x => x.t));
+        const heldT = new Set(pfRows.map(r => r._src.ticker));
+        const cand = allData.map(d => ({ d, us: true })).concat((allDataRoW || []).map(d => ({ d, us: false }))).map(x => {
+            const d = x.d, va = d.va_rs ?? d.rs_ibd, above200 = pfAbove(d.ticker, 200), held = heldT.has(d.ticker);
+            const cap = pfCap(d), fund = pfFundScore(d);
+            const okNew = cap != null && cap >= minCap && d.rs_ibd >= 70 && va >= 70 && above200 === true
+                && (d.high52_dist == null || d.high52_dist >= -20) && top.has(pfTheme(d));
+            const okHeld = held && d.rs_ibd >= 50 && va >= 50 && above200 !== false;
+            const rank = 0.4 * (va ?? 0) + 0.25 * (d.rs_ibd ?? 0) + 0.15 * (d.pct_4w ?? 50) + 0.2 * (fund ?? 50) + (okHeld ? 5 : 0);
+            return { ...x, va, held, cap, rank, ok: okNew || okHeld, theme: pfTheme(d) };
+        }).filter(x => x.ok).sort((a, b) => b.rank - a.rank);
+        const pick = [], perTheme = {};
+        const tryAdd = x => { if (pick.length >= N || pick.includes(x) || (perTheme[x.theme] || 0) >= 3) return false; pick.push(x); perTheme[x.theme] = (perTheme[x.theme] || 0) + 1; return true; };
+        // non-US target is enforced by number of positions (min and max)
+        const rowQuota = Math.round(N * rowMin / 100);
+        cand.filter(x => !x.us).forEach(x => { if (pick.filter(p => !p.us).length < rowQuota) tryAdd(x); });
+        cand.filter(x => x.us).forEach(tryAdd);
+        cand.filter(x => !x.us).forEach(x => { if (pick.length < N) tryAdd(x); });  // only if US names run out
+        const invested = Math.min(100, pfRows.reduce((s, r) => s + r.w, 0)) || 100;
+        const rows = pick.map(x => {
+            const vol = pfVol(x.d.ticker, 60);
+            const cur = pfRows.find(r => r._src === x.d);
+            return Object.assign({}, x.d, { _src: x.d, input: cur ? cur.input : x.d.ticker, theme: x.theme, vol60: vol,
+                raw: wt === 'eq' ? 1 : 1 / Math.max(vol || 25, 8), w: 0, held: x.held });
+        });
+        rows.forEach(r => r.w = r.raw);
+        // region split by weight: non-US gets the chosen % of invested capital (if non-US names exist)
+        const usR = rows.filter(r => allData.includes(r._src)), rowR = rows.filter(r => !allData.includes(r._src));
+        const tRow = rowR.length && usR.length ? rowMin / 100 : (rowR.length ? 1 : 0);
+        if (usR.length) pfCapWeights(usR, maxW, secCap / (1 - tRow || 1), invested * (1 - tRow));
+        if (rowR.length) pfCapWeights(rowR, maxW, 100, invested * tRow);
+        // re-apply the sector cap on the whole book
+        pfCapWeights(rows, maxW, secCap, invested);
+        rows.forEach(r => { r.above50 = pfAbove(r.ticker, 50); r.above200 = pfAbove(r.ticker, 200); r.dvol60 = pfDownVol(r.ticker, 60); });
+        return { rows, themes, top, invested };
+    }
+    function pfStats(R) {
+        const inv = R.reduce((s, r) => s + r.w, 0) || 1;
+        const share = f => { const c = R.filter(r => f(r) != null); const cw = c.reduce((s, r) => s + r.w, 0); return cw ? c.filter(f).reduce((s, r) => s + r.w, 0) / cw * 100 : null; };
+        const pe = R.filter(r => r.forward_pe > 0), peW = pe.reduce((s, r) => s + r.w, 0);
+        const us = R.filter(r => allData.includes(r._src)).reduce((s, r) => s + r.w, 0) / inv * 100;
+        return {
+            n: R.length, top10: [...R].sort((a, b) => b.w - a.w).slice(0, 10).reduce((s, r) => s + r.w, 0) / inv * 100,
+            maxW: Math.max(...R.map(r => r.w)), us,
+            p4: pfWavg(R, 'pct_4w'), p6: pfWavg(R, 'pct_6m'), rs: pfWavg(R, 'rs_ibd'), va: pfWavg(R, 'va_rs'),
+            s27: pfWmedian(R, 'ny_yoy_s'), e27: pfWmedian(R, 'ny_yoy'), pe: peW ? peW / pe.reduce((s, r) => s + r.w / r.forward_pe, 0) : null,
+            a50: share(r => r.above50), a200: share(r => r.above200), h52: pfWavg(R, 'high52_dist'),
+            pv: pfPortVol(R, 60), sv: pfWavg(R, 'vol60'), r3: pfWavg(R, 'ret_3m'), r12: pfWavg(R, 'ret_12m')
+        };
+    }
+    let _cp = null;
+    function pfRenderClaude() {
+        if (!pfRows.length || !document.getElementById('cpN')) return;
+        pfRows.forEach(r => { if (r.theme === undefined) r.theme = r.group; });
+        _cp = pfBuildClaude();
+        const C = pfStats(pfRows), M = pfStats(_cp.rows);
+        const f = (v, d = 0, suf = '') => v == null || isNaN(v) ? '—' : (+v).toFixed(d) + suf;
+        const sg = (v, d = 1) => v == null || isNaN(v) ? '—' : (v > 0 ? '+' : '') + (+v).toFixed(d);
+        const rows = [
+            ['Positions', C.n, M.n, 0, ''], ['Top 10 weight', C.top10, M.top10, 0, '%'], ['Largest position', C.maxW, M.maxW, 1, '%'], ['US weight', C.us, M.us, 0, '%'],
+            ['Pct 4W', C.p4, M.p4, 0, ''], ['Pct 6M', C.p6, M.p6, 0, ''], ['RS IBD', C.rs, M.rs, 0, ''], ['VA RS', C.va, M.va, 0, ''],
+            ['Sales 2027', C.s27, M.s27, 0, '%'], ['EPS 2027', C.e27, M.e27, 0, '%'], ['Fwd P/E', C.pe, M.pe, 1, 'x'],
+            ['Above 50 MA', C.a50, M.a50, 0, '%'], ['Above 200 MA', C.a200, M.a200, 0, '%'], ['From 52W high', C.h52, M.h52, 1, '%'],
+            ['Portfolio vol 60D', C.pv, M.pv, 1, '%'], ['Stock vol 60D', C.sv, M.sv, 1, '%'], ['3M (holdings)', C.r3, M.r3, 1, '%'], ['12M (holdings)', C.r12, M.r12, 1, '%']
+        ];
+        document.getElementById('cpCmp').innerHTML = rows.map(([l, a, b, d, u]) =>
+            `<tr><td class="td-name">${l}</td><td class="td-pct">${f(a, d, u)}</td><td class="td-pct" style="font-weight:700">${f(b, d, u)}</td><td class="td-pct">${a == null || b == null ? '—' : sg(b - a, d)}</td></tr>`).join('');
+        // themes
+        const wBy = (R, t) => R.filter(r => (r.group || r.theme) === t || pfTheme(r._src) === t).reduce((s, r) => s + r.w, 0);
+        const themeRows = _cp.themes.slice(0, 25);
+        document.getElementById('cpThemes').innerHTML = themeRows.map((x, i) => `<tr${i === 15 ? ' style="border-top:2px solid var(--border)"' : ''}>
+            <td class="td-pct">${i + 1}</td><td class="td-name">${x.t}</td><td class="td-pct" style="font-weight:700">${x.score}</td>
+            <td class="td-pct">${x.va != null ? Math.round(x.va) : '—'}</td><td class="td-pct">${Math.round(x.breadth)}%</td>
+            <td class="td-pct">${f(wBy(pfRows, x.t), 1, '%')}</td><td class="td-pct">${f(wBy(_cp.rows, x.t), 1, '%')}</td></tr>`).join('');
+        // trades
+        const cur = new Map(pfRows.map(r => [r._src, r])), mod = new Map(_cp.rows.map(r => [r._src, r]));
+        const all = [...new Set([...cur.keys(), ...mod.keys()])].map(d => {
+            const a = cur.get(d), b = mod.get(d), wa = a ? a.w : 0, wb = b ? b.w : 0;
+            const act = !a ? 'BUY' : !b ? 'SELL' : Math.abs(wb - wa) < 0.5 ? 'KEEP' : wb > wa ? 'ADD' : 'TRIM';
+            return { d, a, b, wa, wb, act, dw: wb - wa };
+        });
+        const order = { SELL: 0, BUY: 1, TRIM: 2, ADD: 3, KEEP: 4 };
+        all.sort((x, y) => order[x.act] - order[y.act] || Math.abs(y.dw) - Math.abs(x.dw));
+        const turnover = all.reduce((s, x) => s + Math.abs(x.dw), 0) / 2;
+        document.getElementById('cpTurn').textContent = `one-way turnover ${turnover.toFixed(0)}% · ${all.filter(x => x.act === 'SELL').length} sells · ${all.filter(x => x.act === 'BUY').length} buys`;
+        document.getElementById('cpTrades').innerHTML = all.map(x => { const d = x.d; const v = pfVol(d.ticker, 60); return `<tr>
+            <td class="td-name" style="font-weight:700">${x.act}</td><td class="td-ticker" style="cursor:pointer;color:var(--accent2)" onclick="openNews('${d.ticker}')">${pfShort(x.a ? x.a.input : d.ticker)}</td>
+            <td class="td-name">${(d.name || '').slice(0, 26)}</td><td class="td-name">${pfTheme(d)}</td>
+            <td class="td-pct">${x.wa ? x.wa.toFixed(1) : '—'}</td><td class="td-pct" style="font-weight:700">${x.wb ? x.wb.toFixed(1) : '—'}</td>
+            <td class="td-pct">${d.rs_ibd ?? '—'}</td><td class="td-pct">${d.va_rs ?? '—'}</td><td class="td-pct">${v != null ? Math.round(v) + '%' : '—'}</td></tr>`; }).join('');
+        // narrative
+        const topW = R => R.filter(r => _cp.top.has(pfTheme(r._src))).reduce((s, r) => s + r.w, 0) / (R.reduce((s, r) => s + r.w, 0) || 1) * 100;
+        const ownedThemes = {}; pfRows.forEach(r => { const t = pfTheme(r._src); ownedThemes[t] = (ownedThemes[t] || 0) + r.w; });
+        const rankOf = t => { const i = _cp.themes.findIndex(x => x.t === t); return i < 0 ? null : i + 1; };
+        const weak = Object.entries(ownedThemes).map(([t, w]) => ({ t, w, rk: rankOf(t), sc: (_cp.themes.find(x => x.t === t) || {}).score }))
+            .filter(x => x.rk == null || x.rk > _cp.themes.length / 2).sort((a, b) => b.w - a.w);
+        const missing = _cp.themes.slice(0, 10).filter(x => !ownedThemes[x.t]);
+        const below200 = pfRows.filter(r => r.above200 === false);
+        const L = [];
+        L.push(`<b>Themes.</b> ${f(topW(pfRows), 0, '%')} of the current portfolio sits in the 15 strongest themes, versus ${f(topW(_cp.rows), 0, '%')} for the Claude portfolio.`);
+        if (weak.length) L.push(`<b>Weak themes owned</b> (bottom half of the ranking): ${weak.slice(0, 6).map(x => `${x.t} ${x.w.toFixed(1)}%`).join(', ')} — ${weak.reduce((s, x) => s + x.w, 0).toFixed(0)}% of the portfolio.`);
+        if (missing.length) L.push(`<b>Strong themes not owned</b> (top 10): ${missing.map(x => `${x.t} (${x.score})`).join(', ')}.`);
+        L.push(`<b>Relative strength.</b> RS IBD ${f(C.rs)} → ${f(M.rs)}, VA RS ${f(C.va)} → ${f(M.va)}, Pct 4W ${f(C.p4)} → ${f(M.p4)}. ${C.p4 != null && C.p6 != null && C.p4 < C.p6 - 3 ? 'Current momentum is fading (4W below 6M).' : ''}`);
+        L.push(`<b>Stability.</b> Portfolio vol 60D ${f(C.pv, 1, '%')} → ${f(M.pv, 1, '%')}; average stock vol ${f(C.sv, 1, '%')} → ${f(M.sv, 1, '%')}. ${below200.length ? `${below200.length} holdings (${below200.reduce((s, r) => s + r.w, 0).toFixed(0)}%) are below their 200 MA: ${below200.map(r => pfShort(r.input)).join(', ')}.` : 'No holding is below its 200 MA.'}`);
+        L.push(`<b>Trend.</b> Above 200 MA ${f(C.a200, 0, '%')} → ${f(M.a200, 0, '%')}; distance from 52W high ${f(C.h52, 1, '%')} → ${f(M.h52, 1, '%')}.`);
+        L.push(`<b>Valuation & growth.</b> Fwd P/E ${f(C.pe, 1, 'x')} → ${f(M.pe, 1, 'x')}; median sales 2027 ${f(C.s27, 0, '%')} → ${f(M.s27, 0, '%')}, EPS 2027 ${f(C.e27, 0, '%')} → ${f(M.e27, 0, '%')}.`);
+        L.push(`<b>Getting there.</b> One-way turnover ${turnover.toFixed(0)}%: sell ${all.filter(x => x.act === 'SELL').map(x => pfShort(x.a.input)).join(', ') || 'nothing'}; buy ${all.filter(x => x.act === 'BUY').map(x => pfShort(x.d.ticker)).join(', ') || 'nothing'}.`);
+        document.getElementById('cpNarr').innerHTML = '<ul style="padding:0;margin:0">' + L.map(x => `<li>${x}</li>`).join('') + '</ul>';
+    }
+    function pfClaudeCSV() {
+        if (!_cp) return;
+        const h = ['ticker', 'name', 'theme', 'sector', 'weight', 'rs_ibd', 'va_rs', 'vol60'];
+        const lines = [h.join(',')].concat(_cp.rows.sort((a, b) => b.w - a.w).map(r => [pfShort(r.input), `"${r.name || ''}"`, `"${r.theme}"`, `"${r.sector || ''}"`, r.w.toFixed(2), r.rs_ibd, r.va_rs, r.vol60 != null ? r.vol60.toFixed(1) : ''].map(x => x == null ? '' : x).join(',')));
+        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv' }));
+        a.download = `claude_portfolio_${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    }
+
     function pfCandidates(r, held) {
         const src = r._src, isUS = allData.includes(src);
         const universe = isUS ? allData : (allDataRoW || []);
