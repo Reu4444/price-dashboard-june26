@@ -1640,13 +1640,15 @@
             <label>Sector cap <select id="cpSecCap" onchange="pfRenderClaude()"><option value="25">25%</option><option value="30" selected>30%</option><option value="35">35%</option><option value="100">none</option></select></label>
             <label>Min cap <select id="cpCap" onchange="pfRenderClaude()"><option value="10">10B</option><option value="20" selected>20B</option><option value="50">50B</option></select></label>
             <label>Non-US weight ≈ <select id="cpRow" onchange="pfRenderClaude()"><option value="0">0%</option><option value="15">15%</option><option value="25" selected>25%</option><option value="35">35%</option></select></label>
+            <label>Max per group <select id="cpGrp" onchange="pfRenderClaude()"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option></select></label>
+            <label>Max pair corr <select id="cpCorr" onchange="pfRenderClaude()"><option value="0.5">0.5</option><option value="0.6">0.6</option><option value="0.7" selected>0.7</option><option value="0.8">0.8</option></select></label>
             <label>Weighting <select id="cpWt" onchange="pfRenderClaude()"><option value="iv" selected>Inverse vol</option><option value="eq">Equal</option></select></label>
             <a href="#" onclick="pfClaudeCSV();return false" style="color:var(--accent2);text-decoration:none">Export CSV</a>
         </div>
         <div class="pf-card" style="max-height:none;margin-bottom:12px"><div class="pf-sub">Holdings <span id="cpSum" style="font-family:Arial;font-size:11px;color:var(--muted)"></span></div>
             <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr>
                 <th>#</th><th>TICKER</th><th>NAME</th><th>STATUS</th><th>THEME</th><th>SECTOR</th><th>REGION</th>
-                <th class="th-pct">WEIGHT</th><th class="th-pct">RS IBD</th><th class="th-pct">VA RS</th><th class="th-pct">PCT 4W</th>
+                <th class="th-pct">WEIGHT</th><th class="th-pct">VA 6-12M</th><th class="th-pct">VA RS</th><th class="th-pct">RS IBD</th><th class="th-pct">PCT 4W</th>
                 <th class="th-pct">SALES 2027</th><th class="th-pct">EPS 2027</th><th class="th-pct">FWD P/E</th><th class="th-pct">VOL 60D</th><th class="th-pct">MAX DD 12M</th><th class="th-pct">RESILIENCE</th><th class="th-pct">FROM 52WH</th><th class="th-pct">CAP</th>
             </tr></thead><tbody id="cpHold"></tbody></table></div>
         </div>
@@ -1657,18 +1659,20 @@
         </div>
         <div style="margin-top:12px">
             <div class="pf-card" style="max-height:520px"><div class="pf-sub">Themes</div>
-                <div class="pf-hint">Theme score = 40% average VA RS (RS IBD for RoW) + 30% breadth (% of members with RS IBD ≥ 70) + 30% average Pct 4W. Top 15 = themes that work.</div>
-                <div class="table-wrap"><table class="pf-gt"><thead><tr><th>#</th><th>THEME</th><th class="th-pct">SCORE</th><th class="th-pct">AVG VA</th><th class="th-pct">BREADTH</th><th class="th-pct">CURRENT</th><th class="th-pct">CLAUDE</th></tr></thead><tbody id="cpThemes"></tbody></table></div></div>
+                <div class="pf-hint">Theme score = 60% average VA 6-12M + 40% breadth (% of members with VA 6-12M ≥ 70). No 4-week data, to avoid short-term momentum. Bottom 40% of themes are excluded from the Claude portfolio.</div>
+                <div class="table-wrap"><table class="pf-gt"><thead><tr><th>#</th><th>THEME</th><th class="th-pct">SCORE</th><th class="th-pct">AVG VA 6-12M</th><th class="th-pct">BREADTH</th><th class="th-pct">CURRENT</th><th class="th-pct">CLAUDE</th></tr></thead><tbody id="cpThemes"></tbody></table></div></div>
 
         </div>
-        <div class="pf-hint" style="margin-top:6px"><b>Selection.</b> 1) Themes: top 15 by theme score. 2) Eligible stocks: in a top-15 theme, market cap ≥ min, RS IBD ≥ 70, VA RS ≥ 70 (RS IBD for RoW), above the 50 MA and the 200 MA, within 15% of the 52W high, 12M max drawdown not worse than −35%, 60D vol ≤ 60%, US tickers of 5+ letters excluded. Current holdings with RS IBD ≥ 50, VA RS ≥ 50 and above the 200 MA stay eligible. 3) Ranking = 45% VA RS + 30% resilience + 15% RS IBD + 10% fundamentals (+5 for current holdings). Resilience = average rank (within the eligible pool) of shallow 12M max drawdown, low 120D downside vol and low 60D vol. 4) Up to max positions, max 3 per theme, non-US share by weight. 5) Weights: inverse 60D vol (or equal), capped per stock and per sector, floor at min weight. Rule-based model, not investment advice.</div>
+        <div class="pf-hint" style="margin-top:6px"><b>Selection — vol-adjusted strength, resilience, diversification (no short-term momentum).</b> 1) Strength measure = VA 6-12M: average of the 6M and 12M vol-adjusted percentiles (the 4W part of VA RS is left out). RoW has no VA data, so it uses a proxy: percentile within RoW of 6M and 12M return divided by volatility. 2) Themes scored on average VA 6-12M and breadth; the bottom 40% of themes are excluded. 3) Eligible: market cap ≥ min, VA 6-12M ≥ 70, above the 200 MA, not extended (≤ 15% above the 50 MA), 12M max drawdown not worse than −35%, 60D vol ≤ 55%, US tickers of 5+ letters excluded. Current holdings with VA 6-12M ≥ 50 above the 200 MA stay eligible (+5 bonus). 4) Ranking = 60% VA 6-12M + 30% resilience (shallow drawdown, low downside vol, low vol) + 10% fundamentals. RS IBD and Pct 4W are not used. 5) Diversification while picking: max stocks per group, max names per sector in line with the sector cap, and no pair of stocks with a 6M daily-return correlation above the chosen limit. 6) Weights: inverse 60D vol (or equal), capped per stock and per sector, floor at min weight. Rule-based model, not investment advice.</div>
         <div class="pf-h" style="margin-top:28px;" id="pfAcwiAnchor">ACWI SECTOR-NEUTRAL PORTFOLIO</div>
         <div class="pf-hint">Sector weights of the iShares MSCI ACWI ETF (as of <span id="awDate"></span>), filled with the strongest stocks of each sector.</div>
         <div class="pf-bar-top" style="justify-content:flex-start;gap:14px">
             <label>Max positions <select id="awN" onchange="pfRenderAcwi()"><option>20</option><option>25</option><option selected>30</option></select></label>
-            <label>Min weight <select id="awMinW" onchange="pfRenderAcwi()"><option value="1">1%</option><option value="2" selected>2%</option></select></label>
+            <label>Min weight <select id="awMinW" onchange="pfRenderAcwi()"><option value="1">1%</option><option value="2" selected>2%</option><option value="3">3%</option></select></label>
             <label>Min cap <select id="awCap" onchange="pfRenderAcwi()"><option value="10">10B</option><option value="20" selected>20B</option><option value="50">50B</option></select></label>
             <label>Non-US weight ≈ <select id="awRow" onchange="pfRenderAcwi()"><option value="0">0%</option><option value="25">25%</option><option value="36" selected>36% (ACWI)</option></select></label>
+            <label>Max per group <select id="awGrp" onchange="pfRenderAcwi()"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option></select></label>
+            <label>Max pair corr <select id="awCorr" onchange="pfRenderAcwi()"><option value="0.5">0.5</option><option value="0.6">0.6</option><option value="0.7" selected>0.7</option><option value="0.8">0.8</option></select></label>
             <label>Weighting within sector <select id="awWt" onchange="pfRenderAcwi()"><option value="iv" selected>Inverse vol</option><option value="eq">Equal</option></select></label>
             <a href="#" onclick="pfAcwiCSV();return false" style="color:var(--accent2);text-decoration:none">Export CSV</a>
         </div>
@@ -1681,11 +1685,11 @@
         <div class="pf-card" style="max-height:none;margin-top:12px"><div class="pf-sub">Holdings <span id="awSum" style="font-family:Arial;font-size:11px;color:var(--muted)"></span></div>
             <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr>
                 <th>SECTOR</th><th>TICKER</th><th>NAME</th><th>STATUS</th><th>GROUP</th><th>REGION</th>
-                <th class="th-pct">WEIGHT</th><th class="th-pct">PCT 4W</th><th class="th-pct">PCT 6M</th><th class="th-pct">RS IBD</th><th class="th-pct">VA RS</th>
+                <th class="th-pct">WEIGHT</th><th class="th-pct">VA 6-12M</th><th class="th-pct">VA RS</th><th class="th-pct">RS IBD</th><th class="th-pct">PCT 4W</th>
                 <th class="th-pct">SALES 2027</th><th class="th-pct">EPS 2027</th><th class="th-pct">FWD P/E</th><th class="th-pct">VOL 60D</th><th class="th-pct">MAX DD 12M</th><th class="th-pct">CAP</th>
             </tr></thead><tbody id="awHold"></tbody></table></div>
         </div>
-        <div class="pf-hint" style="margin-top:6px"><b>Construction.</b> Sector targets = ACWI sector weights rescaled to 100% of invested capital (cash excluded). Number of names per sector ∝ sector weight (at least 1, and no more than the sector weight allows at the min weight). Within each sector: stocks with market cap ≥ min, above the 200 MA, US tickers of 5+ letters excluded, ranked by 45% VA RS (RS IBD for RoW) + 30% resilience + 15% RS IBD + 10% fundamentals; non-US names take their share of slots per sector. Weights within a sector: inverse 60D vol (or equal), summing to the sector target; lines below the min weight are lifted. ACWI weights are a snapshot and need updating when the index drifts.</div>
+        <div class="pf-hint" style="margin-top:6px"><b>Construction — same philosophy as the Claude portfolio.</b> Sector targets = ACWI sector weights rescaled to invested capital. Names per sector ∝ sector weight (at least 1, no more than the min weight allows). Eligible: market cap ≥ min, above the 200 MA, not more than 15% above the 50 MA, 12M max drawdown not worse than −35%, 60D vol ≤ 55%, US tickers of 5+ letters excluded. Ranking within sector = 60% VA 6-12M + 30% resilience + 10% fundamentals (RS IBD and Pct 4W not used). Diversification while picking (largest sectors first): max stocks per group and no pair with a 6M daily-return correlation above the limit. Weights within a sector: inverse 60D vol (or equal), summing to the sector target; lines below the min weight are lifted. ACWI weights are a snapshot.</div>
 
     </div>
 
@@ -7170,11 +7174,12 @@
         const m = {};
         allData.concat(allDataRoW || []).forEach(d => { const t = pfTheme(d); if (t !== '(n/a)') (m[t] = m[t] || []).push(d); });
         return Object.entries(m).filter(([, a]) => a.length >= 3).map(([t, a]) => {
-            const va = pfAvg(a.map(d => d.va_rs ?? d.rs_ibd));
-            const breadth = a.filter(d => d.rs_ibd >= 70).length / a.length * 100;
-            const p4 = pfAvg(a.map(d => d.pct_4w));
-            const score = va == null ? null : Math.round(0.4 * va + 0.3 * breadth + 0.3 * (p4 ?? 50));
-            return { t, n: a.length, va, breadth, p4, score };
+            const vas = a.map(d => pfSlowVA(d));
+            const va = pfAvg(vas);
+            const breadth = vas.filter(v => v != null && v >= 70).length / a.length * 100;
+            const p6 = pfAvg(a.map(d => d.pct_6m));
+            const score = va == null ? null : Math.round(0.6 * va + 0.4 * breadth);
+            return { t, n: a.length, va, breadth, p4: p6, score };
         }).filter(x => x.score != null).sort((a, b) => b.score - a.score);
     }
     function pfCapWeights(rows, maxW, secCap, total) {
@@ -7219,46 +7224,96 @@
             let lo = 0; while (lo < v.length && v[lo] <= g) lo++;
             const pct = lo / v.length * 100; return higherIsBetter ? pct : 100 - pct; };
     }
+
+    // "Slow" vol-adjusted RS: average of VA 6M and VA 12M percentiles (US). Excludes the 4W component on purpose (less momentum).
+    // RoW has no VA data: proxy = percentile within RoW of (6M return / 6M vol) and (12M return / 12M vol), averaged.
+    let _pfRowVA = null;
+    function pfBuildRowVA() {
+        const L = (allDataRoW || []).map(d => {
+            const p = pfPrices(d.ticker); if (!p) return { d, a: null, b: null };
+            const ra = (n) => { if (p.length < n + 1) return null; const r = pfRets(d.ticker, n); if (!r) return null;
+                const m = r.reduce((x, y) => x + y, 0) / n, sd = Math.sqrt(r.reduce((x, y) => x + (y - m) ** 2, 0) / (n - 1)) * Math.sqrt(n);
+                return sd > 0 ? Math.log(p[0] / p[n]) / sd : null; };
+            return { d, a: ra(126), b: ra(252) };
+        });
+        const rA = pfRankPct(L, x => x.a, true), rB = pfRankPct(L, x => x.b, true);
+        _pfRowVA = new Map(L.map(x => [x.d, Math.round(((x.a != null ? rA(x) : 50) + (x.b != null ? rB(x) : 50)) / 2)]));
+    }
+    function pfSlowVA(d) {
+        if (allData.includes(d)) {
+            const v = [d.va_6m, d.va_12m].filter(x => x != null);
+            return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : (d.va_rs ?? null);
+        }
+        if (!_pfRowVA) pfBuildRowVA();
+        return _pfRowVA.get(d) ?? null;
+    }
+    // correlation of daily returns over n days (arrays are newest-first)
+    const _pfRetCache = new Map();
+    function pfRetsC(tk, n) { const k = tk + '|' + n; if (!_pfRetCache.has(k)) _pfRetCache.set(k, pfRets(tk, n)); return _pfRetCache.get(k); }
+    function pfCorr(a, b, n) {
+        const x = pfRetsC(a, n), y = pfRetsC(b, n); if (!x || !y) return null;
+        let mx = 0, my = 0; for (let i = 0; i < n; i++) { mx += x[i]; my += y[i]; } mx /= n; my /= n;
+        let sxy = 0, sxx = 0, syy = 0;
+        for (let i = 0; i < n; i++) { const dx = x[i] - mx, dy = y[i] - my; sxy += dx * dy; sxx += dx * dx; syy += dy * dy; }
+        return sxx > 0 && syy > 0 ? sxy / Math.sqrt(sxx * syy) : null;
+    }
+    function pfAvgCorr(R, n) {
+        let s = 0, c = 0;
+        for (let i = 0; i < R.length; i++) for (let j = i + 1; j < R.length; j++) {
+            const v = pfCorr(R[i]._src.ticker, R[j]._src.ticker, n); if (v != null) { s += v; c++; } }
+        return c ? s / c : null;
+    }
     function pfBuildClaude() {
         const N = +document.getElementById('cpN').value, maxW = +document.getElementById('cpMaxW').value;
         const secCap = +document.getElementById('cpSecCap').value, minCap = +document.getElementById('cpCap').value;
         const rowMin = +document.getElementById('cpRow').value, wt = document.getElementById('cpWt').value;
-        const themes = pfThemeTable(), top = new Set(themes.slice(0, 15).map(x => x.t));
-        const heldT = new Set(pfRows.map(r => r._src.ticker));
         const minW = +document.getElementById('cpMinW').value;
+        const maxCorr = +document.getElementById('cpCorr').value, perGroup = +document.getElementById('cpGrp').value;
+        _pfRowVA = null;
+        const themes = pfThemeTable();
+        const weakThemes = new Set(themes.slice(Math.floor(themes.length * 0.6)).map(x => x.t));   // bottom 40% of themes excluded
+        const top = new Set(themes.slice(0, 15).map(x => x.t));
+        const heldT = new Set(pfRows.map(r => r._src.ticker));
         let cand = allData.filter(d => d.ticker.replace(/[^A-Z]/gi, '').length <= 4).map(d => ({ d, us: true }))
             .concat((allDataRoW || []).map(d => ({ d, us: false }))).map(x => {
-            const d = x.d, va = d.va_rs ?? d.rs_ibd, above200 = pfAbove(d.ticker, 200), held = heldT.has(d.ticker);
-            const cap = pfCap(d);
-            const okNew = cap != null && cap >= minCap && d.rs_ibd >= 70 && va >= 70 && above200 === true
-                && pfAbove(d.ticker, 50) === true && (d.high52_dist == null || d.high52_dist >= -15) && top.has(pfTheme(d));
-            const okHeld = held && d.rs_ibd >= 50 && va >= 50 && above200 !== false;
-            return { ...x, va, held, cap, ok: okNew || okHeld, theme: pfTheme(d) };
-        }).filter(x => x.ok);
+            const d = x.d, sva = pfSlowVA(d), held = heldT.has(d.ticker), cap = pfCap(d);
+            if (cap == null || (cap < minCap && !held)) return null;
+            const above200 = pfAbove(d.ticker, 200);
+            const p = pfPrices(d.ticker), m50 = pfSma(d.ticker, 50), ext50 = p && m50 ? (p[0] / m50 - 1) * 100 : null;
+            const okNew = sva != null && sva >= 70 && above200 === true && (ext50 == null || ext50 <= 15) && !weakThemes.has(pfTheme(d));
+            const okHeld = held && sva != null && sva >= 50 && above200 !== false;
+            return { ...x, va: sva, held, cap, ext50, ok: okNew || okHeld, theme: pfTheme(d) };
+        }).filter(x => x && x.ok);
         // resilience: shallow 12M drawdown, low 120D downside vol, low 60D vol (ranked within the eligible pool)
         cand.forEach(x => { x.dd = pfMaxDD(x.d.ticker, 252); x.dv = pfDownVol(x.d.ticker, 120); x.v60 = pfVol(x.d.ticker, 60); });
-        cand = cand.filter(x => x.held || ((x.dd == null || x.dd >= -35) && (x.v60 == null || x.v60 <= 60)));
+        cand = cand.filter(x => x.held || ((x.dd == null || x.dd >= -35) && (x.v60 == null || x.v60 <= 55)));
         const rDD = pfRankPct(cand, x => x.dd, true), rDV = pfRankPct(cand, x => x.dv, false), rV = pfRankPct(cand, x => x.v60, false);
         cand.forEach(x => {
             x.res = Math.round((rDD(x) + rDV(x) + rV(x)) / 3);
-            const fund = pfFundScore(x.d);
-            x.rank = 0.45 * (x.va ?? 0) + 0.15 * (x.d.rs_ibd ?? 0) + 0.30 * x.res + 0.10 * (fund ?? 50) + (x.held ? 5 : 0);
+            x.rank = 0.60 * (x.va ?? 0) + 0.30 * x.res + 0.10 * (pfFundScore(x.d) ?? 50) + (x.held ? 5 : 0);
         });
         cand.sort((a, b) => b.rank - a.rank);
         const invested0 = Math.min(100, pfRows.reduce((s, r) => s + r.w, 0)) || 100;
         const Nmax = Math.min(N, Math.floor(invested0 / minW));
-        const pick = [], perTheme = {};
-        const tryAdd = x => { if (pick.length >= Nmax || pick.includes(x) || (perTheme[x.theme] || 0) >= 3) return false; pick.push(x); perTheme[x.theme] = (perTheme[x.theme] || 0) + 1; return true; };
-        // non-US target is enforced by number of positions (min and max)
+        const perSectorMax = Math.max(2, Math.ceil(Nmax * secCap / 100 / (invested0 / Nmax / (100 / Nmax))));  // count cap ≈ sector cap
+        const pick = [], perTheme = {}, perSec = {};
+        const tryAdd = x => {
+            if (pick.length >= Nmax || pick.includes(x)) return false;
+            if ((perTheme[x.theme] || 0) >= perGroup) return false;
+            if ((perSec[x.d.sector] || 0) >= Math.ceil(Nmax * secCap / 100)) return false;
+            // correlation screen: no pair above maxCorr with names already picked
+            for (const p of pick) { const c = pfCorr(x.d.ticker, p.d.ticker, 126); if (c != null && c > maxCorr) return false; }
+            pick.push(x); perTheme[x.theme] = (perTheme[x.theme] || 0) + 1; perSec[x.d.sector] = (perSec[x.d.sector] || 0) + 1; return true;
+        };
         const rowQuota = Math.round(Nmax * rowMin / 100);
         cand.filter(x => !x.us).forEach(x => { if (pick.filter(p => !p.us).length < rowQuota) tryAdd(x); });
         cand.filter(x => x.us).forEach(tryAdd);
-        cand.filter(x => !x.us).forEach(x => { if (pick.length < Nmax) tryAdd(x); });  // only if US names run out
+        cand.filter(x => !x.us).forEach(x => { if (pick.length < Nmax) tryAdd(x); });
         const invested = Math.min(100, pfRows.reduce((s, r) => s + r.w, 0)) || 100;
         const rows = pick.map(x => {
             const vol = pfVol(x.d.ticker, 60);
             const cur = pfRows.find(r => r._src === x.d);
-            return Object.assign({}, x.d, { _src: x.d, input: cur ? cur.input : x.d.ticker, theme: x.theme, vol60: vol, res: x.res, dd: x.dd,
+            return Object.assign({}, x.d, { _src: x.d, input: cur ? cur.input : x.d.ticker, theme: x.theme, vol60: vol, res: x.res, dd: x.dd, sva: x.va,
                 raw: wt === 'eq' ? 1 : 1 / Math.max(vol || 25, 8), w: 0, held: x.held });
         });
         rows.forEach(r => r.w = r.raw);
@@ -7291,7 +7346,12 @@
             p4: pfWavg(R, 'pct_4w'), p6: pfWavg(R, 'pct_6m'), rs: pfWavg(R, 'rs_ibd'), va: pfWavg(R, 'va_rs'),
             s27: pfWmedian(R, 'ny_yoy_s'), e27: pfWmedian(R, 'ny_yoy'), pe: peW ? peW / pe.reduce((s, r) => s + r.w / r.forward_pe, 0) : null,
             a50: share(r => r.above50), a200: share(r => r.above200), h52: pfWavg(R, 'high52_dist'),
-            pv: pfPortVol(R, 60), sv: pfWavg(R, 'vol60'), r3: pfWavg(R, 'ret_3m'), r12: pfWavg(R, 'ret_12m')
+            pv: pfPortVol(R, 60), sv: pfWavg(R, 'vol60'), r3: pfWavg(R, 'ret_3m'), r12: pfWavg(R, 'ret_12m'),
+            sva: pfWavg(R.map(r => Object.assign(r, { sva: r.sva ?? pfSlowVA(r._src) })), 'sva'),
+            corr: pfAvgCorr(R, 126), effN: 1 / R.reduce((s, r) => s + (r.w / inv) ** 2, 0),
+            nSec: new Set(R.map(r => r.sector)).size, nGrp: new Set(R.map(r => pfTheme(r._src))).size,
+            maxSec: Math.max(...Object.values(R.reduce((m, r) => (m[r.sector] = (m[r.sector] || 0) + r.w, m), {}))) / inv * 100,
+            divRatio: null
         };
     }
     let _cp = null;
@@ -7303,11 +7363,14 @@
         pfRows.forEach(r => { if (r.theme === undefined) r.theme = r.group; });
         _cp = pfBuildClaude();
         const C = pfStats(pfRows), M = pfStats(_cp.rows);
+        [C, M].forEach(X => X.divRatio = X.sv && X.pv ? X.sv / X.pv : null);
         const f = (v, d = 0, suf = '') => v == null || isNaN(v) ? '—' : (+v).toFixed(d) + suf;
         const sg = (v, d = 1) => v == null || isNaN(v) ? '—' : (v > 0 ? '+' : '') + (+v).toFixed(d);
         const rows = [
             ['Positions', C.n, M.n, 0, ''], ['Top 10 weight', C.top10, M.top10, 0, '%'], ['Largest position', C.maxW, M.maxW, 1, '%'], ['US weight', C.us, M.us, 0, '%'],
-            ['Pct 4W', C.p4, M.p4, 0, ''], ['Pct 6M', C.p6, M.p6, 0, ''], ['RS IBD', C.rs, M.rs, 0, ''], ['VA RS', C.va, M.va, 0, ''],
+            ['VA 6-12M', C.sva, M.sva, 0, ''], ['VA RS', C.va, M.va, 0, ''], ['RS IBD', C.rs, M.rs, 0, ''], ['Pct 4W', C.p4, M.p4, 0, ''], ['Pct 6M', C.p6, M.p6, 0, ''],
+            ['Effective N', C.effN, M.effN, 1, ''], ['Sectors', C.nSec, M.nSec, 0, ''], ['Groups', C.nGrp, M.nGrp, 0, ''], ['Largest sector', C.maxSec, M.maxSec, 0, '%'],
+            ['Avg pair correlation 6M', C.corr, M.corr, 2, ''], ['Diversification ratio', C.divRatio, M.divRatio, 2, ''],
             ['Sales 2027', C.s27, M.s27, 0, '%'], ['EPS 2027', C.e27, M.e27, 0, '%'], ['Fwd P/E', C.pe, M.pe, 1, 'x'],
             ['Above 50 MA', C.a50, M.a50, 0, '%'], ['Above 200 MA', C.a200, M.a200, 0, '%'], ['From 52W high', C.h52, M.h52, 1, '%'],
             ['Portfolio vol 60D', C.pv, M.pv, 1, '%'], ['Stock vol 60D', C.sv, M.sv, 1, '%'], ['3M (holdings)', C.r3, M.r3, 1, '%'], ['12M (holdings)', C.r12, M.r12, 1, '%']
@@ -7316,7 +7379,8 @@
         const regionOf = r => { const cur = pfRows.find(x => x._src === r._src); if (cur) return cur.region || ''; return allData.includes(r._src) ? PF_REGION(PF_DOMICILE[r.ticker] || 'United States') : PF_REGION(r.country); };
         const hold = [..._cp.rows].sort((a, b) => b.w - a.w);
         const secW = {}; hold.forEach(r => secW[r.sector || '?'] = (secW[r.sector || '?'] || 0) + r.w);
-        document.getElementById('cpSum').textContent = `updated ${new Date().toLocaleTimeString('en-GB')} · ${hold.length} positions · invested ${hold.reduce((s, r) => s + r.w, 0).toFixed(1)}% · ` +
+        const cpFloor = +document.getElementById('cpMinW').value * hold.length;
+        document.getElementById('cpSum').textContent = `${cpFloor >= 0.8 * _cp.invested ? `⚠ min weight × positions = ${cpFloor}% of ${_cp.invested.toFixed(0)}% invested — weights are nearly equal, so max weight / weighting have little effect · ` : ''}updated ${new Date().toLocaleTimeString('en-GB')} · ${hold.length} positions · invested ${hold.reduce((s, r) => s + r.w, 0).toFixed(1)}% · ` +
             Object.entries(secW).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v.toFixed(0)}%`).join(' · ');
         const g0 = v => v == null || isNaN(v) ? '—' : (v > 0 ? '+' : '') + Math.round(v) + '%';
         document.getElementById('cpHold').innerHTML = hold.map((r, i) => `<tr>
@@ -7324,7 +7388,7 @@
             <td class="td-ticker" style="cursor:pointer;color:var(--accent2)" onclick="openNews('${r.ticker}')">${pfShort(r.input)}</td>
             <td class="td-name">${(r.name || '').slice(0, 30)}</td><td class="td-name">${heldSet.has(r._src) ? 'Held' : 'New'}</td>
             <td class="td-name">${r.theme}</td><td class="td-name">${r.sector || ''}</td><td class="td-name">${regionOf(r)}</td>
-            <td class="td-pct" style="font-weight:700">${r.w.toFixed(1)}%</td><td class="td-pct">${r.rs_ibd ?? '—'}</td><td class="td-pct">${r.va_rs ?? '—'}</td><td class="td-pct">${r.pct_4w ?? '—'}</td>
+            <td class="td-pct" style="font-weight:700">${r.w.toFixed(1)}%</td><td class="td-pct" style="font-weight:700">${r.sva ?? '—'}</td><td class="td-pct">${r.va_rs ?? '—'}</td><td class="td-pct">${r.rs_ibd ?? '—'}</td><td class="td-pct">${r.pct_4w ?? '—'}</td>
             <td class="td-pct">${g0(r.ny_yoy_s)}</td><td class="td-pct">${g0(r.ny_yoy)}</td><td class="td-pct">${r.forward_pe > 0 ? r.forward_pe.toFixed(1) : '—'}</td>
             <td class="td-pct">${r.vol60 != null ? Math.round(r.vol60) + '%' : '—'}</td><td class="td-pct">${r.dd != null ? r.dd.toFixed(0) + '%' : '—'}</td><td class="td-pct">${r.res ?? '—'}</td><td class="td-pct">${r.high52_dist != null ? r.high52_dist.toFixed(1) + '%' : '—'}</td>
             <td class="td-pct">${pfCap(r._src) != null ? Math.round(pfCap(r._src)) : '—'}</td></tr>`).join('');
@@ -7365,7 +7429,8 @@
         L.push(`<b>Themes.</b> ${f(topW(pfRows), 0, '%')} of the current portfolio sits in the 15 strongest themes, versus ${f(topW(_cp.rows), 0, '%')} for the Claude portfolio.`);
         if (weak.length) L.push(`<b>Weak themes owned</b> (bottom half of the ranking): ${weak.slice(0, 6).map(x => `${x.t} ${x.w.toFixed(1)}%`).join(', ')} — ${weak.reduce((s, x) => s + x.w, 0).toFixed(0)}% of the portfolio.`);
         if (missing.length) L.push(`<b>Strong themes not owned</b> (top 10): ${missing.map(x => `${x.t} (${x.score})`).join(', ')}.`);
-        L.push(`<b>Relative strength.</b> RS IBD ${f(C.rs)} → ${f(M.rs)}, VA RS ${f(C.va)} → ${f(M.va)}, Pct 4W ${f(C.p4)} → ${f(M.p4)}. ${C.p4 != null && C.p6 != null && C.p4 < C.p6 - 3 ? 'Current momentum is fading (4W below 6M).' : ''}`);
+        L.push(`<b>Vol-adjusted strength.</b> VA 6-12M ${f(C.sva)} → ${f(M.sva)} (VA RS ${f(C.va)} → ${f(M.va)}). The Claude portfolio ranks on VA 6-12M, not on 4-week momentum; RS IBD moves ${f(C.rs)} → ${f(M.rs)} as a side effect.`);
+        L.push(`<b>Diversification.</b> Effective N ${f(C.effN, 1)} → ${f(M.effN, 1)}; ${C.nSec} → ${M.nSec} sectors, ${C.nGrp} → ${M.nGrp} groups; largest sector ${f(C.maxSec, 0, '%')} → ${f(M.maxSec, 0, '%')}; average pair correlation (6M daily returns) ${f(C.corr, 2)} → ${f(M.corr, 2)}; diversification ratio ${f(C.divRatio, 2)} → ${f(M.divRatio, 2)}.`);
         L.push(`<b>Stability.</b> Portfolio vol 60D ${f(C.pv, 1, '%')} → ${f(M.pv, 1, '%')}; average stock vol ${f(C.sv, 1, '%')} → ${f(M.sv, 1, '%')}. ${below200.length ? `${below200.length} holdings (${below200.reduce((s, r) => s + r.w, 0).toFixed(0)}%) are below their 200 MA: ${below200.map(r => pfShort(r.input)).join(', ')}.` : 'No holding is below its 200 MA.'}`);
         L.push(`<b>Trend.</b> Above 200 MA ${f(C.a200, 0, '%')} → ${f(M.a200, 0, '%')}; distance from 52W high ${f(C.h52, 1, '%')} → ${f(M.h52, 1, '%')}.`);
         L.push(`<b>Valuation & growth.</b> Fwd P/E ${f(C.pe, 1, 'x')} → ${f(M.pe, 1, 'x')}; median sales 2027 ${f(C.s27, 0, '%')} → ${f(M.s27, 0, '%')}, EPS 2027 ${f(C.e27, 0, '%')} → ${f(M.e27, 0, '%')}.`);
@@ -7394,29 +7459,44 @@
         const invested = Math.min(100, pfRows.reduce((s, r) => s + r.w, 0)) || 100;
         const totT = Object.values(ACWI_SECTORS).reduce((a, b) => a + b, 0);
         const heldT = new Set(pfRows.map(r => r._src.ticker));
+        const maxCorr = +document.getElementById('awCorr').value, perGroup = +document.getElementById('awGrp').value;
+        _pfRowVA = null;
         let pool = allData.filter(d => d.ticker.replace(/[^A-Z]/gi, '').length <= 4).map(d => ({ d, us: true }))
             .concat((allDataRoW || []).map(d => ({ d, us: false })))
             .filter(x => x.d.sector && ACWI_SECTORS[x.d.sector] != null)
-            .map(x => ({ ...x, cap: pfCap(x.d), va: x.d.va_rs ?? x.d.rs_ibd }))
-            .filter(x => x.cap != null && x.cap >= minCap && x.d.rs_ibd != null && pfAbove(x.d.ticker, 200) === true);
+            .map(x => ({ ...x, cap: pfCap(x.d) }))
+            .filter(x => x.cap != null && x.cap >= minCap && pfAbove(x.d.ticker, 200) === true)
+            .map(x => { const p = pfPrices(x.d.ticker), m50 = pfSma(x.d.ticker, 50); return { ...x, va: pfSlowVA(x.d), ext50: p && m50 ? (p[0] / m50 - 1) * 100 : null }; })
+            .filter(x => x.va != null && (x.ext50 == null || x.ext50 <= 15));
         pool.forEach(x => { x.dd = pfMaxDD(x.d.ticker, 252); x.dv = pfDownVol(x.d.ticker, 120); x.v60 = pfVol(x.d.ticker, 60); });
+        pool = pool.filter(x => (x.dd == null || x.dd >= -35) && (x.v60 == null || x.v60 <= 55));
         const rDD = pfRankPct(pool, x => x.dd, true), rDV = pfRankPct(pool, x => x.dv, false), rV = pfRankPct(pool, x => x.v60, false);
         pool.forEach(x => { x.res = Math.round((rDD(x) + rDV(x) + rV(x)) / 3);
-            x.rank = 0.45 * (x.va ?? 0) + 0.30 * x.res + 0.15 * x.d.rs_ibd + 0.10 * (pfFundScore(x.d) ?? 50); });
-        const rows = [], secInfo = {};
-        Object.entries(ACWI_SECTORS).forEach(([sec, w]) => {
+            x.rank = 0.60 * x.va + 0.30 * x.res + 0.10 * (pfFundScore(x.d) ?? 50); });
+        const rows = [], secInfo = {}, chosen = [], perTheme = {};
+        const okDiv = x => {
+            if ((perTheme[pfTheme(x.d)] || 0) >= perGroup) return false;
+            for (const c of chosen) { const r = pfCorr(x.d.ticker, c.d.ticker, 126); if (r != null && r > maxCorr) return false; }
+            return true;
+        };
+        // biggest sectors first so they get first pick of uncorrelated names
+        Object.entries(ACWI_SECTORS).sort((a, b) => b[1] - a[1]).forEach(([sec, w]) => {
             const target = w / totT * invested;
             const maxBySize = Math.max(1, Math.floor(target / minW));
             const n = Math.max(1, Math.min(maxBySize, Math.round(w / totT * N)));
             const cands = pool.filter(x => x.d.sector === sec).sort((a, b) => b.rank - a.rank);
-            const nRow = Math.round(n * rowShare), nUS = n - nRow;
-            let pick = cands.filter(x => x.us).slice(0, nUS).concat(cands.filter(x => !x.us).slice(0, nRow));
-            if (pick.length < n) pick = pick.concat(cands.filter(x => !pick.includes(x)).slice(0, n - pick.length));
+            const nRow = Math.round(n * rowShare), nUS = n - nRow, pick = [];
+            const take = (list, k) => { for (const x of list) { if (pick.length >= k) break; if (!pick.includes(x) && okDiv(x)) { pick.push(x); chosen.push(x); perTheme[pfTheme(x.d)] = (perTheme[pfTheme(x.d)] || 0) + 1; } } };
+            take(cands.filter(x => x.us), nUS);
+            take(cands.filter(x => !x.us), nUS + nRow);
+            take(cands, n);
             const raw = pick.map(x => wt === 'eq' ? 1 : 1 / Math.max(x.v60 || 25, 8)), rs = raw.reduce((a, b) => a + b, 0) || 1;
             pick.forEach((x, i) => rows.push(Object.assign({}, x.d, { _src: x.d, input: x.d.ticker, w: target * raw[i] / rs,
-                vol60: x.v60, dd: x.dd, res: x.res, theme: pfTheme(x.d), held: heldT.has(x.d.ticker), us: x.us })));
+                vol60: x.v60, dd: x.dd, res: x.res, sva: x.va, theme: pfTheme(x.d), held: heldT.has(x.d.ticker), us: x.us })));
             secInfo[sec] = { acwi: w, target, n: pick.length };
         });
+        // keep the ACWI sector order for display
+        const ordered = {}; Object.keys(ACWI_SECTORS).forEach(k => ordered[k] = secInfo[k]);
         // min weight floor (funded pro rata by lines above the floor)
         for (let it = 0; it < 30; it++) {
             const low = rows.filter(r => r.w < minW - 1e-9); if (!low.length) break;
@@ -7425,7 +7505,7 @@
             if (room <= 0) break; donors.forEach(r => r.w -= need * (r.w - minW) / room);
         }
         rows.forEach(r => { r.above50 = pfAbove(r.ticker, 50); r.above200 = pfAbove(r.ticker, 200); });
-        return { rows, secInfo, totT };
+        return { rows, secInfo: ordered, totT };
     }
     function pfRenderAcwi() {
         try { pfRenderAcwiInner(); } catch (e) { console.error(e); const el = document.getElementById('awSum'); if (el) el.textContent = 'Error: ' + e.message; }
@@ -7443,13 +7523,15 @@
                 <td class="td-pct">${cur.toFixed(1)}%</td><td class="td-pct">${(cur - acwi > 0 ? '+' : '') + (cur - acwi).toFixed(1)}</td><td class="td-pct">${v.n}</td></tr>`;
         }).join('');
         const C = pfStats(pfRows), M = _cp ? pfStats(_cp.rows) : {}, A = pfStats(R);
-        const lines = [['Positions', 'n', 0, ''], ['Top 10 weight', 'top10', 0, '%'], ['US weight', 'us', 0, '%'], ['Pct 4W', 'p4', 0, ''], ['Pct 6M', 'p6', 0, ''],
+        [C, M, A].forEach(X => { if (X && X.sv && X.pv) X.divRatio = X.sv / X.pv; });
+        const lines = [['Positions', 'n', 0, ''], ['Top 10 weight', 'top10', 0, '%'], ['US weight', 'us', 0, '%'], ['VA 6-12M', 'sva', 0, ''], ['Effective N', 'effN', 1, ''], ['Sectors', 'nSec', 0, ''], ['Groups', 'nGrp', 0, ''], ['Avg pair correlation 6M', 'corr', 2, ''], ['Diversification ratio', 'divRatio', 2, ''], ['Pct 4W', 'p4', 0, ''], ['Pct 6M', 'p6', 0, ''],
             ['RS IBD', 'rs', 0, ''], ['VA RS', 'va', 0, ''], ['Sales 2027', 's27', 0, '%'], ['EPS 2027', 'e27', 0, '%'], ['Fwd P/E', 'pe', 1, 'x'],
             ['Above 50 MA', 'a50', 0, '%'], ['Above 200 MA', 'a200', 0, '%'], ['From 52W high', 'h52', 1, '%'], ['Portfolio vol 60D', 'pv', 1, '%'], ['Stock vol 60D', 'sv', 1, '%']];
         document.getElementById('awCmp').innerHTML = lines.map(([l, k, d, u]) =>
             `<tr><td class="td-name">${l}</td><td class="td-pct">${f(C[k], d, u)}</td><td class="td-pct">${f(M[k], d, u)}</td><td class="td-pct" style="font-weight:700">${f(A[k], d, u)}</td></tr>`).join('');
         const regionOf = r => allData.includes(r._src) ? PF_REGION(PF_DOMICILE[r.ticker] || 'United States') : PF_REGION(r.country);
-        document.getElementById('awSum').textContent = `updated ${new Date().toLocaleTimeString('en-GB')} · ${R.length} positions · invested ${R.reduce((s, r) => s + r.w, 0).toFixed(1)}% · US ${f(A.us, 0, '%')}`;
+        const awFloor = +document.getElementById('awMinW').value * R.length, awInv = pfRows.reduce((s, r) => s + r.w, 0);
+        document.getElementById('awSum').textContent = `${awFloor >= 0.8 * awInv ? `⚠ min weight × positions = ${awFloor}% of ${awInv.toFixed(0)}% invested — weights are nearly equal · ` : ''}updated ${new Date().toLocaleTimeString('en-GB')} · ${R.length} positions · invested ${R.reduce((s, r) => s + r.w, 0).toFixed(1)}% · US ${f(A.us, 0, '%')}`;
         const g0 = v => v == null || isNaN(v) ? '—' : (v > 0 ? '+' : '') + Math.round(v) + '%';
         const order = Object.keys(ACWI_SECTORS);
         document.getElementById('awHold').innerHTML = [...R].sort((a, b) => order.indexOf(a.sector) - order.indexOf(b.sector) || b.w - a.w).map((r, i, arr) => `<tr${i && arr[i - 1].sector !== r.sector ? ' style="border-top:2px solid var(--border)"' : ''}>
@@ -7457,8 +7539,8 @@
             <td class="td-ticker" style="cursor:pointer;color:var(--accent2)" onclick="openNews('${r.ticker}')">${pfShort(r.ticker)}</td>
             <td class="td-name">${(r.name || '').slice(0, 28)}</td><td class="td-name">${r.held ? 'Held' : 'New'}</td>
             <td class="td-name">${r.theme}</td><td class="td-name">${regionOf(r)}</td>
-            <td class="td-pct" style="font-weight:700">${r.w.toFixed(1)}%</td><td class="td-pct">${r.pct_4w ?? '—'}</td><td class="td-pct">${r.pct_6m ?? '—'}</td>
-            <td class="td-pct">${r.rs_ibd ?? '—'}</td><td class="td-pct">${r.va_rs ?? '—'}</td><td class="td-pct">${g0(r.ny_yoy_s)}</td><td class="td-pct">${g0(r.ny_yoy)}</td>
+            <td class="td-pct" style="font-weight:700">${r.w.toFixed(1)}%</td><td class="td-pct" style="font-weight:700">${r.sva ?? '—'}</td><td class="td-pct">${r.va_rs ?? '—'}</td>
+            <td class="td-pct">${r.rs_ibd ?? '—'}</td><td class="td-pct">${r.pct_4w ?? '—'}</td><td class="td-pct">${g0(r.ny_yoy_s)}</td><td class="td-pct">${g0(r.ny_yoy)}</td>
             <td class="td-pct">${r.forward_pe > 0 ? r.forward_pe.toFixed(1) : '—'}</td><td class="td-pct">${r.vol60 != null ? Math.round(r.vol60) + '%' : '—'}</td>
             <td class="td-pct">${r.dd != null ? r.dd.toFixed(0) + '%' : '—'}</td><td class="td-pct">${pfCap(r._src) != null ? Math.round(pfCap(r._src)) : '—'}</td></tr>`).join('');
     }
