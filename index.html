@@ -682,7 +682,43 @@
         margin-bottom: 8px;
         display: none;
     }
-    </style>
+        /* ── PORTFOLIO ── */
+    .pf-top{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:16px;margin-bottom:18px}
+    @media(max-width:900px){.pf-top{grid-template-columns:1fr}}
+    .pf-input-box{background:var(--bg2);border:1px solid var(--border);padding:12px}
+    #pfInput{width:100%;height:170px;font-family:'IBM Plex Mono',monospace;font-size:12px;border:1px solid var(--faint);padding:8px;resize:vertical;background:var(--bg)}
+    .pf-h{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.12em;color:var(--accent2);margin:6px 0 8px}
+    .pf-sub{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.1em;color:var(--text);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+    .pf-sub select{font-size:11px}
+    .pf-hint{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:6px}
+    .pf-kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;align-content:start}
+    .pf-kpi{background:var(--bg2);border:1px solid var(--faint);padding:8px 10px}
+    .pf-kpi .v{font-size:20px;font-weight:700}
+    .pf-kpi .l{font-size:10px;color:var(--muted);margin-top:2px}
+    .pf-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    @media(max-width:1100px){.pf-grid3{grid-template-columns:1fr}}
+    .pf-card{background:var(--bg2);border:1px solid var(--border);padding:12px;max-height:420px;overflow:auto}
+    .pf-bar{display:grid;grid-template-columns:minmax(90px,38%) 1fr 46px 34px;gap:6px;align-items:center;font-size:11px;margin-bottom:4px}
+    .pf-bar .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .pf-bar .t{background:var(--bg3);height:10px;position:relative}
+    .pf-bar .f{position:absolute;left:0;top:0;bottom:0;background:var(--accent2)}
+    .pf-bar .p{text-align:right;font-weight:700}
+    .pf-bar .r{text-align:right;font-size:10px}
+    #pfTable th{cursor:pointer;white-space:nowrap}
+    .pf-alerts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+    .pf-alert{font-size:11px;padding:4px 8px;border:1px solid var(--faint);background:var(--bg2)}
+    .pf-alert.hi{border-color:#b91c1c;color:#b91c1c}
+    .pf-alert.md{border-color:#b45309;color:#b45309}
+    .pf-reco{background:var(--bg2);border:1px solid var(--border);border-left-width:4px;padding:10px 12px;margin-bottom:8px}
+    .pf-reco.HOLD{border-left-color:#15803d}.pf-reco.WATCH{border-left-color:#b45309}.pf-reco.SWITCH{border-left-color:#b91c1c}
+    .pf-reco .hd{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+    .pf-verdict{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.1em;padding:1px 8px;color:#fff}
+    .pf-verdict.HOLD{background:#15803d}.pf-verdict.WATCH{background:#b45309}.pf-verdict.SWITCH{background:#b91c1c}
+    .pf-why{font-size:12px;color:var(--muted);margin:6px 0;line-height:1.5}
+    .pf-cands{display:flex;flex-wrap:wrap;gap:6px}
+    .pf-cand{font-size:11px;border:1px solid var(--faint);padding:4px 8px;background:var(--bg)}
+    .pf-cand b{color:var(--accent2)}
+</style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -795,6 +831,7 @@
             <button class="tab" onclick="switchTab('daily')">DAILY MOVES</button>
             <button class="tab" onclick="switchTab('leaders')">LEADERS</button>
             <button class="tab" onclick="switchTab('fund')">FUNDAMENTALS</button>
+            <button class="tab" onclick="switchTab('portfolio')">PORTFOLIO</button>
             <button class="tab" onclick="switchTab('method')">METHOD</button>
         </div>
 
@@ -1473,6 +1510,62 @@
 
             </div>
         </div>
+
+    <!-- TAB: PORTFOLIO -->
+    <div class="tab-content" id="tab-portfolio" style="padding:20px 24px;box-sizing:border-box;">
+        <div class="pf-top">
+            <div class="pf-input-box">
+                <div class="pf-h">HOLDINGS</div>
+                <div class="pf-hint">One line per position: <b>TICKER WEIGHT</b> (e.g. <code>NVDA 6.5</code>). Weights in %. If the total is below 100, the remainder is shown as cash.</div>
+                <textarea id="pfInput" spellcheck="false" placeholder="NVDA 6&#10;MSFT 5&#10;ANET 4&#10;..."></textarea>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;">
+                    <button class="btn" onclick="pfSave()">Analyse</button>
+                    <button class="btn" style="background:var(--muted)" onclick="pfExportCSV()">Export CSV</button>
+                    <span id="pfStatus" style="font-size:10px;color:var(--muted)"></span>
+                </div>
+            </div>
+            <div class="pf-kpis" id="pfKpis"></div>
+        </div>
+
+        <div id="pfAlertsWrap" style="display:none">
+            <div class="pf-h">ALERTS</div>
+            <div id="pfAlerts" class="pf-alerts"></div>
+        </div>
+
+        <div class="pf-h">HOLDINGS STATISTICS</div>
+        <div class="table-wrap"><table id="pfTable"><thead><tr>
+            <th onclick="pfSort('ticker')">TICKER</th><th onclick="pfSort('name')">NAME</th>
+            <th onclick="pfSort('sector')">SECTOR</th><th onclick="pfSort('group')">GROUP</th>
+            <th class="th-pct" onclick="pfSort('w')">WT %</th>
+            <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('rs_ibd')">RS IBD</th>
+            <th class="th-pct" onclick="pfSort('va_rs')">VA RS</th>
+            <th class="th-pct" onclick="pfSort('pct_4w')">PCT 4W</th>
+            <th class="th-pct" onclick="pfSort('pct_6m')">PCT 6M</th>
+            <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('ret_5d')">1W</th>
+            <th class="th-pct" onclick="pfSort('ret_3m')">3M</th>
+            <th class="th-pct" onclick="pfSort('ma20_dist')">vs EMA20</th>
+            <th class="th-pct" onclick="pfSort('high52_dist')">vs 52WH</th>
+            <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('sales_cq')">SALES CQ</th>
+            <th class="th-pct" onclick="pfSort('eps_cq')">EPS CQ</th>
+            <th class="th-pct" onclick="pfSort('forward_pe')">FWD PE</th>
+            <th class="th-pct" style="border-left:1px solid var(--border2);color:#6d28d9" onclick="pfSort('score')">SCORE</th>
+        </tr></thead><tbody id="pfBody"></tbody></table></div>
+
+        <div class="pf-h" style="margin-top:22px;">WEIGHTS</div>
+        <div class="pf-grid3">
+            <div class="pf-card"><div class="pf-sub">By sector</div><div id="pfWSector"></div></div>
+            <div class="pf-card"><div class="pf-sub">By group</div><div id="pfWGroup"></div></div>
+            <div class="pf-card"><div class="pf-sub">By percentile
+                <select id="pfBucketMetric" onchange="pfRenderBuckets()">
+                    <option value="rs_ibd">RS IBD</option><option value="va_rs">VA RS</option>
+                    <option value="pct_4w">Pct 4W</option><option value="pct_6m">Pct 6M</option>
+                </select></div><div id="pfWBucket"></div></div>
+        </div>
+
+        <div class="pf-h" style="margin-top:22px;">SWITCH RECOMMENDATIONS</div>
+        <div class="pf-hint" style="margin-bottom:8px;">Score = 70% relative strength (RS IBD 35 · VA RS 25 · Pct 6M 20 · Pct 4W 20) + 30% fundamentals (Sales CQ and EPS CQ growth percentiles). Switch candidates: same group first, then same sector, RS IBD ≥ 70 and score ≥ holding +15. Rule-based, not investment advice.</div>
+        <div id="pfRecos"></div>
+    </div>
 
     <!-- TAB: METHOD -->
     <div class="tab-content" id="tab-method">
@@ -2686,6 +2779,8 @@
             renderRotation();
         else if (activeTab === 'leaders')
             renderLeaders();
+        else if (activeTab === 'portfolio')
+            renderPortfolio();
         else
             renderGroups();
     }
@@ -6307,4 +6402,313 @@
     // JOURNAL MODULE — 100% driven by Google Sheet
     // ══════════════════════════════════════════════
 
-    </script>
+    
+    // ── PORTFOLIO ────────────────────────────────────────────────
+    const PF_KEY = 'portfolioHoldings';
+    let pfRows = [];
+    let pfSortCol = 'w', pfSortDir = 'desc';
+
+    function pfParse(text) {
+        const out = {};
+        (text || '').split(/\n/).forEach(line => {
+            const parts = line.trim().split(/[\s,;\t]+/).filter(Boolean);
+            if (!parts.length) return;
+            const t = parts[0].toUpperCase().replace(/[^A-Z0-9.\-]/g, '');
+            if (!t) return;
+            const w = parts[1] != null ? parseFloat(String(parts[1]).replace('%', '').replace(',', '.')) : NaN;
+            if (!(t in out)) out[t] = null;
+            if (!isNaN(w) && w > 0) out[t] = (out[t] || 0) + w;
+        });
+        const list = Object.entries(out).map(([ticker, raw]) => ({ ticker, raw }));
+        const given = list.filter(x => x.raw != null);
+        // unweighted lines get the average of the weighted ones (or equal-weight if none given)
+        const fill = given.length ? given.reduce((s, x) => s + x.raw, 0) / given.length : 1;
+        list.forEach(x => { if (x.raw == null) x.raw = fill; });
+        const sum = list.reduce((s, x) => s + x.raw, 0);
+        // weights kept as entered if total ≤ 100 (remainder = cash); rescaled only if total > 100
+        const k = sum > 100 ? 100 / sum : 1;
+        list.forEach(x => x.w = x.raw * k);
+        return list;
+    }
+
+    async function pfSave() {
+        const text = document.getElementById('pfInput').value;
+        try { localStorage.setItem(PF_KEY, text); } catch (e) {}
+        try {
+            await firestoreDB.collection('portfolio').doc('main').set({ text, updated: Date.now() });
+            pfStatus('Saved');
+        } catch (e) { pfStatus('Saved locally'); }
+        renderPortfolio();
+    }
+    function pfStatus(s) { const el = document.getElementById('pfStatus'); if (el) el.textContent = s; }
+
+    async function pfLoad() {
+        const el = document.getElementById('pfInput');
+        if (!el) return;
+        try { el.value = localStorage.getItem(PF_KEY) || ''; } catch (e) {}
+        try {
+            const doc = await firestoreDB.collection('portfolio').doc('main').get();
+            if (doc.exists && doc.data().text && !el.value) el.value = doc.data().text;
+            else if (doc.exists && doc.data().text) el.value = doc.data().text;
+        } catch (e) {}
+        if (activeTab === 'portfolio') renderPortfolio();
+    }
+
+    function pfWavg(rows, key) {
+        let s = 0, w = 0;
+        rows.forEach(r => { const v = r[key]; if (v != null && !isNaN(v)) { s += v * r.w; w += r.w; } });
+        return w > 0 ? s / w : null;
+    }
+
+    function pfRsScore(d) {
+        const parts = [[d.rs_ibd, .35], [d.va_rs, .25], [d.pct_6m, .20], [d.pct_4w, .20]].filter(p => p[0] != null);
+        const ws = parts.reduce((s, p) => s + p[1], 0);
+        return ws ? parts.reduce((s, p) => s + p[0] * p[1], 0) / ws : null;
+    }
+
+    let _pfFundRank = null;
+    function pfBuildFundRank() {
+        const sR = pctRank(allData, d => d.sales_cq), eR = pctRank(allData, d => d.eps_cq);
+        _pfFundRank = { s: sR, e: eR };
+    }
+    function pfFundScore(d) {
+        if (!_pfFundRank) pfBuildFundRank();
+        const inUS = allData.includes(d);
+        const s = d.pct_sales_cq != null ? d.pct_sales_cq : (inUS ? _pfFundRank.s(d) : null);
+        const e = d.pct_eps_cq != null ? d.pct_eps_cq : (inUS ? _pfFundRank.e(d) : null);
+        const v = [s, e].filter(x => x != null);
+        return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+    }
+    function pfScore(d) {
+        const rs = pfRsScore(d), f = pfFundScore(d);
+        if (rs == null) return null;
+        return Math.round(f == null ? rs : 0.7 * rs + 0.3 * f);
+    }
+
+    function renderPortfolio() {
+        const input = document.getElementById('pfInput');
+        if (!input) return;
+        if (!allData.length) { pfStatus('Waiting for data…'); return; }
+        if (allData[0].va_rs === undefined) computeVolAdjRS();
+        _pfFundRank = null;
+        const holdings = pfParse(input.value);
+        const map = {};
+        allData.forEach(d => map[d.ticker] = d);
+        (allDataRoW || []).forEach(d => { if (!map[d.ticker]) map[d.ticker] = d; });
+        const missing = [];
+        pfRows = holdings.map(h => {
+            const d = map[h.ticker];
+            if (!d) { missing.push(h.ticker); return null; }
+            const r = Object.assign({}, d, { w: h.w, _src: d });
+            r.rsScore = pfRsScore(d); r.fundScore = pfFundScore(d); r.score = pfScore(d);
+            return r;
+        }).filter(Boolean);
+        window._pfCash = Math.max(0, 100 - holdings.reduce((s, h) => s + h.w, 0));
+        window._pfUnmatched = holdings.filter(h => missing.includes(h.ticker)).reduce((s, h) => s + h.w, 0);
+        pfStatus(`${pfRows.length} matched${missing.length ? ' · not found: ' + missing.join(', ') : ''}`);
+        pfRenderKpis();
+        pfRenderTable();
+        pfRenderWeights();
+        pfRenderAlerts(missing);
+        pfRenderRecos();
+    }
+
+    function pfKpi(v, l, color) {
+        return `<div class="pf-kpi"><div class="v" style="color:${color || 'var(--text)'}">${v}</div><div class="l">${l}</div></div>`;
+    }
+    const pfFmt = (v, d = 0, suf = '') => v == null ? '—' : (Math.round(v * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d) + suf;
+    const pfSigned = (v, d = 1) => v == null ? '—' : (v > 0 ? '+' : '') + v.toFixed(d) + '%';
+    const pfCol = v => v == null ? 'var(--muted)' : v >= 70 ? '#15803d' : v >= 30 ? 'var(--text)' : '#b91c1c';
+    const pfRetCol = v => v == null ? 'var(--muted)' : v > 0 ? '#15803d' : v < 0 ? '#b91c1c' : 'var(--text)';
+
+    function pfRenderKpis() {
+        const R = pfRows;
+        const el = document.getElementById('pfKpis');
+        if (!R.length) { el.innerHTML = ''; return; }
+        const inv = R.reduce((s, r) => s + r.w, 0) || 1;
+        const hhi = R.reduce((s, r) => s + Math.pow(r.w / inv, 2), 0);
+        const top5 = [...R].sort((a, b) => b.w - a.w).slice(0, 5).reduce((s, r) => s + r.w, 0);
+        const wIn = f => R.filter(f).reduce((s, r) => s + r.w, 0);
+        const pe = R.filter(r => r.forward_pe != null && r.forward_pe > 0);
+        const peW = pe.reduce((s, r) => s + r.w, 0);
+        const hPE = peW ? peW / pe.reduce((s, r) => s + r.w / r.forward_pe, 0) : null;
+        const rs = pfWavg(R, 'rs_ibd'), va = pfWavg(R, 'va_rs'), p4 = pfWavg(R, 'pct_4w'), p6 = pfWavg(R, 'pct_6m');
+        const sc = pfWavg(R, 'score');
+        const r1w = pfWavg(R, 'ret_5d'), r1m = pfWavg(R, 'm1'), r3m = pfWavg(R, 'ret_3m'), r12 = pfWavg(R, 'ret_12m');
+        el.innerHTML = [
+            pfKpi(R.length, 'Positions'),
+            pfKpi(pfFmt(R.reduce((s, r) => s + r.w, 0), 1, '%'), 'Invested (matched)'),
+            pfKpi(pfFmt(window._pfCash, 1, '%'), 'Cash'),
+            pfKpi(pfFmt(1 / hhi, 1), 'Effective N (1/HHI)'),
+            pfKpi(pfFmt(top5, 0, '%'), 'Top-5 weight'),
+            pfKpi(pfFmt(sc), 'Wtd score', pfCol(sc)),
+            pfKpi(pfFmt(rs), 'Wtd RS IBD', pfCol(rs)),
+            pfKpi(pfFmt(va), 'Wtd VA RS', pfCol(va)),
+            pfKpi(pfFmt(p4), 'Wtd Pct 4W', pfCol(p4)),
+            pfKpi(pfFmt(p6), 'Wtd Pct 6M', pfCol(p6)),
+            pfKpi(pfFmt(wIn(r => r.rs_ibd >= 80), 0, '%'), 'Weight RS ≥ 80', '#15803d'),
+            pfKpi(pfFmt(wIn(r => r.rs_ibd != null && r.rs_ibd < 30), 0, '%'), 'Weight RS < 30', '#b91c1c'),
+            pfKpi(pfFmt(wIn(r => r.ma20_dist != null && r.ma20_dist > 0), 0, '%'), 'Weight above EMA20'),
+            pfKpi(pfSigned(pfWavg(R, 'high52_dist')), 'Wtd vs 52W high'),
+            pfKpi(pfSigned(r1w), 'Wtd return 1W', pfRetCol(r1w)),
+            pfKpi(pfSigned(r1m), 'Wtd return 1M', pfRetCol(r1m)),
+            pfKpi(pfSigned(r3m), 'Wtd return 3M', pfRetCol(r3m)),
+            pfKpi(pfSigned(r12), 'Wtd return 12M', pfRetCol(r12)),
+            pfKpi(pfSigned(pfWavg(R, 'sales_cq'), 0), 'Wtd Sales CQ growth'),
+            pfKpi(pfSigned(pfWavg(R, 'eps_cq'), 0), 'Wtd EPS CQ growth'),
+            pfKpi(pfFmt(hPE, 1, 'x'), 'Fwd PE (harmonic)'),
+        ].join('');
+    }
+
+    function pfSort(col) {
+        if (pfSortCol === col) pfSortDir = pfSortDir === 'desc' ? 'asc' : 'desc';
+        else { pfSortCol = col; pfSortDir = ['ticker', 'name', 'sector', 'group'].includes(col) ? 'asc' : 'desc'; }
+        pfRenderTable();
+    }
+
+    function pfRenderTable() {
+        const body = document.getElementById('pfBody');
+        const rows = [...pfRows].sort((a, b) => {
+            const x = a[pfSortCol], y = b[pfSortCol];
+            if (x == null) return 1; if (y == null) return -1;
+            const c = typeof x === 'string' ? x.localeCompare(y) : x - y;
+            return pfSortDir === 'asc' ? c : -c;
+        });
+        const bL = 'border-left:1px solid var(--border2)';
+        body.innerHTML = rows.map(d => `<tr>
+            <td class="td-ticker" style="color:var(--accent2);cursor:pointer" onclick="openNews('${d.ticker}','${(d.name || '').replace(/'/g, "\\'")}')">${d.ticker}</td>
+            <td class="td-name">${d.name || ''}</td><td class="td-name">${d.sector || ''}</td><td class="td-name">${d.group || ''}</td>
+            <td class="td-pct" style="font-weight:700">${d.w.toFixed(1)}</td>
+            <td class="td-pct" style="${bL}">${pctCell(d.rs_ibd)}</td><td class="td-pct">${pctCell(d.va_rs)}</td>
+            <td class="td-pct">${pctCell(d.pct_4w)}</td><td class="td-pct">${pctCell(d.pct_6m)}</td>
+            <td class="td-pct" style="${bL};color:${pfRetCol(d.ret_5d)}">${fr(d.ret_5d)}</td>
+            <td class="td-pct" style="color:${pfRetCol(d.ret_3m)}">${fr(d.ret_3m)}</td>
+            <td class="td-pct">${distCell(d.ma20_dist)}</td><td class="td-pct">${distCell52w(d.high52_dist)}</td>
+            <td class="td-pct" style="${bL}">${salesCell(d.sales_cq)}</td><td class="td-pct">${epsCell(d.eps_cq)}</td>
+            <td class="td-pct">${d.forward_pe != null ? d.forward_pe.toFixed(1) : '—'}</td>
+            <td class="td-pct" style="${bL}">${pctCell(d.score)}</td></tr>`).join('');
+    }
+
+    function pfBars(entries, withRs) {
+        const max = Math.max(...entries.map(e => e.w), 1);
+        return entries.map(e => `<div class="pf-bar" title="${e.names || ''}">
+            <span class="n">${e.k}</span><span class="t"><span class="f" style="width:${e.w / max * 100}%"></span></span>
+            <span class="p">${e.w.toFixed(1)}%</span>
+            <span class="r" style="color:${pfCol(e.rs)}">${withRs && e.rs != null ? Math.round(e.rs) : ''}</span></div>`).join('')
+            || '<div class="pf-hint">—</div>';
+    }
+    function pfGroupBy(key) {
+        const m = {};
+        pfRows.forEach(r => {
+            const k = r[key] || '(n/a)';
+            (m[k] = m[k] || { k, w: 0, rows: [] }).w += r.w; m[k].rows.push(r);
+        });
+        return Object.values(m).map(e => ({ ...e, rs: pfWavg(e.rows, 'rs_ibd'), names: e.rows.map(r => r.ticker).join(', ') }))
+            .sort((a, b) => b.w - a.w);
+    }
+    function pfRenderWeights() {
+        document.getElementById('pfWSector').innerHTML = pfBars(pfGroupBy('sector'), true);
+        document.getElementById('pfWGroup').innerHTML = pfBars(pfGroupBy('group'), true);
+        pfRenderBuckets();
+    }
+    function pfRenderBuckets() {
+        const key = document.getElementById('pfBucketMetric').value;
+        const b = [['80–100', 80, 101], ['60–79', 60, 80], ['40–59', 40, 60], ['20–39', 20, 40], ['0–19', 0, 20]]
+            .map(([k, lo, hi]) => {
+                const rows = pfRows.filter(r => r[key] != null && r[key] >= lo && r[key] < hi);
+                return { k, w: rows.reduce((s, r) => s + r.w, 0), names: rows.map(r => r.ticker).join(', ') };
+            });
+        const na = pfRows.filter(r => r[key] == null);
+        if (na.length) b.push({ k: 'n/a', w: na.reduce((s, r) => s + r.w, 0), names: na.map(r => r.ticker).join(', ') });
+        document.getElementById('pfWBucket').innerHTML = pfBars(b, false) +
+            `<div class="pf-hint" style="margin-top:8px">${b.filter(x => x.names).map(x => `<b>${x.k}</b>: ${x.names}`).join('<br>')}</div>`;
+    }
+
+    function pfRenderAlerts(missing) {
+        const A = [];
+        pfRows.forEach(r => {
+            if (r.ma20_dist != null && r.ma20_dist > 25) A.push(['md', `${r.ticker} extended +${Math.round(r.ma20_dist)}% vs EMA20`]);
+            if (r.high52_dist != null && r.high52_dist < -25) A.push(['hi', `${r.ticker} ${Math.round(r.high52_dist)}% off 52W high`]);
+            if (r.pct_4w != null && r.pct_6m != null && r.pct_4w - r.pct_6m <= -25) A.push(['hi', `${r.ticker} RS decaying (4W ${r.pct_4w} vs 6M ${r.pct_6m})`]);
+            if (r.ema10_above === false && r.ma20_dist != null && r.ma20_dist < 0) A.push(['md', `${r.ticker} below EMA20, EMA10 < EMA20`]);
+            if (r.w > 10) A.push(['md', `${r.ticker} weight ${r.w.toFixed(1)}%`]);
+        });
+        pfGroupBy('group').filter(g => g.k !== '(n/a)' && g.w > 25).forEach(g => A.push(['md', `Group ${g.k} at ${g.w.toFixed(0)}%`]));
+        pfGroupBy('sector').filter(g => g.w > 40).forEach(g => A.push(['md', `Sector ${g.k} at ${g.w.toFixed(0)}%`]));
+        if (missing.length) A.push(['hi', `Not in universe: ${missing.join(', ')}`]);
+        document.getElementById('pfAlertsWrap').style.display = A.length ? '' : 'none';
+        document.getElementById('pfAlerts').innerHTML = A.map(([c, t]) => `<span class="pf-alert ${c}">${t}</span>`).join('');
+    }
+
+    function pfCandidates(r, held) {
+        const pool = allData.filter(d => !held.has(d.ticker) && d.rs_ibd != null && d.rs_ibd >= 70);
+        const pick = f => pool.filter(f).map(d => ({ d, s: pfScore(d) }))
+            .filter(x => x.s != null && x.s >= (r.score || 0) + 15).sort((a, b) => b.s - a.s).slice(0, 3);
+        let c = r.group ? pick(d => d.group === r.group) : [];
+        let scope = 'group';
+        if (c.length < 2 && r.sector) {
+            const extra = pick(d => d.sector === r.sector && !c.some(x => x.d === d));
+            c = c.concat(extra).slice(0, 3); if (!c.length || extra.length) scope = c.length && r.group && c[0].d.group === r.group ? 'group/sector' : 'sector';
+        }
+        return { c, scope };
+    }
+
+    function pfVerdict(r) {
+        const rs = r.rsScore, sc = r.score;
+        if (rs == null) return 'WATCH';
+        const decay = r.pct_4w != null && r.pct_6m != null ? r.pct_4w - r.pct_6m : 0;
+        if (rs < 40 || sc < 40 || (r.rs_ibd != null && r.rs_ibd < 30)) return 'SWITCH';
+        if (rs >= 65 && sc >= 60 && decay > -20) return 'HOLD';
+        return 'WATCH';
+    }
+
+    function pfWhy(r, v) {
+        const s = [];
+        s.push(`RS IBD ${r.rs_ibd ?? '—'}, VA RS ${r.va_rs ?? '—'}, Pct 4W ${r.pct_4w ?? '—'} vs 6M ${r.pct_6m ?? '—'}.`);
+        const decay = r.pct_4w != null && r.pct_6m != null ? r.pct_4w - r.pct_6m : null;
+        if (decay != null && decay <= -20) s.push('Short-term RS is deteriorating vs the 6M trend.');
+        else if (decay != null && decay >= 20) s.push('Short-term RS is accelerating.');
+        if (r.sales_cq != null || r.eps_cq != null)
+            s.push(`Fundamentals: sales CQ ${r.sales_cq != null ? Math.round(r.sales_cq) + '%' : '—'}, EPS CQ ${r.eps_cq != null ? Math.round(r.eps_cq) + '%' : '—'}${r.fundScore != null ? ` (pctl ${Math.round(r.fundScore)})` : ''}.`);
+        if (r.high52_dist != null && r.high52_dist < -25) s.push(`Trading ${Math.abs(Math.round(r.high52_dist))}% below its 52W high.`);
+        if (v === 'HOLD' && r.ma20_dist > 25) s.push('Extended — avoid adding here.');
+        return s.join(' ');
+    }
+
+    function pfRenderRecos() {
+        const el = document.getElementById('pfRecos');
+        const held = new Set(pfRows.map(r => r.ticker));
+        const order = { SWITCH: 0, WATCH: 1, HOLD: 2 };
+        const list = pfRows.map(r => {
+            const v = pfVerdict(r);
+            const cand = v === 'HOLD' ? { c: [], scope: '' } : pfCandidates(r, held);
+            return { r, v, cand };
+        }).sort((a, b) => order[a.v] - order[b.v] || (a.r.score ?? 0) - (b.r.score ?? 0));
+        window._pfRecos = list;
+        el.innerHTML = list.map(({ r, v, cand }) => `<div class="pf-reco ${v}">
+            <div class="hd"><span class="pf-verdict ${v}">${v}</span>
+                <b style="color:var(--accent2)">${r.ticker}</b><span style="font-size:12px">${r.name || ''}</span>
+                <span style="font-size:11px;color:var(--muted)">${r.group || r.sector || ''} · ${r.w.toFixed(1)}%</span>
+                <span style="margin-left:auto;font-size:11px">Score ${pctCell(r.score)}</span></div>
+            <div class="pf-why">${pfWhy(r, v)}</div>
+            ${v !== 'HOLD' ? (cand.c.length
+                ? `<div class="pf-cands"><span style="font-size:11px;color:var(--muted)">Switch into (${cand.scope}):</span>${cand.c.map(x =>
+                    `<span class="pf-cand"><b>${x.d.ticker}</b> score ${x.s} · RS ${x.d.rs_ibd} · VA ${x.d.va_rs ?? '—'} · S ${x.d.sales_cq != null ? Math.round(x.d.sales_cq) + '%' : '—'} · E ${x.d.eps_cq != null ? Math.round(x.d.eps_cq) + '%' : '—'}</span>`).join('')}</div>`
+                : '<div class="pf-hint">No stronger candidate in group/sector — consider trimming rather than switching.</div>') : ''}
+        </div>`).join('') || '<div class="pf-hint">Enter holdings and press Analyse.</div>';
+    }
+
+    function pfExportCSV() {
+        if (!window._pfRecos) return;
+        const h = ['ticker','name','sector','group','weight','rs_ibd','va_rs','pct_4w','pct_6m','ret_1w','ret_3m','ma20_dist','high52_dist','sales_cq','eps_cq','forward_pe','score','verdict','candidates'];
+        const lines = [h.join(',')].concat(window._pfRecos.map(({ r, v, cand }) => [r.ticker, `"${r.name || ''}"`, `"${r.sector || ''}"`, `"${r.group || ''}"`,
+            r.w.toFixed(2), r.rs_ibd, r.va_rs, r.pct_4w, r.pct_6m, r.ret_5d, r.ret_3m, r.ma20_dist, r.high52_dist, r.sales_cq, r.eps_cq, r.forward_pe, r.score, v,
+            `"${cand.c.map(x => x.d.ticker).join(' ')}"`].map(x => x == null ? '' : x).join(',')));
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv' }));
+        a.download = `portfolio_${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+    }
+
+    document.addEventListener('DOMContentLoaded', pfLoad);
+</script>
