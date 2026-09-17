@@ -1638,7 +1638,7 @@
                     <div style="margin-bottom:1px;">  PCT 1W  = rank(w1)</div>
                     <div style="margin-bottom:1px;">  PCT 4W  = avg(rank_w1, rank_w2, rank_w3, rank_w4)</div>
                     <div style="margin-bottom:1px;">  PCT 6M  = 0.25×rank_m1 + 0.20×rank_m2 + 0.15×rank_m3 + 0.15×rank_m4 + 0.15×rank_m5 + 0.10×rank_m6</div>
-                    <div style="margin-bottom:1px;">  PCT 12M = EWM-weighted avg(rank_m1 … rank_m12, factor=0.90)</div>
+                    <div style="margin-bottom:1px;">  PCT 12M = EMA(rank_m1 … rank_m12, factor=0.90)</div>
                     <div style="height:5px;"></div>
                     <div style="margin-bottom:1px;">RS IBD = percentile of  (0.4×ret_3m + 0.2×ret_6m + 0.2×ret_9m + 0.2×ret_12m)</div>
                     <div style="margin-bottom:1px;">  ret_Xm = cumulative % return from day 0 to day X (overlapping windows, not isolated quarters)</div>
@@ -1667,7 +1667,7 @@
                     <div style="margin-bottom:1px;">  VA 1W  = rank(va_w1)</div>
                     <div style="margin-bottom:1px;">  VA 4W  = avg(rank_va_w1 … rank_va_w4)</div>
                     <div style="margin-bottom:1px;">  VA 6M  = avg(rank_va_m1 … rank_va_m6)</div>
-                    <div style="margin-bottom:1px;">  VA 12M = EWM-weighted avg(rank_va_m1 … rank_va_m12, factor=0.90)</div>
+                    <div style="margin-bottom:1px;">  VA 12M = EMA(rank_va_m1 … rank_va_m12, factor=0.90)</div>
                     <div style="margin-bottom:1px;">  VA-RS  = percentile(0.4×VA_4W + 0.2×VA_6M + 0.4×VA_12M)</div>
                     <div style="height:5px;"></div>
                     <div style="margin-bottom:1px;">Δ = VA-RS − RS IBD</div>
@@ -1678,7 +1678,7 @@
             <div style="margin-bottom:18px;background:var(--bg2);border:1px solid var(--border);border-top:1px solid #10b981;padding:14px 18px;">
                 <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.12em;color:#10b981;margin-bottom:10px;">EMA 10 / 20 — PULLBACKS ST MA</div>
                 <div style="font-size:13px;line-height:1.8;color:var(--muted);border-left:1px solid #10b981;padding-left:10px;margin-bottom:12px;">
-                    O'Neil documented that the greatest winners repeatedly find support at their <strong style="color:var(--text)">10-week moving average</strong> during their major advances,
+                    O'Neil documented that the greatest winners repeatedly find support at their <strong style="color:var(--text)">10-week MA</strong> during their major advances,
                     offering successive low-risk re-entry opportunities. The bullish MA cascade (EMA20 &gt; SMA50 &gt; SMA200) confirms institutions are in accumulation mode.
                     A pullback within 0.5σ of the EMA10 or EMA20 is the optimal entry zone — reduced risk, trend intact.
                 </div>
@@ -1711,7 +1711,7 @@
                     <div style="margin-bottom:1px;">  2. Max consecutive closes below SMA ≤ max_below (default 2)</div>
                     <div style="margin-bottom:1px;">  3. Current close above SMA — confirmed recovery</div>
                     <div style="height:5px;"></div>
-                    <div style="margin-bottom:1px;">SMA = Simple moving average (50, 100, or 200 days — toggle in UI).</div>
+                    <div style="margin-bottom:1px;">SMA = simple MA (50, 100, or 200 days — toggle in UI).</div>
                     <div style="height:5px;"></div>
                     <div style="margin-bottom:1px;">Columns:  vs MA = current distance from SMA</div>
                     <div style="margin-bottom:1px;">          TOUCH = sessions ago (1 = yesterday)</div>
@@ -6733,7 +6733,7 @@
                 pfKpi(pfFmt(wIn(r => r.rs_ibd >= 80), 0, '%'), 'Weight RS IBD ≥ 80'),
                 pfKpi(pfFmt(wIn(r => r.rs_ibd != null && r.rs_ibd < 30), 0, '%'), 'Weight RS IBD < 30'),
             ]),
-            sec('3 · Fundamentals <span>(weighted median)</span>', [
+            sec('3 · Fundamentals <span>(median)</span>', [
                 pfKpi(pfSigned(g('sales_cq'), 0), 'Sales growth CQ', growCol(g('sales_cq'))),
                 pfKpi(pfSigned(g('sales_nq'), 0), 'Sales growth NQ', growCol(g('sales_nq'))),
                 pfKpi(pfSigned(g('ny_yoy_s'), 0), 'Sales growth next year', growCol(g('ny_yoy_s'))),
@@ -6754,14 +6754,14 @@
                 return sec('5 · Volatility <span>(annualised, daily returns)</span>', [
                     pfKpi(pfFmt(pv, 1, '%'), 'Portfolio vol 60D'),
                     pfKpi(pfFmt(pv126, 1, '%'), 'Portfolio vol 6M'),
-                    pfKpi(pfFmt(wv, 1, '%'), 'Wtd avg stock vol 60D'),
-                    pfKpi(pfFmt(pfWavg(R, 'dvol60'), 1, '%'), 'Wtd downside vol 60D'),
+                    pfKpi(pfFmt(wv, 1, '%'), 'Average stock vol 60D'),
+                    pfKpi(pfFmt(pfWavg(R, 'dvol60'), 1, '%'), 'Average downside vol 60D'),
                     pfKpi(pv && wv ? (wv / pv).toFixed(2) : '—', 'Diversification ratio'),
-                    pfKpi(pfFmt(pfWavg(R, 'va_rs')), 'Wtd VA RS'),
+                    pfKpi(pfFmt(pfWavg(R, 'va_rs')), 'Average VA RS'),
                     pfKpi(hiVol || '—', 'Top vol contributors'),
                 ]);
             })(),
-            sec('6 · Returns <span>(weighted)</span>', [
+            sec('6 · Returns <span>(average)</span>', [
                 pfKpi(pfSigned(pfWavg(R, 'ret_5d')), '5D', pfRetCol(pfWavg(R, 'ret_5d'))),
                 pfKpi(pfSigned(pfWavg(R, 'm1')), '1M', pfRetCol(pfWavg(R, 'm1'))),
                 pfKpi(pfSigned(pfWavg(R, 'ret_3m')), '3M', pfRetCol(pfWavg(R, 'ret_3m'))),
