@@ -706,6 +706,22 @@
     .pf-edit textarea{width:100%;height:140px;font-family:'IBM Plex Mono',monospace;font-size:11px;border:1px solid var(--faint);padding:6px;margin-bottom:6px}
     .pf-narr{font-size:12px;line-height:1.6}
     .pf-narr li{margin:0 0 6px 16px}
+    .pf-stabs{display:flex;border-bottom:1px solid var(--border2);margin:4px 0 14px}
+    .pf-stab,.pf-mtab{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border:none;border-bottom:1px solid transparent;background:transparent}
+    .pf-stab.on,.pf-mtab.on{color:var(--accent2);border-bottom-color:var(--accent2)}
+    .pf-mtab{padding:6px 16px;border:1px solid var(--border);margin-right:-1px}
+    .pf-mtab.on{background:var(--bg2)}
+    .pf-subc{display:none}.pf-subc.on{display:block}
+    .pf-swt{width:100%;background:var(--bg2)}
+    .pf-swt td{vertical-align:top}
+    .pf-swc{min-width:150px}
+    .pf-swv{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.08em}
+    .pf-swcand{font-size:11px;line-height:1.35}
+    .pf-swcand b{color:var(--accent2);font-size:12px}
+    .pf-swcand span{color:var(--muted)}
+    .pf-swf{font-size:11px;padding:3px 10px;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--text)}
+    .pf-swf.on{background:var(--text);color:var(--bg)}
+    .pf-swt tr.grp td{border-top:2px solid var(--border)}
     .pf-strip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(72px,1fr);gap:4px}
     .pf-strip .pf-kpi{padding:5px 6px;white-space:nowrap}
     .pf-sec{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:start}
@@ -1557,9 +1573,7 @@
             <span id="pfStatus"></span>
             <span class="pf-ctrls">
                 <label>Rank leaders by <select id="pfRankBy" onchange="renderPortfolio()"><option value="va" selected>VA RS</option><option value="score">Composite score</option></select></label>
-                <a href="#" onclick="document.getElementById('pfClaudeAnchor').scrollIntoView({behavior:'smooth'});return false">Claude portfolio ↓</a>
-                <a href="#" onclick="document.getElementById('pfAcwiAnchor').scrollIntoView({behavior:'smooth'});return false">ACWI-neutral ↓</a>
-                <a href="#" onclick="pfLoadSheet();return false">Reload sheet</a>
+                                                <a href="#" onclick="pfLoadSheet();return false">Reload sheet</a>
                 <a href="#" onclick="pfExportCSV();return false">Export CSV</a>
                 <a href="#" onclick="document.getElementById('pfEdit').classList.toggle('open');return false">Edit manually</a>
             </span>
@@ -1568,6 +1582,8 @@
             <textarea id="pfInput" spellcheck="false" placeholder="AMZN US 5.9&#10;ISP IM 4.3"></textarea>
             <button class="btn" onclick="pfSave()">Analyse</button>
         </div>
+        <div class="pf-stabs"><button class="pf-stab" data-sub="portfolio" onclick="pfSubTab('portfolio')">PORTFOLIO</button><button class="pf-stab" data-sub="alerts" onclick="pfSubTab('alerts')">ALERTS</button><button class="pf-stab" data-sub="themes" onclick="pfSubTab('themes')">THEMES / STOCKS</button><button class="pf-stab" data-sub="switch" onclick="pfSubTab('switch')">SWITCH</button><button class="pf-stab" data-sub="models" onclick="pfSubTab('models')">MODEL PORTFOLIOS</button></div>
+        <div class="pf-subc" id="pfSub-portfolio">
         <div class="pf-kpis" id="pfKpis"></div>
 
         <div class="pf-h">WEIGHTS</div>
@@ -1583,29 +1599,7 @@
         </div>
 
 
-        <div id="pfAlertsWrap" style="display:none">
-            <div class="pf-h" style="margin-top:16px">ALERTS</div>
-            <div id="pfAlerts" class="pf-alerts"></div>
-        </div>
-
-        <div class="pf-h" style="margin-top:22px;">GAPS — WHAT THE PORTFOLIO DOESN'T OWN</div>
-        <div class="pf-grid2">
-            <div class="pf-card" style="max-height:560px">
-                <div class="pf-sub">Strong groups not held
-                    <select id="pfGapMinN" onchange="pfRenderGaps()"><option value="3">≥ 3 stocks</option><option value="5" selected>≥ 5 stocks</option><option value="10">≥ 10 stocks</option></select></div>
-                <div class="pf-hint">US groups ranked by the average of Pct 4W and Pct 6M (averages of members, same method as the Groups tab). Leaders = top 3 by the ranking measure.</div>
-                <div class="table-wrap"><table class="pf-gt"><thead><tr><th>GROUP</th><th>SECTOR</th><th class="th-pct">N</th><th class="th-pct">PCT 4W</th><th class="th-pct">PCT 6M</th><th class="th-pct">RS IBD</th><th class="th-pct">SALES CQ</th><th>LEADERS</th></tr></thead><tbody id="pfGapGroups"></tbody></table></div>
-            </div>
-            <div class="pf-card" style="max-height:560px">
-                <div class="pf-sub">Large-cap leaders not held
-                    <span><select id="pfGapCap" onchange="pfRenderGaps()"><option value="20">Cap ≥ 20B</option><option value="50" selected>Cap ≥ 50B</option><option value="100">Cap ≥ 100B</option><option value="200">Cap ≥ 200B</option></select>
-                    <select id="pfGapUni" onchange="pfRenderGaps()"><option value="all">US + RoW</option><option value="us">US</option><option value="row">RoW</option></select></span></div>
-                <div class="pf-hint">RS IBD ≥ 70, sorted by the ranking measure (VA RS by default). US tickers of 5+ letters (OTC ADRs) excluded. ● = group already held. RoW cap in EUR.</div>
-                <div class="table-wrap"><table class="pf-gt"><thead><tr><th>TICKER</th><th>NAME</th><th>GROUP</th><th class="th-pct">CAP</th><th class="th-pct">RS</th><th class="th-pct">VA</th><th class="th-pct">4W</th><th class="th-pct">SALES</th><th class="th-pct">EPS</th><th class="th-pct">VOL</th><th class="th-pct">SCORE</th></tr></thead><tbody id="pfGapStocks"></tbody></table></div>
-            </div>
-        </div>
-
-        <div class="pf-h" style="margin-top:22px;">HOLDINGS STATISTICS</div>
+        <div class="pf-h" style="margin-top:18px;">HOLDINGS STATISTICS</div>
         <div class="table-wrap"><table id="pfTable"><thead><tr>
             <th onclick="pfSort('ticker')">TICKER</th><th onclick="pfSort('name')">NAME</th>
             <th onclick="pfSort('country')">COUNTRY</th><th onclick="pfSort('sector')">SECTOR</th><th onclick="pfSort('group')">GROUP</th>
@@ -1625,14 +1619,47 @@
             <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('score')">SCORE</th>
         </tr></thead><tbody id="pfBody"></tbody></table></div>
 
-        <div id="pfActionsWrap" style="display:none;margin:22px 0 10px">
-            <div class="pf-h">SWITCH</div>
-            <div class="pf-hint" style="margin-bottom:6px">Candidates: same universe (US / RoW), same sector, market cap ≥ 1/3 of the holding, RS IBD and VA RS both better than the holding (RS IBD only for RoW), US tickers of 5+ letters (OTC ADRs) excluded. Sorted by VA RS.</div>
-            <div id="pfActions" class="pf-actions"></div>
         </div>
-        <div id="pfRecos" style="display:none"></div>
+        <div class="pf-subc" id="pfSub-alerts">
+        <div id="pfAlertsWrap" >
+            
+            <div id="pfAlerts" class="pf-alerts"></div>
+        </div>
 
-        <div class="pf-h" style="margin-top:28px;" id="pfClaudeAnchor">CLAUDE PORTFOLIO</div>
+        </div>
+        <div class="pf-subc" id="pfSub-themes">
+        
+        <div class="pf-grid2">
+            <div class="pf-card" style="max-height:560px">
+                <div class="pf-sub">Strong groups not held
+                    <select id="pfGapMinN" onchange="pfRenderGaps()"><option value="3">≥ 3 stocks</option><option value="5" selected>≥ 5 stocks</option><option value="10">≥ 10 stocks</option></select></div>
+                <div class="pf-hint">US groups ranked by the average of Pct 4W and Pct 6M (averages of members, same method as the Groups tab). Leaders = top 3 by the ranking measure.</div>
+                <div class="table-wrap"><table class="pf-gt"><thead><tr><th>GROUP</th><th>SECTOR</th><th class="th-pct">N</th><th class="th-pct">PCT 4W</th><th class="th-pct">PCT 6M</th><th class="th-pct">RS IBD</th><th class="th-pct">SALES CQ</th><th>LEADERS</th></tr></thead><tbody id="pfGapGroups"></tbody></table></div>
+            </div>
+            <div class="pf-card" style="max-height:560px">
+                <div class="pf-sub">Large-cap leaders not held
+                    <span><select id="pfGapCap" onchange="pfRenderGaps()"><option value="20">Cap ≥ 20B</option><option value="50" selected>Cap ≥ 50B</option><option value="100">Cap ≥ 100B</option><option value="200">Cap ≥ 200B</option></select>
+                    <select id="pfGapUni" onchange="pfRenderGaps()"><option value="all">US + RoW</option><option value="us">US</option><option value="row">RoW</option></select></span></div>
+                <div class="pf-hint">RS IBD ≥ 70, sorted by the ranking measure (VA RS by default). US tickers of 5+ letters (OTC ADRs) excluded. ● = group already held. RoW cap in EUR.</div>
+                <div class="table-wrap"><table class="pf-gt"><thead><tr><th>TICKER</th><th>NAME</th><th>GROUP</th><th class="th-pct">CAP</th><th class="th-pct">RS</th><th class="th-pct">VA</th><th class="th-pct">4W</th><th class="th-pct">SALES</th><th class="th-pct">EPS</th><th class="th-pct">VOL</th><th class="th-pct">SCORE</th></tr></thead><tbody id="pfGapStocks"></tbody></table></div>
+            </div>
+        </div>
+
+        </div>
+        <div class="pf-subc" id="pfSub-switch">
+        <div class="pf-bar-top" style="justify-content:flex-start;gap:10px" id="swFilters"></div>
+        <div class="table-wrap"><table class="pf-gt pf-swt"><thead><tr>
+            <th>VERDICT</th><th>TICKER</th><th>GROUP</th><th class="th-pct">WEIGHT</th>
+            <th class="th-pct">VA RS</th><th class="th-pct">RS IBD</th><th class="th-pct">PCT 4W</th><th class="th-pct">PCT 6M</th><th class="th-pct">VOL 60D</th>
+            <th class="pf-swc">CANDIDATE 1</th><th class="pf-swc">CANDIDATE 2</th><th class="pf-swc">CANDIDATE 3</th>
+        </tr></thead><tbody id="swBody"></tbody></table></div>
+        <div class="pf-hint" style="margin-top:6px">Verdict: SWITCH if relative strength is weak (RS score &lt; 40, composite &lt; 40 or RS IBD &lt; 30), HOLD if strong (RS score ≥ 65, composite ≥ 60, no sharp 4W deterioration), otherwise WATCH. Candidates: same universe (US / RoW), same sector, market cap ≥ 1/3 of the holding, RS IBD and VA RS both better than the holding (RS IBD only for RoW), US tickers of 5+ letters excluded, sorted by VA RS.</div>
+        <div id="pfRecos" style="display:none"></div>
+        </div>
+        <div class="pf-subc" id="pfSub-models">
+            <div class="pf-bar-top" style="justify-content:flex-start;gap:0"><button class="pf-mtab" data-m="claude" onclick="pfModelTab('claude')">CLAUDE</button><button class="pf-mtab" data-m="acwi" onclick="pfModelTab('acwi')">ACWI NEUTRAL</button></div>
+            <div id="pfModel-claude">
+        <div class="pf-h" style="margin-top:6px;" id="pfClaudeAnchor">CLAUDE PORTFOLIO</div>
         <div class="pf-bar-top" style="justify-content:flex-start;gap:14px">
             <label>Max positions <select id="cpN" onchange="pfRenderClaude()"><option>15</option><option>20</option><option>25</option><option selected>30</option></select></label>
             <label>Min weight <select id="cpMinW" onchange="pfRenderClaude()"><option value="1">1%</option><option value="2" selected>2%</option><option value="3">3%</option></select></label>
@@ -1664,7 +1691,9 @@
 
         </div>
         <div class="pf-hint" style="margin-top:6px"><b>Selection — vol-adjusted strength, resilience, diversification (no short-term momentum).</b> 1) Strength measure = VA 6-12M: average of the 6M and 12M vol-adjusted percentiles (the 4W part of VA RS is left out). RoW has no VA data, so it uses a proxy: percentile within RoW of 6M and 12M return divided by volatility. 2) Themes scored on average VA 6-12M and breadth; the bottom 40% of themes are excluded. 3) Eligible: market cap ≥ min, VA 6-12M ≥ 70, above the 200 MA, not extended (≤ 15% above the 50 MA), 12M max drawdown not worse than −35%, 60D vol ≤ 55%, US tickers of 5+ letters excluded. Current holdings with VA 6-12M ≥ 50 above the 200 MA stay eligible (+5 bonus). 4) Ranking = 60% VA 6-12M + 30% resilience (shallow drawdown, low downside vol, low vol) + 10% fundamentals. RS IBD and Pct 4W are not used. 5) Diversification while picking: max stocks per group, max names per sector in line with the sector cap, and no pair of stocks with a 6M daily-return correlation above the chosen limit. 6) Weights: inverse 60D vol (or equal), capped per stock and per sector, floor at min weight. Rule-based model, not investment advice.</div>
-        <div class="pf-h" style="margin-top:28px;" id="pfAcwiAnchor">ACWI SECTOR-NEUTRAL PORTFOLIO</div>
+            </div>
+            <div id="pfModel-acwi">
+        <div class="pf-h" style="margin-top:6px;" id="pfAcwiAnchor">ACWI SECTOR-NEUTRAL PORTFOLIO</div>
         <div class="pf-hint">Sector weights of the iShares MSCI ACWI ETF (as of <span id="awDate"></span>), filled with the strongest stocks of each sector.</div>
         <div class="pf-bar-top" style="justify-content:flex-start;gap:14px">
             <label>Max positions <select id="awN" onchange="pfRenderAcwi()"><option>20</option><option>25</option><option selected>30</option></select></label>
@@ -1691,6 +1720,8 @@
         </div>
         <div class="pf-hint" style="margin-top:6px"><b>Construction — same philosophy as the Claude portfolio.</b> Sector targets = ACWI sector weights rescaled to invested capital. Names per sector ∝ sector weight (at least 1, no more than the min weight allows). Eligible: market cap ≥ min, above the 200 MA, not more than 15% above the 50 MA, 12M max drawdown not worse than −35%, 60D vol ≤ 55%, US tickers of 5+ letters excluded. Ranking within sector = 60% VA 6-12M + 30% resilience + 10% fundamentals (RS IBD and Pct 4W not used). Diversification while picking (largest sectors first): max stocks per group and no pair with a 6M daily-return correlation above the limit. Weights within a sector: inverse 60D vol (or equal), summing to the sector target; lines below the min weight are lifted. ACWI weights are a snapshot.</div>
 
+            </div>
+        </div>
     </div>
 
     <!-- TAB: METHOD -->
@@ -6770,9 +6801,10 @@
         pfRenderAlerts(missing);
         pfRenderGaps();
         pfRenderRecos();
-        pfRenderActions();
-        pfRenderClaude();
-        pfRenderAcwi(); window._awReady = true;
+        pfRenderSwitch();
+        window._pfModelsDirty = true;
+        if (pfSub === 'models') pfRenderModels();
+        pfSubTab(pfSub); pfModelTab(pfModel);
     }
 
     function pfKpi(v, l, color) {
@@ -7550,6 +7582,58 @@
         const lines = [h.join(',')].concat(_aw.rows.map(r => [`"${r.sector}"`, pfShort(r.ticker), `"${r.name || ''}"`, `"${r.theme}"`, r.w.toFixed(2), r.rs_ibd, r.va_rs, r.vol60 != null ? r.vol60.toFixed(1) : ''].map(x => x == null ? '' : x).join(',')));
         const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv' }));
         a.download = `acwi_neutral_${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    }
+
+
+    // ── SUB-TABS ─────────────────────────────────────────────────
+    let pfSub = (() => { try { return localStorage.getItem('pfSub') || 'portfolio'; } catch (e) { return 'portfolio'; } })();
+    let pfModel = (() => { try { return localStorage.getItem('pfModel') || 'claude'; } catch (e) { return 'claude'; } })();
+    function pfSubTab(k) {
+        pfSub = k; try { localStorage.setItem('pfSub', k); } catch (e) {}
+        document.querySelectorAll('.pf-stab').forEach(b => b.classList.toggle('on', b.dataset.sub === k));
+        document.querySelectorAll('.pf-subc').forEach(c => c.classList.toggle('on', c.id === 'pfSub-' + k));
+        if (k === 'models' && window._pfModelsDirty) pfRenderModels();
+    }
+    function pfModelTab(m) {
+        pfModel = m; try { localStorage.setItem('pfModel', m); } catch (e) {}
+        document.querySelectorAll('.pf-mtab').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+        document.getElementById('pfModel-claude').style.display = m === 'claude' ? '' : 'none';
+        document.getElementById('pfModel-acwi').style.display = m === 'acwi' ? '' : 'none';
+    }
+    function pfRenderModels() {
+        window._pfModelsDirty = false;
+        pfRenderClaude(); pfRenderAcwi(); window._awReady = true;
+    }
+
+    // ── SWITCH TABLE ─────────────────────────────────────────────
+    let pfSwFilter = 'ALL';
+    function pfRenderSwitch() {
+        const L = window._pfRecos || [];
+        const body = document.getElementById('swBody'); if (!body) return;
+        const cnt = v => L.filter(x => x.v === v), wsum = a => a.reduce((s, x) => s + x.r.w, 0).toFixed(1);
+        document.getElementById('swFilters').innerHTML = ['ALL', 'SWITCH', 'WATCH', 'HOLD'].map(v => {
+            const a = v === 'ALL' ? L : cnt(v);
+            return `<button class="pf-swf${pfSwFilter === v ? ' on' : ''}" onclick="pfSwFilter='${v}';pfRenderSwitch()">${v === 'ALL' ? 'All' : v[0] + v.slice(1).toLowerCase()} · ${a.length} · ${wsum(a)}%</button>`;
+        }).join('');
+        const held = new Set(pfRows.map(r => r.ticker));
+        const order = { SWITCH: 0, WATCH: 1, HOLD: 2 };
+        const rows = L.filter(x => pfSwFilter === 'ALL' || x.v === pfSwFilter).sort((a, b) => order[a.v] - order[b.v] || b.r.w - a.r.w);
+        const v = x => x == null ? '—' : x;
+        body.innerHTML = rows.map((x, i) => {
+            const r = x.r;
+            const c = x.v === 'HOLD' ? pfCandidates(r, held).c : x.cand.c;
+            const cell = k => { const y = c[k]; if (!y) return '<td class="pf-swc"></td>';
+                return `<td class="pf-swc"><div class="pf-swcand"><b style="cursor:pointer" onclick="openNews('${y.d.ticker}')">${pfShort(y.d.ticker)}</b> ${(y.d.name || '').slice(0, 18)}<br>
+                    <span>VA ${v(y.d.va_rs)} · RS ${v(y.d.rs_ibd)} · cap ${y.cap != null ? Math.round(y.cap) : '—'}${y.d.currency ? ' ' + y.d.currency : ''}</span></div></td>`; };
+            return `<tr class="${i && rows[i - 1].v !== x.v ? 'grp' : ''}">
+                <td class="pf-swv">${x.v}</td>
+                <td class="td-ticker" style="cursor:pointer" onclick="openNews('${r._src.ticker}')"><b>${pfShort(r.input)}</b></td>
+                <td class="td-name">${pfTheme(r._src)}</td>
+                <td class="td-pct">${r.w.toFixed(1)}%</td>
+                <td class="td-pct">${pfPctC(r.va_rs)}</td><td class="td-pct">${pfPctC(r.rs_ibd)}</td><td class="td-pct">${pfPctC(r.pct_4w)}</td><td class="td-pct">${pfPctC(r.pct_6m)}</td>
+                <td class="td-pct">${r.vol60 != null ? Math.round(r.vol60) + '%' : '—'}</td>
+                ${cell(0)}${cell(1)}${cell(2)}</tr>`;
+        }).join('') || '<tr><td colspan="12" class="pf-hint">None.</td></tr>';
     }
 
     function pfCandidates(r, held) {
