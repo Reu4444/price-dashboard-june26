@@ -785,6 +785,7 @@
     .pf-atable .th-c,.pf-atable .td-c{text-align:center}
     .pf-atable td.td-c{font-size:13px}
     .pf-atable tr.hot td,.pf-atable tr.hot td b{color:#b91c1c}
+    .pf-atable td.td-ticker b{color:inherit}
     .pf-hot{color:#b91c1c;font-size:12px;margin-bottom:8px}
     .pf-acol{background:var(--bg2);border:1px solid var(--border);padding:8px;display:flex;flex-direction:column;gap:4px;max-height:320px;overflow:auto}
     .pf-acol-t{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.08em;color:var(--text);display:flex;justify-content:space-between}
@@ -1645,8 +1646,6 @@
             <th data-x="1" class="th-pct" onclick="pfSort('ma200_dist')">vs 200 MA</th>
             <th data-x="1" class="th-pct" onclick="pfSort('high52_dist')">vs 52WH</th>
             <th data-x="1" class="th-pct" onclick="pfSort('perf')">PERF</th>
-            <th data-x="1" class="th-pct" onclick="pfSort('cost')">COST</th>
-            <th data-x="1" class="th-pct" onclick="pfSort('perfCalc')">P&amp;L vs COST</th>
             <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('ny_yoy_s')">SALES 2027</th>
             <th class="th-pct" onclick="pfSort('ny_yoy')">EPS 2027</th>
             <th data-x="1" class="th-pct" onclick="pfSort('forward_pe')">FWD PE</th>
@@ -6785,7 +6784,7 @@
             } catch (e) {}
             if (!csv) { try { csv = await fetchWithProxy(PF_SHEET_URL); } catch (e) {} }
             if (!csv || /<html/i.test(csv)) { pfStatus('Sheet not reachable — check the tab is still published (CSV)'); return false; }
-            rows = parseCSVLines(csv);
+            rows = String(csv).replace(/^\uFEFF/, '').split(/\r?\n/).map(l => parseCSVRow(l));   // quote-aware: the Plan column contains commas
         }
         const headRow = rows[0] || [];
         const rowsCsv = rows.slice(1);
@@ -6952,7 +6951,10 @@
         window._pfCash = Math.max(0, 100 - holdings.reduce((s, h) => s + h.w, 0));
         window._pfUnmatched = holdings.filter(h => missing.includes(h.ticker)).reduce((s, h) => s + h.w, 0);
         const rowPending = missing.some(t => { const e = t.split(' ')[1]; return e && !['US','UW','UN'].includes(e); }) && !(allDataRoW || []).length;
-        pfStatus(`${window._pfSheetAt ? `Portfolio loaded from Google Sheet (${window._pfSheetVia || 'published CSV'}) on ` + '' + + window._pfSheetAt.toLocaleString('en-GB', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : 'Portfolio entered manually'} · ${pfRows.length} matched${missing.length ? ' · not found: ' + missing.join(', ') : ''}${rowPending ? ' · RoW data still loading…' : ` · RoW universe ${(allDataRoW || []).length}`}`);
+        pfStatus(`${window._pfSheetAt
+            ? `Portfolio loaded from Google Sheet (${window._pfSheetVia || 'published CSV'}) on ` + window._pfSheetAt.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+            : 'Portfolio entered manually'} · ${pfRows.length} matched${missing.length ? ' · not found: ' + missing.join(', ') : ''} · perf ${pfRows.filter(r => r.perf != null).length}/${pfRows.length}${rowPending ? ' · RoW data still loading…' : ` · RoW universe ${(allDataRoW || []).length}`}`);
+
         pfRenderKpis();
         pfRenderTable();
         pfRenderWeights();
@@ -7083,7 +7085,7 @@
             <td class="td-pct">${pfPctC(d.rs_ibd)}</td><td class="td-pct">${pfPctC(d.va_rs)}</td>
             <td class="td-pct" data-x="1" style="${bL}">${pfRetN(d.ret_5d)}</td>
             <td class="td-pct" data-x="1">${pfRetN(d.ret_3m)}</td>
-            <td class="td-pct" data-x="1">${pfRetN(d.ma200_dist)}</td><td class="td-pct" data-x="1">${pfRetN(d.high52_dist)}</td><td class="td-pct" data-x="1">${pfRetN(d.perf)}</td><td class="td-pct" data-x="1">${(d.costAdj ?? d.cost) != null ? (d.costAdj ?? d.cost).toFixed(2) : '—'}</td><td class="td-pct" data-x="1">${pfRetN(d.perfCalc)}</td>
+            <td class="td-pct" data-x="1">${pfRetN(d.ma200_dist)}</td><td class="td-pct" data-x="1">${pfRetN(d.high52_dist)}</td><td class="td-pct" data-x="1">${pfRetN(d.perf)}</td>
             <td class="td-pct" style="${bL}">${pfGrowN(d.ny_yoy_s)}</td><td class="td-pct">${pfGrowN(d.ny_yoy)}</td>
             <td class="td-pct" data-x="1">${d.forward_pe != null ? d.forward_pe.toFixed(1) + 'x' : '—'}</td>
             <td class="td-pct" style="${bL}${d.vol60 != null && d.vol60 > 50 ? ';color:#b91c1c;font-weight:700' : ''}">${d.vol60 != null ? d.vol60.toFixed(0) + '%' : '—'}</td>
@@ -7277,21 +7279,21 @@
             <th class="th-c">GROUP WEAK</th><th class="th-c">FLAGS</th></tr></thead><tbody>
             ${visible.map(x => {
                 const r = x.r, hot = x.n >= 3, isNew = prev && !prevSet.has(r.input);
-                return `<tr class="${hot ? 'hot' : ''}">
-                <td class="td-ticker" style="cursor:pointer" onclick="openNews('${r._src.ticker}')"><b>${pfShort(r.input)}</b>${isNew ? ' <span class="pf-new">NEW</span>' : ''}</td>
+                return `<tr>
+                <td class="td-ticker" style="cursor:pointer${hot ? ';color:#b91c1c' : ''}" onclick="openNews('${r._src.ticker}')"><b>${pfShort(r.input)}</b>${isNew ? ' <span class="pf-new">NEW</span>' : ''}</td>
                 <td class="td-name">${pfTheme(r._src)}</td>
                 <td class="td-pct">${r.w.toFixed(1)}%</td>
-                <td class="td-pct">${r.perf != null ? r.perf.toFixed(1) + '%' : '—'}</td>
+                <td class="td-pct" style="${r.perf != null && r.perf < -10 ? 'color:#b91c1c;font-weight:700' : ''}">${r.perf != null ? r.perf.toFixed(1) + '%' : '—'}</td>
                 <td class="td-c">${ck(x.f.perf)}</td>
                 <td class="td-c" title="RS IBD ${v(r.rs_ibd)} · 4W ${v(r.pct_4w)} · 6M ${v(r.pct_6m)}">${ck(x.f.rw)}</td>
-                <td class="td-c" title="${pfMaDist(r, 50)} · ${pfMaDist(r, 200)}">${ck(x.f.trend)}</td>
+                <td class="td-c" title="${pfMaDist(r, 50)} · ${pfMaDist(r, 200)}" style="${r.above200 === false ? 'color:#b91c1c;font-weight:700' : ''}">${ck(x.f.trend)}</td>
                 <td class="td-c" title="${r.high52_dist != null ? r.high52_dist.toFixed(1) + '%' : ''}">${ck(x.f.off52)}</td>
                 <td class="td-c" title="group Pct 4W ${x.g.p4 != null ? Math.round(x.g.p4) : '—'} · Pct 6M ${x.g.p6 != null ? Math.round(x.g.p6) : '—'}">${ck(x.f.grp)}</td>
-                <td class="td-c"><b>${x.n}/5</b></td></tr>`; }).join('')}
+                <td class="td-c" style="${hot ? 'color:#b91c1c' : ''}"><b>${x.n}/5</b></td></tr>`; }).join('')}
             </tbody></table></div>
             ${hidden ? `<div class="pf-hint" style="margin-top:4px"><a href="#" onclick="pfAlertsShowAll=true;pfRenderAlerts([]);return false" style="color:var(--accent2)">Show ${hidden} stocks with only 1 flag</a></div>`
                      : (pfAlertsShowAll ? `<div class="pf-hint" style="margin-top:4px"><a href="#" onclick="pfAlertsShowAll=false;pfRenderAlerts([]);return false" style="color:var(--accent2)">Hide stocks with only 1 flag</a></div>` : '')}
-            <div class="pf-hint" style="margin-top:4px">Stocks within 5% of their 52W high are never flagged. Relative weakness = RS IBD &lt; 50, or Pct 4W and Pct 6M both &lt; 50. Below MA = below the 50 MA or the 200 MA (one flag). Group weak = group Pct 4W &lt; 50 and Pct 6M &lt; 50 (average of members). Sorted by weight × flags. Red = 3+ flags.</div>` + summary;
+            <div class="pf-hint" style="margin-top:4px">Stocks within 5% of their 52W high are never flagged. Relative weakness = RS IBD &lt; 50, or Pct 4W and Pct 6M both &lt; 50. Below MA = below the 50 MA or the 200 MA (one flag); the tick is red when the stock is below the 200 MA, black when it is only below the 50 MA. Group weak = group Pct 4W &lt; 50 and Pct 6M &lt; 50 (average of members). Sorted by weight × flags. Red = 3+ flags.</div>` + summary;
         pfCollapseHints(document.getElementById('pfAlerts'));
     }
     function pfMaDistV(r, n) {
