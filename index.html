@@ -687,7 +687,7 @@
     @media(max-width:900px){.pf-top{grid-template-columns:1fr}}
     .pf-input-box{background:var(--bg2);border:1px solid var(--border);padding:12px}
     #pfInput{width:100%;height:110px;font-family:'IBM Plex Mono',monospace;font-size:12px;border:1px solid var(--faint);padding:8px;resize:vertical;background:var(--bg)}
-    .pf-h{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.12em;color:var(--accent2);margin:6px 0 8px}
+    .pf-h{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.12em;color:var(--accent2);margin:2px 0 6px}
     .pf-sub{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.1em;color:var(--text);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
     .pf-sub select{font-size:11px}
     .pf-hint{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:6px}
@@ -697,7 +697,7 @@
     .pf-act{background:var(--bg2);border:1px solid var(--border);padding:8px 10px;font-size:12px;line-height:1.55}
     .pf-act-t{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.08em;display:flex;justify-content:space-between;margin-bottom:4px}
     .pf-act-t span{font-family:Arial,sans-serif;font-size:11px;color:var(--muted)}
-    .pf-bar-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;font-size:11px;color:var(--muted);margin-bottom:8px}
+    .pf-bar-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;font-size:11px;color:var(--muted);margin-bottom:4px}
     .pf-ctrls{display:flex;gap:14px;align-items:center}
     .pf-ctrls a{color:var(--accent2);text-decoration:none}
     .pf-ctrls select{font-size:11px}
@@ -706,7 +706,7 @@
     .pf-edit textarea{width:100%;height:140px;font-family:'IBM Plex Mono',monospace;font-size:11px;border:1px solid var(--faint);padding:6px;margin-bottom:6px}
     .pf-narr{font-size:12px;line-height:1.6}
     .pf-narr li{margin:0 0 6px 16px}
-    .pf-stabs{display:flex;border-bottom:1px solid var(--border2);margin:4px 0 14px}
+    .pf-stabs{display:flex;border-bottom:1px solid var(--border2);margin:0 0 10px}
     .pf-stab,.pf-mtab{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border:none;border-bottom:1px solid transparent;background:transparent}
     .pf-stab.on,.pf-mtab.on{color:var(--accent2);border-bottom-color:var(--accent2)}
     .pf-mtab{padding:6px 16px;border:1px solid var(--border);margin-right:-1px}
@@ -735,6 +735,8 @@
     details.pf-info{margin-top:6px}
     details.pf-info>summary{cursor:pointer;font-size:11px;color:var(--accent2);list-style:none}
     details.pf-info>summary::before{content:'ℹ︎ ';}
+    details.pf-tick>summary::before{content:'▸ ';}
+    details.pf-tick[open]>summary::before{content:'▾ ';}
     details.pf-info>div{margin-top:4px}
     #tab-portfolio.pf-compact .pf-gt td,#tab-portfolio.pf-compact .pf-gt th,#tab-portfolio.pf-compact #pfTable td,#tab-portfolio.pf-compact #pfTable th{padding:2px 5px!important;font-size:10.5px!important}
     #tab-portfolio.pf-compact .pf-kpi{padding:3px 5px}#tab-portfolio.pf-compact .pf-kpi .v{font-size:12px}
@@ -750,9 +752,9 @@
     .pf-kpi{background:var(--bg2);border:1px solid var(--faint);padding:5px 8px}
     .pf-kpi .v{font-size:14px;font-weight:700}
     .pf-kpi .l{font-size:9.5px;color:var(--muted);margin-top:1px}
-    .pf-grid3{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .pf-grid3{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:start}
     @media(max-width:1300px){.pf-grid3{grid-template-columns:repeat(2,1fr)}}@media(max-width:800px){.pf-grid3{grid-template-columns:1fr}}
-    .pf-card{background:var(--bg2);border:1px solid var(--border);padding:10px;max-height:300px;overflow:auto}
+    .pf-card{background:var(--bg2);border:1px solid var(--border);padding:10px}
     .pf-charts .pf-card{max-height:none}
     .pf-grid2{display:grid;grid-template-columns:1fr 1.25fr;gap:12px}
     @media(max-width:1200px){.pf-grid2{grid-template-columns:1fr}}
@@ -1593,12 +1595,11 @@
         </div>
 
     <!-- TAB: PORTFOLIO -->
-    <div class="tab-content" id="tab-portfolio" style="padding:20px 24px;box-sizing:border-box;">
+    <div class="tab-content" id="tab-portfolio" style="padding:10px 24px 20px;box-sizing:border-box;">
         <div class="pf-bar-top">
             <span id="pfStatus"></span>
             <span class="pf-ctrls">
-                <label>Rank leaders by <select id="pfRankBy" onchange="renderPortfolio()"><option value="va" selected>VA RS</option><option value="score">Composite score</option></select></label>
-                                                <a href="#" onclick="pfLoadSheet();return false">Reload sheet</a>
+                                                                <a href="#" onclick="pfLoadSheet();return false">Reload sheet</a>
                 <a href="#" onclick="pfExportCSV();return false">Export CSV</a>
                 <a href="#" id="pfCompactLink" onclick="pfToggleCompact();return false">Compact view</a>
                 <a href="#" onclick="document.getElementById('pfEdit').classList.toggle('open');return false">Edit manually</a>
@@ -1610,11 +1611,10 @@
         </div>
         <div class="pf-stabs"><button class="pf-stab" data-sub="portfolio" onclick="pfSubTab('portfolio')">PORTFOLIO</button><button class="pf-stab" data-sub="alerts" onclick="pfSubTab('alerts')">ALERTS</button><button class="pf-stab" data-sub="switch" onclick="pfSubTab('switch')">SWITCH</button><button class="pf-stab" data-sub="themes" onclick="pfSubTab('themes')">WHAT TO OWN</button><button class="pf-stab" data-sub="bench" onclick="pfSubTab('bench')">VS ACWI</button><button class="pf-stab" data-sub="models" onclick="pfSubTab('models')">MODEL PORTFOLIOS</button></div>
         <div class="pf-subc" id="pfSub-portfolio">
-        <div class="pf-h">KEY STATISTICS</div>
+        <div class="pf-h" style="margin-top:0">KEY STATISTICS</div>
         <div class="pf-kpis" id="pfKpis"></div>
 
         <div class="pf-h" style="margin-top:18px">RELATIVE STRENGTH</div>
-        <div class="pf-topline" id="pfTopLine"></div>
         <div class="pf-grid3" id="pfRsCards">
             <div class="pf-card"><div class="pf-sub">RS IBD <span class="pf-agg" id="pfAgg-rs_ibd"></span></div><div id="pfBk-rs_ibd"></div></div>
             <div class="pf-card"><div class="pf-sub">VA RS <span class="pf-agg" id="pfAgg-va_rs"></span></div><div id="pfBk-va_rs"></div></div>
@@ -1641,8 +1641,9 @@
             <th class="th-pct" onclick="pfSort('va_rs')">VA RS</th>
             <th data-x="1" class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('ret_5d')">1W</th>
             <th data-x="1" class="th-pct" onclick="pfSort('ret_3m')">3M</th>
-            <th class="th-pct" onclick="pfSort('ma200_dist')">vs 200 MA</th>
+            <th data-x="1" class="th-pct" onclick="pfSort('ma200_dist')">vs 200 MA</th>
             <th data-x="1" class="th-pct" onclick="pfSort('high52_dist')">vs 52WH</th>
+            <th data-x="1" class="th-pct" onclick="pfSort('perf')">PERF</th>
             <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('ny_yoy_s')">SALES 2027</th>
             <th class="th-pct" onclick="pfSort('ny_yoy')">EPS 2027</th>
             <th data-x="1" class="th-pct" onclick="pfSort('forward_pe')">FWD PE</th>
@@ -1659,6 +1660,8 @@
 
         </div>
         <div class="pf-subc" id="pfSub-themes">
+            <div class="pf-bar-top" style="justify-content:flex-start;gap:10px"><label>Rank leaders by <select id="pfRankBy" onchange="pfRenderGaps()"><option value="va" selected>VA RS</option><option value="score">Composite score</option></select></label>
+                <span style="color:var(--muted)">sorts the leaders of each group and the large-cap list</span></div>
         
         <div class="pf-grid2">
             <div class="pf-card" style="max-height:560px">
@@ -6760,8 +6763,11 @@
         rowsCsv.forEach(r => {
             const t = String(r[0] || '').trim().toUpperCase().replace(/\s+/g, ' ');
             if (!t) return;
-            const num = v => { const c = String(v ?? '').trim(); if (!c) return null;
-                const n = parseFloat(c.replace('%', '').replace(',', '.')); return !isNaN(n) && /^[-+\d.,\s%]+$/.test(c) ? n : null; };
+            const num = v => { let c = String(v ?? '').trim(); if (!c) return null;
+                let neg = /^\(.*\)$/.test(c); if (neg) c = c.slice(1, -1);
+                c = c.replace(/[%\s\u00a0']/g, '').replace(/,(\d{1,2})$/, '.$1').replace(/,/g, '');
+                if (!/^[-+]?\d*\.?\d+$/.test(c)) return null;
+                const n = parseFloat(c); return isNaN(n) ? null : (neg ? -n : n); };
             const txt = v => { const c = String(v ?? '').trim(); return c && num(c) == null ? c : null; };
             const perf = num(r[2]); if (perf != null) window._pfPerf[t] = perf;
             const th = txt(r[3]); if (th) window._pfThemeSheet[t] = th;
@@ -6972,13 +6978,13 @@
         const grp = f => { const a = R.filter(f); return { n: a.length, w: a.reduce((s, r) => s + r.w, 0), t: a.map(x => pfShort(x.input)).join(', ') }; };
         const below200 = grp(r => r.above200 === false), small = grp(r => r.w < 2), bad = grp(r => r.perf != null && r.perf < -10);
         const row = (l, v, n, w, names) => `<tr><td class="td-name">${l}</td><td class="td-pct" style="font-weight:700">${v}</td>
-            <td class="td-pct">${n == null ? '' : n}</td><td class="td-pct">${w == null ? '' : w.toFixed(1) + '%'}</td><td class="td-name" style="color:var(--muted);font-size:11px">${names || ''}</td></tr>`;
+            <td class="td-pct">${n == null ? '' : n}</td><td class="td-name" style="color:var(--muted);font-size:11px">${names || ''}</td></tr>`;
         el.innerHTML = `<table class="pf-gt pf-keystats" style="width:100%"><thead><tr>
-            <th>STATISTIC</th><th class="th-pct">VALUE</th><th class="th-pct">POSITIONS</th><th class="th-pct">WEIGHT</th><th>STOCKS</th></tr></thead><tbody>
+            <th>STATISTIC</th><th class="th-pct">VALUE</th><th class="th-pct">POSITIONS</th><th>STOCKS</th></tr></thead><tbody>
             ${row('Invested', pfFmt(inv, 1, '%'), R.length, inv, '')}
             ${row('Below 200 MA', pfFmt(below200.w, 1, '%'), below200.n, below200.w, below200.t)}
             ${row('Weight < 2%', pfFmt(small.w, 1, '%'), small.n, small.w, small.t)}
-            ${row('Performance < −10%', pfFmt(bad.w, 1, '%'), bad.n, bad.w, bad.t)}
+            ${row('Performance < −10%', R.some(r => r.perf != null) ? pfFmt(bad.w, 1, '%') : 'n/a', R.some(r => r.perf != null) ? bad.n : null, bad.w, R.some(r => r.perf != null) ? bad.t : 'no performance column found in the Sheet (col C)')}
             ${row('Portfolio realized vol 60D', pfFmt(pv, 1, '%'), null, null, 'annualised, current weights')}
             ${row('Stocks realized vol 60D', pfFmt(wv, 1, '%'), null, null, 'weighted average of the holdings')}
             </tbody></table>`;
@@ -7007,7 +7013,7 @@
             <td class="td-pct">${pfPctC(d.rs_ibd)}</td><td class="td-pct">${pfPctC(d.va_rs)}</td>
             <td class="td-pct" data-x="1" style="${bL}">${pfRetN(d.ret_5d)}</td>
             <td class="td-pct" data-x="1">${pfRetN(d.ret_3m)}</td>
-            <td class="td-pct">${pfRetN(d.ma200_dist)}</td><td class="td-pct" data-x="1">${pfRetN(d.high52_dist)}</td>
+            <td class="td-pct" data-x="1">${pfRetN(d.ma200_dist)}</td><td class="td-pct" data-x="1">${pfRetN(d.high52_dist)}</td><td class="td-pct" data-x="1">${pfRetN(d.perf)}</td>
             <td class="td-pct" style="${bL}">${pfGrowN(d.ny_yoy_s)}</td><td class="td-pct">${pfGrowN(d.ny_yoy)}</td>
             <td class="td-pct" data-x="1">${d.forward_pe != null ? d.forward_pe.toFixed(1) + 'x' : '—'}</td>
             <td class="td-pct" style="${bL}${d.vol60 != null && d.vol60 > 50 ? ';color:#b91c1c;font-weight:700' : ''}">${d.vol60 != null ? d.vol60.toFixed(0) + '%' : '—'}</td>
@@ -7095,7 +7101,11 @@
             const na = pfRows.filter(r => r[key] == null);
             if (na.length) b.push({ k: 'n/a', w: na.reduce((s, r) => s + r.w, 0), names: na.map(r => pfShort(r.input)).join(', ') });
             host.innerHTML = pfBars(b, false) +
-                `<div class="pf-hint" style="margin-top:6px">${b.filter(x => x.names).map(x => `<b>${x.k}</b>: ${x.names}`).join('<br>')}</div>`;
+                `<details class="pf-info pf-tick" data-k="bk-${key}"><summary>Show tickers</summary>
+                    <div class="pf-hint">${b.filter(x => x.names).map(x => `<b>${x.k}</b>: ${x.names}`).join('<br>')}</div></details>`;
+            const d = host.querySelector('details');
+            try { d.open = localStorage.getItem('pfDet:bk-' + key) === '1'; } catch (e) {}
+            d.addEventListener('toggle', () => { try { localStorage.setItem('pfDet:bk-' + key, d.open ? '1' : '0'); } catch (e) {} });
             const agg = pfWavg(pfRows, key);
             const el = document.getElementById('pfAgg-' + key);
             if (el) el.textContent = agg == null ? '—' : Math.round(agg);
