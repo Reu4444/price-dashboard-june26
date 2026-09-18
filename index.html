@@ -1686,11 +1686,19 @@
         <div class="pf-bar-top" style="justify-content:flex-start;gap:10px"><span id="swFilters" style="display:flex;gap:10px"></span>
             <label style="margin-left:14px">Candidate market cap <select id="swCap" onchange="pfSwCapChanged()"><option value="third" selected>≥ 1/3 of holding</option><option value="same">≥ holding</option><option value="10">≥ 10B</option><option value="20">≥ 20B</option><option value="50">≥ 50B</option><option value="100">≥ 100B</option></select></label></div>
         <div class="table-wrap"><table class="pf-gt pf-swt"><thead><tr>
-            <th>VERDICT</th><th>TICKER</th><th>GROUP</th><th class="th-pct">WEIGHT</th>
-            <th class="th-pct">VA RS</th><th class="th-pct">RS IBD</th><th class="th-pct">PCT 4W</th><th class="th-pct">PCT 6M</th><th class="th-pct">VOL 60D</th>
-            <th class="pf-swc">CANDIDATE 1</th><th class="pf-swc">CANDIDATE 2</th><th class="pf-swc">CANDIDATE 3</th><th class="pf-swc" style="min-width:190px">BETTER IN SAME GROUP</th>
+            <th>STOCK</th><th>GROUP</th><th class="th-pct">WEIGHT</th><th class="th-pct">PERF</th>
+            <th class="th-c">PERF &lt; −10%</th><th class="th-c">RELATIVE WEAKNESS</th><th class="th-c">BELOW MA</th><th class="th-c">OFF 52W HIGH</th><th class="th-c">GROUP WEAK</th><th class="th-c">FLAGS</th>
+            <th class="th-pct">VA RS</th><th class="th-pct">RS IBD</th>
+            <th class="pf-swc">CANDIDATE 1</th><th class="pf-swc">CANDIDATE 2</th><th class="pf-swc">CANDIDATE 3</th><th class="pf-swc" style="min-width:180px">BETTER IN SAME GROUP</th>
         </tr></thead><tbody id="swBody"></tbody></table></div>
-        <div class="pf-hint" style="margin-top:6px">Verdict: SWITCH if relative strength is weak (RS score &lt; 40, composite &lt; 40 or RS IBD &lt; 30), HOLD if strong (RS score ≥ 65, composite ≥ 60, no sharp 4W deterioration), otherwise WATCH. Candidates: same universe (US / RoW), same sector, market cap per the selector (default ≥ 1/3 of the holding), RS IBD and VA RS both better than the holding (RS IBD only for RoW), US tickers of 5+ letters excluded, sorted by VA RS. Better in same group = peers in the holding's group (same universe) with both VA RS and RS IBD higher than the holding and meeting the market cap criterion, shown as VA RS / RS IBD. For non-US stocks, VA RS = normal RS IBD.</div>
+        <div class="pf-hint" style="margin-top:6px">Same flags as the Alerts tab, plus switch candidates for each holding. Candidates: same universe (US / RoW), same sector, market cap per the selector (default ≥ 1/3 of the holding), RS IBD and VA RS both better than the holding (RS IBD only for RoW), US tickers of 5+ letters excluded, sorted by VA RS. Better in same group = peers in the holding's group (same universe) with both VA RS and RS IBD higher than the holding and meeting the market cap criterion, shown as VA RS / RS IBD. For non-US stocks, VA RS = normal RS IBD.</div>
+        <div class="pf-h" style="margin-top:20px">OTHER HOLDINGS — NOTHING FLAGGED</div>
+        <div class="table-wrap"><table class="pf-gt pf-swt"><thead><tr>
+            <th>STOCK</th><th>GROUP</th><th class="th-pct">WEIGHT</th><th class="th-pct">PERF</th>
+            <th class="th-pct">VA RS</th><th class="th-pct">RS IBD</th><th class="th-pct">PCT 4W</th><th>STATUS</th>
+            <th class="pf-swc">CANDIDATE 1</th><th class="pf-swc">CANDIDATE 2</th><th class="pf-swc" style="min-width:180px">BETTER IN SAME GROUP</th>
+        </tr></thead><tbody id="swBody2"></tbody></table></div>
+        <div class="pf-hint" style="margin-top:4px">Holdings with no flag. "Leader — keep" = VA RS ≥ 70 and no stock in its group is better on both VA RS and RS IBD. Otherwise the best alternatives are shown, as an optional upgrade rather than a switch.</div>
         <div id="pfRecos" style="display:none"></div>
         </div>
         <div class="pf-subc" id="pfSub-bench">
@@ -7225,11 +7233,10 @@
         });
         return out;
     }
-    function pfRenderAlerts(missing) {
+    // one row per holding with its 5 flags (shared by Alerts and Switch)
+    function pfFlagRows() {
         const G = pfGroupStats();
-        const held = new Set(pfRows.map(r => r.ticker));
-        const ck = b => b ? '✓' : '';
-        const all = pfRows.map(r => {
+        return pfRows.map(r => {
             const g = G[pfTheme(r._src)] || {};
             const near = r.high52_dist != null && r.high52_dist > -5;   // within 5% of 52W high → never flagged
             const trend = r.above200 === false ? '< 200' : r.above50 === false ? '< 50' : '';
@@ -7242,8 +7249,24 @@
             };
             const n = near ? 0 : Object.values(f).filter(Boolean).length;
             return { r, f, n, g, trend, risk: r.w * n };
-        });
-        const rows = all.filter(x => x.n > 0).sort((a, b) => b.risk - a.risk || b.n - a.n);
+        }).sort((a, b) => b.risk - a.risk || b.n - a.n);
+    }
+    const pfCk = b => b ? '✓' : '';
+    function pfFlagCells(x) {
+        const r = x.r, v = y => y == null ? '—' : y;
+        return `<td class="td-pct" style="${r.perf != null && r.perf < -10 ? 'color:#b91c1c;font-weight:700' : ''}">${r.perf != null ? r.perf.toFixed(1) + '%' : '—'}</td>
+            <td class="td-c">${pfCk(x.f.perf)}</td>
+            <td class="td-c" title="RS IBD ${v(r.rs_ibd)} · 4W ${v(r.pct_4w)} · 6M ${v(r.pct_6m)}">${pfCk(x.f.rw)}</td>
+            <td class="td-c" title="${pfMaDist(r, 50)} · ${pfMaDist(r, 200)}" style="${r.above200 === false ? 'color:#b91c1c;font-weight:700' : ''}">${pfCk(x.f.trend)}</td>
+            <td class="td-c" title="${r.high52_dist != null ? r.high52_dist.toFixed(1) + '%' : ''}">${pfCk(x.f.off52)}</td>
+            <td class="td-c" title="group Pct 4W ${x.g.p4 != null ? Math.round(x.g.p4) : '—'} · Pct 6M ${x.g.p6 != null ? Math.round(x.g.p6) : '—'}">${pfCk(x.f.grp)}</td>
+            <td class="td-c" style="${x.n >= 3 ? 'color:#b91c1c' : ''}"><b>${x.n}/5</b></td>`;
+    }
+    function pfRenderAlerts(missing) {
+        const held = new Set(pfRows.map(r => r.ticker));
+        const ck = pfCk;
+        const all = pfFlagRows();
+        const rows = all.filter(x => x.n > 0);
         const red = rows.filter(x => x.n >= 3);
         // history
         const hist = pfAlertHistSave(rows.map(x => x.r.input));
@@ -7845,36 +7868,56 @@
     }
 
     // ── SWITCH TABLE ─────────────────────────────────────────────
-    let pfSwFilter = 'ALL';
+    let pfSwFilter = 'FLAGGED';
+    function pfSwCapChanged() { pfRenderSwitch(); }
     function pfRenderSwitch() {
-        const L = window._pfRecos || [];
         const body = document.getElementById('swBody'); if (!body) return;
-        const cnt = v => L.filter(x => x.v === v), wsum = a => a.reduce((s, x) => s + x.r.w, 0).toFixed(1);
-        document.getElementById('swFilters').innerHTML = ['ALL', 'SWITCH', 'WATCH', 'HOLD'].map(v => {
-            const a = v === 'ALL' ? L : cnt(v);
-            return `<button class="pf-swf${pfSwFilter === v ? ' on' : ''}" onclick="pfSwFilter='${v}';pfRenderSwitch()">${v === 'ALL' ? 'All' : v[0] + v.slice(1).toLowerCase()} · ${a.length} · ${wsum(a)}%</button>`;
-        }).join('');
         const held = new Set(pfRows.map(r => r.ticker));
-        const order = { SWITCH: 0, WATCH: 1, HOLD: 2 };
-        const rows = L.filter(x => pfSwFilter === 'ALL' || x.v === pfSwFilter).sort((a, b) => order[a.v] - order[b.v] || b.r.w - a.r.w);
-        const v = x => x == null ? '—' : x;
-        body.innerHTML = rows.map((x, i) => {
-            const r = x.r;
-            const c = x.v === 'HOLD' ? pfCandidates(r, held).c : x.cand.c;
+        const all = pfFlagRows();
+        const sets = { HOT: all.filter(x => x.n >= 3), FLAGGED: all.filter(x => x.n > 0), ALL: all };
+        document.getElementById('swFilters').innerHTML = [['HOT', '3+ flags'], ['FLAGGED', 'Flagged'], ['ALL', 'All holdings']].map(([k, l]) =>
+            `<button class="pf-swf${pfSwFilter === k ? ' on' : ''}" onclick="pfSwFilter='${k}';pfRenderSwitch()">${l} · ${sets[k].length} · ${sets[k].reduce((s, x) => s + x.r.w, 0).toFixed(1)}%</button>`).join('');
+        const rows = sets[pfSwFilter] || sets.FLAGGED;
+        const v = y => y == null ? '—' : y;
+        body.innerHTML = rows.map(x => {
+            const r = x.r, hot = x.n >= 3;
+            const c = pfCandidates(r, held).c;
+            const gb = pfGroupBetter(r, held);
             const cell = k => { const y = c[k]; if (!y) return '<td class="pf-swc"></td>';
-                return `<td class="pf-swc"><div class="pf-swcand"><b style="cursor:pointer" onclick="openNews('${y.d.ticker}')">${pfShort(y.d.ticker)}</b> ${(y.d.name || '').slice(0, 18)}<br>
-                    <span>VA ${v(y.d.va_rs)} · RS ${v(y.d.rs_ibd)} · cap ${y.cap != null ? Math.round(y.cap) : '—'}${y.d.currency ? ' ' + y.d.currency : ''}</span></div></td>`; };
-            return `<tr class="${i && rows[i - 1].v !== x.v ? 'grp' : ''}">
-                <td class="pf-swv">${x.v}</td>
+                return `<td class="pf-swc"><div class="pf-swcand"><b style="cursor:pointer" onclick="openNews('${y.d.ticker}')">${pfShort(y.d.ticker)}</b> ${(y.d.name || '').slice(0, 16)}<br>
+                    <span>VA ${v(y.d.va_rs)} · RS ${v(y.d.rs_ibd)} · cap ${y.cap != null ? Math.round(y.cap) : '—'}</span></div></td>`; };
+            return `<tr>
+                <td class="td-ticker" style="cursor:pointer${hot ? ';color:#b91c1c' : ''}" onclick="openNews('${r._src.ticker}')"><b>${pfShort(r.input)}</b></td>
+                <td class="td-name">${pfTheme(r._src)}</td>
+                <td class="td-pct">${r.w.toFixed(1)}%</td>
+                ${pfFlagCells(x)}
+                <td class="td-pct">${pfPctC(r.va_rs)}</td><td class="td-pct">${pfPctC(r.rs_ibd)}</td>
+                ${cell(0)}${cell(1)}${cell(2)}
+                <td class="pf-swc">${gb.list.length
+                    ? `<div class="pf-swcand"><b style="font-size:11px">${gb.list.length}</b><span> of ${gb.n - 1}:</span> ${gb.list.slice(0, 3).map(y => `<b style="cursor:pointer" onclick="openNews('${y.ticker}')">${pfShort(y.ticker)}</b> <span>${v(y.va_rs)}/${v(y.rs_ibd)}</span>`).join(' · ')}</div>`
+                    : `<span class="pf-swcand"><span>none of ${gb.n - 1} peers</span></span>`}</td></tr>`;
+        }).join('') || '<tr><td colspan="16" class="pf-hint">None.</td></tr>';
+        // second table: holdings with no flag
+        const clean = all.filter(x => x.n === 0);
+        document.getElementById('swBody2').innerHTML = clean.map(x => {
+            const r = x.r;
+            const c = pfCandidates(r, held).c, gb = pfGroupBetter(r, held);
+            const leader = (r.va_rs ?? 0) >= 70 && !gb.list.length;
+            const cell = k => { const y = c[k]; if (!y) return '<td class="pf-swc"></td>';
+                return `<td class="pf-swc"><div class="pf-swcand"><b style="cursor:pointer" onclick="openNews('${y.d.ticker}')">${pfShort(y.d.ticker)}</b> ${(y.d.name || '').slice(0, 16)}<br>
+                    <span>VA ${v(y.d.va_rs)} · RS ${v(y.d.rs_ibd)} · cap ${y.cap != null ? Math.round(y.cap) : '—'}</span></div></td>`; };
+            return `<tr>
                 <td class="td-ticker" style="cursor:pointer" onclick="openNews('${r._src.ticker}')"><b>${pfShort(r.input)}</b></td>
                 <td class="td-name">${pfTheme(r._src)}</td>
                 <td class="td-pct">${r.w.toFixed(1)}%</td>
-                <td class="td-pct">${pfPctC(r.va_rs)}</td><td class="td-pct">${pfPctC(r.rs_ibd)}</td><td class="td-pct">${pfPctC(r.pct_4w)}</td><td class="td-pct">${pfPctC(r.pct_6m)}</td>
-                <td class="td-pct">${r.vol60 != null ? Math.round(r.vol60) + '%' : '—'}</td>
-                ${cell(0)}${cell(1)}${cell(2)}
-                <td class="pf-swc">${(() => { const gb = pfGroupBetter(r, held); if (!gb.list.length) return `<span class="pf-swcand"><span>none of ${gb.n - 1} peers</span></span>`;
-                    return `<div class="pf-swcand"><b style="font-size:11px">${gb.list.length}</b><span> of ${gb.n - 1} peers:</span> ${gb.list.slice(0, 3).map(y => `<b style="cursor:pointer" onclick="openNews('${y.ticker}')">${pfShort(y.ticker)}</b> <span>${v(y.va_rs)}/${v(y.rs_ibd)}</span>`).join(' · ')}</div>`; })()}</td></tr>`;
-        }).join('') || '<tr><td colspan="13" class="pf-hint">None.</td></tr>';
+                <td class="td-pct">${r.perf != null ? r.perf.toFixed(1) + '%' : '—'}</td>
+                <td class="td-pct">${pfPctC(r.va_rs)}</td><td class="td-pct">${pfPctC(r.rs_ibd)}</td><td class="td-pct">${pfPctC(r.pct_4w)}</td>
+                <td class="td-name">${leader ? 'Leader — keep' : 'Upgrade possible'}</td>
+                ${leader ? '<td class="pf-swc"></td><td class="pf-swc"></td>' : cell(0) + cell(1)}
+                <td class="pf-swc">${gb.list.length
+                    ? `<div class="pf-swcand"><b style="font-size:11px">${gb.list.length}</b><span> of ${gb.n - 1}:</span> ${gb.list.slice(0, 3).map(y => `<b style="cursor:pointer" onclick="openNews('${y.ticker}')">${pfShort(y.ticker)}</b> <span>${v(y.va_rs)}/${v(y.rs_ibd)}</span>`).join(' · ')}</div>`
+                    : `<span class="pf-swcand"><span>none of ${gb.n - 1} peers</span></span>`}</td></tr>`;
+        }).join('') || '<tr><td colspan="11" class="pf-hint">Every holding has at least one flag.</td></tr>';
     }
 
 
