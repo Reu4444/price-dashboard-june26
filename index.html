@@ -2145,6 +2145,16 @@
         return map;
     }
 
+    // align RoW sector labels with the US universe ("Health Care" -> "Healthcare", etc.)
+    const SECTOR_ALIASES = { 'health care': 'Healthcare', 'healthcare': 'Healthcare', 'information technology': 'Technology', 'tech': 'Technology',
+        'communication services': 'Communications', 'communication': 'Communications', 'consumer discretionary': 'Discretionary',
+        'consumer staples': 'Staples', 'consumer cyclical': 'Discretionary', 'consumer defensive': 'Staples', 'basic materials': 'Materials',
+        'financial services': 'Financials', 'real estate': 'Real Estate' };
+    function normSectorName(x) {
+        const v = String(x || '').trim(); if (!v) return '';
+        return SECTOR_ALIASES[v.toLowerCase()] || v;
+    }
+
     // colA=ticker, colB=name, colC=country, colD=currency, colE=mktcap, colF=mktcap_eur, colG=sector, colH=group (optional)
     function parseInfoRowJSON(data) {
         const map = {};
@@ -2160,7 +2170,7 @@
                 currency: String(currency || ''),
                 mktcap: isNaN(mc) ? '' : String(mc),
                 mktcap_eur: isNaN(mcEur) ? '' : String(mcEur),
-                sector: String(sector || ''),
+                sector: normSectorName(sector),
                 group: String(group || '').trim(),
             };
         }
