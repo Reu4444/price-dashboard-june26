@@ -828,6 +828,7 @@
         <!-- Controls -->
         <div class="top-bar">
             <button class="btn" id="loadBtn" onclick="loadWithCache(true)">REFRESH DATA</button>
+            <a href="#" onclick="hardReset();return false" style="font-size:11px;color:var(--accent2);text-decoration:none;margin-left:8px">Full reload</a>
             <button class="btn btn-outline" onclick="exportCSV()" id="csvBtn" style="display:none">↓ CSV</button>
             <input class="filter-input" id="searchInput" placeholder="Search ticker..." oninput="renderActiveDebounced()" style="display:none">
             <!-- Sector exclude dropdown -->
@@ -2472,6 +2473,15 @@
             req.onsuccess  = e => resolve(e.target.result);
             req.onerror    = e => reject(e.target.error);
         });
+    }
+
+
+    // clear every local cache (IndexedDB + localStorage static info) and reload from the source
+    async function hardReset() {
+        try { localStorage.removeItem('infoCacheV2'); localStorage.removeItem('infoRowCacheV2'); localStorage.removeItem('acwiHoldings'); } catch (e) {}
+        try { indexedDB.deleteDatabase('priceDashboard'); } catch (e) {}
+        try { const dbs = await indexedDB.databases(); dbs.forEach(d => indexedDB.deleteDatabase(d.name)); } catch (e) {}
+        setTimeout(() => location.reload(), 300);
     }
 
     async function idbGet(key) {
@@ -5290,7 +5300,10 @@
                         idbGet('allDataRoW'), idbGet('rawPricesRoW')
                     ]);
 
-                    if (cachedData && cachedPrices && cachedData.length > 0) {
+                    const cacheUsable = cachedData && cachedData.length > 0
+                        && cachedData.filter(d => d.sector).length > cachedData.length * 0.5;
+                    if (!cacheUsable && cachedData && cachedData.length) console.warn('Cached data has no sectors — reloading from the source');
+                    if (cachedData && cachedPrices && cacheUsable) {
                         // Restore global state
                         _dataLoadedAt = meta.timestamp;
                         allData     = cachedData;
