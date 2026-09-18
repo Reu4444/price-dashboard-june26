@@ -1645,6 +1645,8 @@
             <th data-x="1" class="th-pct" onclick="pfSort('ma200_dist')">vs 200 MA</th>
             <th data-x="1" class="th-pct" onclick="pfSort('high52_dist')">vs 52WH</th>
             <th data-x="1" class="th-pct" onclick="pfSort('perf')">PERF</th>
+            <th data-x="1" class="th-pct" onclick="pfSort('cost')">COST</th>
+            <th data-x="1" class="th-pct" onclick="pfSort('perfCalc')">P&amp;L vs COST</th>
             <th class="th-pct" style="border-left:1px solid var(--border2)" onclick="pfSort('ny_yoy_s')">SALES 2027</th>
             <th class="th-pct" onclick="pfSort('ny_yoy')">EPS 2027</th>
             <th data-x="1" class="th-pct" onclick="pfSort('forward_pe')">FWD PE</th>
@@ -6760,30 +6762,75 @@
         return hits.length === 1 ? map[hits[0]] : null;
     }
 
+    // Apps Script endpoint that returns the AMC ALLOCATOR tab as values (live formulas already evaluated).
+    // Add to the script:  if (action === 'amc') return json(SpreadsheetApp.openById(ID).getSheetByName('AMC ALLOCATOR').getDataRange().getDisplayValues());
+    async function pfFetchAllocatorRows() {
+        try {
+            const r = await fetch(`${APPS_SCRIPT_URL}?action=amc&t=${Date.now()}`);
+            if (!r.ok) return null;
+            const j = await r.json();
+            const rows = Array.isArray(j) ? j : (j.data || j.values || null);
+            return Array.isArray(rows) && rows.length > 1 ? rows.map(r2 => r2.map(c => String(c ?? ''))) : null;
+        } catch (e) { return null; }
+    }
     async function pfLoadSheet(silent) {
         pfStatus('Loading sheet…');
+        let rows = await pfFetchAllocatorRows();   // preferred: values via Apps Script (no "Loading…")
+        window._pfSheetVia = rows ? 'Apps Script' : 'published CSV';
         let csv = null;
-        try {
-            const r = await fetch(PF_SHEET_URL + '&t=' + Date.now());
-            if (r.ok) { const t = await r.text(); if (!/<html/i.test(t)) csv = t; }
-        } catch (e) {}
-        if (!csv) { try { csv = await fetchWithProxy(PF_SHEET_URL); } catch (e) {} }
-        if (!csv || /<html/i.test(csv)) { pfStatus('Sheet not reachable — check the tab is still published (CSV)'); return false; }
-        const rowsCsv = parseCSVLines(csv).slice(1);
-        // col A ticker · col B weight · col C performance % · col D theme · col E country (optional)
+        if (!rows) {
+            try {
+                const r = await fetch(PF_SHEET_URL + '&t=' + Date.now());
+                if (r.ok) { const t = await r.text(); if (!/<html/i.test(t)) csv = t; }
+            } catch (e) {}
+            if (!csv) { try { csv = await fetchWithProxy(PF_SHEET_URL); } catch (e) {} }
+            if (!csv || /<html/i.test(csv)) { pfStatus('Sheet not reachable — check the tab is still published (CSV)'); return false; }
+            rows = parseCSVLines(csv);
+        }
+        const headRow = rows[0] || [];
+        const rowsCsv = rows.slice(1);
+        // col A ticker · col B weight · first usable text column = theme · a recognised country name = country.
+        // Performance: the live "Perf" formula exports as "Loading...", so it is read from the
+        // instrument block on the right (a "BBG" column plus a "Performance" column).
         window._pfCountryOverride = {}; window._pfPerf = {}; window._pfThemeSheet = {};
+        const JUNK = /^(loading\.\.\.|#n\/a|#ref!|#value!|#div\/0!|n\/a|-|—)$/i;
+        const numCell = v => { let c = String(v ?? '').trim(); if (!c || JUNK.test(c)) return null;
+            let neg = /^\(.*\)$/.test(c); if (neg) c = c.slice(1, -1);
+            c = c.replace(/[%\s\u00a0']/g, '').replace(/,(\d{1,2})$/, '.$1').replace(/,/g, '');
+            if (!/^[-+]?\d*\.?\d+$/.test(c)) return null;
+            const n = parseFloat(c); return isNaN(n) ? null : (neg ? -n : n); };
+        const KNOWN_COUNTRIES = new Set(Object.values(PF_BBG_COUNTRY).concat(Object.values(PF_DOMICILE)).map(x => x.toLowerCase()));
         rowsCsv.forEach(r => {
             const t = String(r[0] || '').trim().toUpperCase().replace(/\s+/g, ' ');
             if (!t) return;
-            const num = v => { let c = String(v ?? '').trim(); if (!c) return null;
-                let neg = /^\(.*\)$/.test(c); if (neg) c = c.slice(1, -1);
-                c = c.replace(/[%\s\u00a0']/g, '').replace(/,(\d{1,2})$/, '.$1').replace(/,/g, '');
-                if (!/^[-+]?\d*\.?\d+$/.test(c)) return null;
-                const n = parseFloat(c); return isNaN(n) ? null : (neg ? -n : n); };
-            const txt = v => { const c = String(v ?? '').trim(); return c && num(c) == null ? c : null; };
-            const perf = num(r[2]); if (perf != null) window._pfPerf[t] = perf;
-            const th = txt(r[3]); if (th) window._pfThemeSheet[t] = th;
-            const co = txt(r[4]); if (co) window._pfCountryOverride[t] = co;
+            const texts = [];
+            for (let i = 2; i < Math.min(r.length, 8); i++) {
+                const raw = String(r[i] ?? '').trim();
+                if (!raw || JUNK.test(raw)) continue;
+                const n = numCell(raw);
+                if (n != null) { if (window._pfPerf[t] == null) window._pfPerf[t] = n; }
+                else texts.push(raw);
+            }
+            if (texts[0]) window._pfThemeSheet[t] = texts[0];
+            const co = texts.slice(1).find(x => KNOWN_COUNTRIES.has(x.toLowerCase()));
+            if (co) window._pfCountryOverride[t] = co;
+        });
+        // performance block, if present
+        const head = headRow.map(x => String(x).trim().toLowerCase());
+        const iBBG = head.findIndex(x => x === 'bbg'), iPerf = head.findIndex(x => x === 'performance');
+        // purchase price ("Local Price") per Bloomberg ticker, for performance computed from the dashboard's own prices
+        window._pfCost = {};
+        const iCost = head.findIndex(x => x === 'local price');
+        if (iBBG >= 0 && iCost >= 0) rowsCsv.forEach(r => {
+            const t = String(r[iBBG] || '').trim().toUpperCase().replace(/\s+/g, ' ');
+            const v = numCell(r[iCost]);
+            if (t && v > 0) window._pfCost[t] = v;
+        });
+        // fallback only: fills stocks whose live Perf cell was empty or still loading
+        if (iBBG >= 0 && iPerf >= 0) rowsCsv.forEach(r => {
+            const t = String(r[iBBG] || '').trim().toUpperCase().replace(/\s+/g, ' ');
+            const v = numCell(r[iPerf]);
+            if (t && v != null && window._pfPerf[t] == null) window._pfPerf[t] = v;
         });
         const lines = rowsCsv
             .map(r => [String(r[0] || '').trim(), String(r[1] || '').trim()])
@@ -6884,7 +6931,18 @@
                 || (PF_BBG_COUNTRY[ex] && !['US','UW','UN'].includes(ex) ? PF_BBG_COUNTRY[ex] : null)
                 || d.country || (allData.includes(d) ? 'United States' : '(n/a)');
             r.region = PF_REGION(r.country);
-            r.perf = (window._pfPerf || {})[h.ticker] ?? null;
+            r.cost = (window._pfCost || {})[h.ticker] ?? null;
+            { const p0 = pfPrices(d.ticker); r.last = p0 ? p0[0] : null; }
+            if (r.cost && r.last) {
+                // quote-unit mismatch (e.g. London in pence vs pounds): rescale by powers of 100
+                let c = r.cost, k = r.last / c;
+                while (k > 20) { c *= 100; k = r.last / c; }
+                while (k < 0.05) { c /= 100; k = r.last / c; }
+                r.costAdj = c;
+                r.perfCalc = (k - 1) * 100;
+            } else r.perfCalc = null;
+            // performance computed from the dashboard's own prices; the Sheet's Perf column is only a fallback
+            r.perf = r.perfCalc ?? (window._pfPerf || {})[h.ticker] ?? null;
             r.themeSheet = (window._pfThemeSheet || {})[h.ticker] || '(none)';
             r.rsScore = pfRsScore(d); r.fundScore = pfFundScore(d); r.score = pfScore(d);
             r.vol60 = pfVol(d.ticker, 60); r.dvol60 = pfDownVol(d.ticker, 60);
@@ -6894,7 +6952,7 @@
         window._pfCash = Math.max(0, 100 - holdings.reduce((s, h) => s + h.w, 0));
         window._pfUnmatched = holdings.filter(h => missing.includes(h.ticker)).reduce((s, h) => s + h.w, 0);
         const rowPending = missing.some(t => { const e = t.split(' ')[1]; return e && !['US','UW','UN'].includes(e); }) && !(allDataRoW || []).length;
-        pfStatus(`${window._pfSheetAt ? 'Portfolio loaded from Google Sheet on ' + window._pfSheetAt.toLocaleString('en-GB', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : 'Portfolio entered manually'} · ${pfRows.length} matched${missing.length ? ' · not found: ' + missing.join(', ') : ''}${rowPending ? ' · RoW data still loading…' : ` · RoW universe ${(allDataRoW || []).length}`}`);
+        pfStatus(`${window._pfSheetAt ? `Portfolio loaded from Google Sheet (${window._pfSheetVia || 'published CSV'}) on ` + '' + + window._pfSheetAt.toLocaleString('en-GB', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : 'Portfolio entered manually'} · ${pfRows.length} matched${missing.length ? ' · not found: ' + missing.join(', ') : ''}${rowPending ? ' · RoW data still loading…' : ` · RoW universe ${(allDataRoW || []).length}`}`);
         pfRenderKpis();
         pfRenderTable();
         pfRenderWeights();
@@ -6996,7 +7054,7 @@
             ${row('Invested', pfFmt(inv, 1, '%'), R.length, inv, '')}
             ${row('Below 200 MA', pfFmt(below200.w, 1, '%'), below200.n, below200.w, below200.t)}
             ${row('Weight < 2%', pfFmt(small.w, 1, '%'), small.n, small.w, small.t)}
-            ${row('Performance < −10%', R.some(r => r.perf != null) ? pfFmt(bad.w, 1, '%') : 'n/a', R.some(r => r.perf != null) ? bad.n : null, bad.w, R.some(r => r.perf != null) ? bad.t : 'no performance column found in the Sheet (col C)')}
+            ${row('Performance < −10%', R.some(r => r.perf != null) ? pfFmt(bad.w, 1, '%') : 'n/a', R.some(r => r.perf != null) ? bad.n : null, bad.w, R.some(r => r.perf != null) ? bad.t : 'no performance values found in the Sheet (the Perf column exports as “Loading…”; a BBG + Performance block is used instead)')}
             ${row('Portfolio realized vol 60D', pfFmt(pv, 1, '%'), null, null, 'annualised, current weights')}
             ${row('Stocks realized vol 60D', pfFmt(wv, 1, '%'), null, null, 'weighted average of the holdings')}
             </tbody></table>`;
@@ -7025,7 +7083,7 @@
             <td class="td-pct">${pfPctC(d.rs_ibd)}</td><td class="td-pct">${pfPctC(d.va_rs)}</td>
             <td class="td-pct" data-x="1" style="${bL}">${pfRetN(d.ret_5d)}</td>
             <td class="td-pct" data-x="1">${pfRetN(d.ret_3m)}</td>
-            <td class="td-pct" data-x="1">${pfRetN(d.ma200_dist)}</td><td class="td-pct" data-x="1">${pfRetN(d.high52_dist)}</td><td class="td-pct" data-x="1">${pfRetN(d.perf)}</td>
+            <td class="td-pct" data-x="1">${pfRetN(d.ma200_dist)}</td><td class="td-pct" data-x="1">${pfRetN(d.high52_dist)}</td><td class="td-pct" data-x="1">${pfRetN(d.perf)}</td><td class="td-pct" data-x="1">${(d.costAdj ?? d.cost) != null ? (d.costAdj ?? d.cost).toFixed(2) : '—'}</td><td class="td-pct" data-x="1">${pfRetN(d.perfCalc)}</td>
             <td class="td-pct" style="${bL}">${pfGrowN(d.ny_yoy_s)}</td><td class="td-pct">${pfGrowN(d.ny_yoy)}</td>
             <td class="td-pct" data-x="1">${d.forward_pe != null ? d.forward_pe.toFixed(1) + 'x' : '—'}</td>
             <td class="td-pct" style="${bL}${d.vol60 != null && d.vol60 > 50 ? ';color:#b91c1c;font-weight:700' : ''}">${d.vol60 != null ? d.vol60.toFixed(0) + '%' : '—'}</td>
