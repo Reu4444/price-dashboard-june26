@@ -723,6 +723,8 @@
     .pf-swf.on{background:var(--text);color:var(--bg)}
     .pf-swt tr.grp td{border-top:2px solid var(--border)}
     #pfTable:not(.all) [data-x]{display:none}
+    .pf-keystats td,.pf-keystats th{padding:5px 8px}
+    .pf-agg{font-family:Arial,sans-serif;font-size:16px;font-weight:700;color:var(--text)}
     .pf-topline{font-size:13px;line-height:1.7;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--accent2);padding:8px 12px;margin-bottom:10px}
     .pf-topline b{font-weight:700}
     .pf-topline .sep{color:var(--faint);margin:0 8px}
@@ -1613,17 +1615,18 @@
 
         <div class="pf-h" style="margin-top:18px">RELATIVE STRENGTH</div>
         <div class="pf-topline" id="pfTopLine"></div>
-        <div class="pf-card" style="max-height:none">
-            <div class="pf-sub"><span id="pfPctTitle">Weight by percentile</span>
-                <select id="pfBucketMetric" onchange="pfRenderBuckets()"><option value="rs_ibd">RS IBD</option><option value="va_rs">VA RS</option><option value="pct_4w">Pct 4W</option><option value="pct_6m">Pct 6M</option></select></div>
-            <div id="pfWBucket"></div>
+        <div class="pf-grid3" id="pfRsCards">
+            <div class="pf-card"><div class="pf-sub">RS IBD <span class="pf-agg" id="pfAgg-rs_ibd"></span></div><div id="pfBk-rs_ibd"></div></div>
+            <div class="pf-card"><div class="pf-sub">VA RS <span class="pf-agg" id="pfAgg-va_rs"></span></div><div id="pfBk-va_rs"></div></div>
+            <div class="pf-card"><div class="pf-sub">Pct 6M <span class="pf-agg" id="pfAgg-pct_6m"></span></div><div id="pfBk-pct_6m"></div></div>
+            <div class="pf-card"><div class="pf-sub">Pct 4W <span class="pf-agg" id="pfAgg-pct_4w"></span></div><div id="pfBk-pct_4w"></div></div>
         </div>
 
         <div class="pf-h" style="margin-top:18px">ALLOCATION</div>
         <div class="pf-grid3">
             <div class="pf-card"><div class="pf-sub">By sector</div><div id="pfWSector"></div></div>
             <div class="pf-card"><div class="pf-sub"><span id="pfGeoTitle">By region</span><select id="pfGeoMode" onchange="document.getElementById('pfGeoTitle').textContent = 'By ' + this.value; pfRenderWeights()"><option value="region" selected>Region</option><option value="country">Country</option></select></div><div id="pfWCountry"></div></div>
-            <div class="pf-card"><div class="pf-sub">By theme</div><div id="pfWTheme"></div></div>
+            <div class="pf-card"><div class="pf-sub">By theme <span style="font-family:Arial;font-size:10px;color:var(--muted)">sheet col D</span></div><div id="pfWTheme"></div></div>
             <div class="pf-card"><div class="pf-sub">By group</div><div id="pfWGroup"></div></div>
         </div>
 
@@ -6752,16 +6755,17 @@
         if (!csv) { try { csv = await fetchWithProxy(PF_SHEET_URL); } catch (e) {} }
         if (!csv || /<html/i.test(csv)) { pfStatus('Sheet not reachable — check the tab is still published (CSV)'); return false; }
         const rowsCsv = parseCSVLines(csv).slice(1);
-        window._pfCountryOverride = {}; window._pfPerf = {};
+        // col A ticker · col B weight · col C performance % · col D theme · col E country (optional)
+        window._pfCountryOverride = {}; window._pfPerf = {}; window._pfThemeSheet = {};
         rowsCsv.forEach(r => {
             const t = String(r[0] || '').trim().toUpperCase().replace(/\s+/g, ' ');
             if (!t) return;
-            [r[2], r[3]].forEach(v => {
-                const c = String(v ?? '').trim(); if (!c) return;
-                const n = parseFloat(c.replace('%', '').replace(',', '.'));
-                if (!isNaN(n) && /^[-+\d.,\s%]+$/.test(c)) { if (window._pfPerf[t] == null) window._pfPerf[t] = n; }
-                else window._pfCountryOverride[t] = c;
-            });
+            const num = v => { const c = String(v ?? '').trim(); if (!c) return null;
+                const n = parseFloat(c.replace('%', '').replace(',', '.')); return !isNaN(n) && /^[-+\d.,\s%]+$/.test(c) ? n : null; };
+            const txt = v => { const c = String(v ?? '').trim(); return c && num(c) == null ? c : null; };
+            const perf = num(r[2]); if (perf != null) window._pfPerf[t] = perf;
+            const th = txt(r[3]); if (th) window._pfThemeSheet[t] = th;
+            const co = txt(r[4]); if (co) window._pfCountryOverride[t] = co;
         });
         const lines = rowsCsv
             .map(r => [String(r[0] || '').trim(), String(r[1] || '').trim()])
@@ -6863,6 +6867,7 @@
                 || d.country || (allData.includes(d) ? 'United States' : '(n/a)');
             r.region = PF_REGION(r.country);
             r.perf = (window._pfPerf || {})[h.ticker] ?? null;
+            r.themeSheet = (window._pfThemeSheet || {})[h.ticker] || '(none)';
             r.rsScore = pfRsScore(d); r.fundScore = pfFundScore(d); r.score = pfScore(d);
             r.vol60 = pfVol(d.ticker, 60); r.dvol60 = pfDownVol(d.ticker, 60);
             { const p0 = pfPrices(d.ticker), m200 = pfSma(d.ticker, 200); r.ma200_dist = p0 && m200 ? (p0[0] / m200 - 1) * 100 : null; }
@@ -6964,18 +6969,19 @@
         const sc = pfWavg(R, 'score');
         const sec = (title, cards) => `<div class="pf-sec"><div class="pf-sec-t">${title}</div><div class="pf-sec-c">${cards.join('')}</div></div>`;
         const pv = pfPortVol(R, 60), wv = pfWavg(R, 'vol60');
-        const grp = f => { const a = R.filter(f); return { n: a.length, w: a.reduce((s, r) => s + r.w, 0) }; };
+        const grp = f => { const a = R.filter(f); return { n: a.length, w: a.reduce((s, r) => s + r.w, 0), t: a.map(x => pfShort(x.input)).join(', ') }; };
         const below200 = grp(r => r.above200 === false), small = grp(r => r.w < 2), bad = grp(r => r.perf != null && r.perf < -10);
-        const nw = x => `${x.n} <span style="font-size:11px;color:var(--muted)">/ ${x.w.toFixed(1)}%</span>`;
-        el.innerHTML = `<div class="pf-strip">${[
-            pfKpi(pfFmt(inv, 1, '%'), 'Invested'),
-            pfKpi(R.length, 'Positions'),
-            pfKpi(nw(below200), 'Below 200 MA'),
-            pfKpi(nw(small), 'Weight < 2%'),
-            pfKpi(nw(bad), 'Performance < −10%'),
-            pfKpi(pfFmt(pv, 1, '%'), 'Portfolio realized vol 60D'),
-            pfKpi(pfFmt(wv, 1, '%'), 'Stocks realized vol 60D'),
-        ].join('')}</div>`;
+        const row = (l, v, n, w, names) => `<tr><td class="td-name">${l}</td><td class="td-pct" style="font-weight:700">${v}</td>
+            <td class="td-pct">${n == null ? '' : n}</td><td class="td-pct">${w == null ? '' : w.toFixed(1) + '%'}</td><td class="td-name" style="color:var(--muted);font-size:11px">${names || ''}</td></tr>`;
+        el.innerHTML = `<table class="pf-gt pf-keystats" style="width:100%"><thead><tr>
+            <th>STATISTIC</th><th class="th-pct">VALUE</th><th class="th-pct">POSITIONS</th><th class="th-pct">WEIGHT</th><th>STOCKS</th></tr></thead><tbody>
+            ${row('Invested', pfFmt(inv, 1, '%'), R.length, inv, '')}
+            ${row('Below 200 MA', pfFmt(below200.w, 1, '%'), below200.n, below200.w, below200.t)}
+            ${row('Weight < 2%', pfFmt(small.w, 1, '%'), small.n, small.w, small.t)}
+            ${row('Performance < −10%', pfFmt(bad.w, 1, '%'), bad.n, bad.w, bad.t)}
+            ${row('Portfolio realized vol 60D', pfFmt(pv, 1, '%'), null, null, 'annualised, current weights')}
+            ${row('Stocks realized vol 60D', pfFmt(wv, 1, '%'), null, null, 'weighted average of the holdings')}
+            </tbody></table>`;
     }
 
     function pfSort(col) {
@@ -7004,7 +7010,7 @@
             <td class="td-pct">${pfRetN(d.ma200_dist)}</td><td class="td-pct" data-x="1">${pfRetN(d.high52_dist)}</td>
             <td class="td-pct" style="${bL}">${pfGrowN(d.ny_yoy_s)}</td><td class="td-pct">${pfGrowN(d.ny_yoy)}</td>
             <td class="td-pct" data-x="1">${d.forward_pe != null ? d.forward_pe.toFixed(1) + 'x' : '—'}</td>
-            <td class="td-pct" style="${bL}">${d.vol60 != null ? d.vol60.toFixed(0) + '%' : '—'}</td>
+            <td class="td-pct" style="${bL}${d.vol60 != null && d.vol60 > 50 ? ';color:#b91c1c;font-weight:700' : ''}">${d.vol60 != null ? d.vol60.toFixed(0) + '%' : '—'}</td>
             <td class="td-pct" data-x="1" style="${bL}">${pfPctN(d.score)}</td></tr>`).join('');
     }
 
@@ -7074,33 +7080,26 @@
     function pfRenderWeights() {
         document.getElementById('pfWSector').innerHTML = pfBars(pfGroupBy('sector'), true);
         document.getElementById('pfWGroup').innerHTML = pfBars(pfGroupBy('group'), true);
-        const th = document.getElementById('pfWTheme'); if (th) th.innerHTML = pfBars(pfGroupBy('theme'), true);
+        const th = document.getElementById('pfWTheme'); if (th) th.innerHTML = pfBars(pfGroupBy('themeSheet'), true);
         document.getElementById('pfWCountry').innerHTML = pfBars(pfGroupBy(document.getElementById('pfGeoMode').value), true);
         pfRenderBuckets();
     }
     function pfRenderBuckets() {
-        const key = document.getElementById('pfBucketMetric').value;
-        const b = [['80–100', 80, 101], ['60–79', 60, 80], ['40–59', 40, 60], ['20–39', 20, 40], ['0–19', 0, 20]]
-            .map(([k, lo, hi]) => {
-                const rows = pfRows.filter(r => r[key] != null && r[key] >= lo && r[key] < hi);
-                return { k, w: rows.reduce((s, r) => s + r.w, 0), names: rows.map(r => pfShort(r.input)).join(', ') };
-            });
-        const na = pfRows.filter(r => r[key] == null);
-        if (na.length) b.push({ k: 'n/a', w: na.reduce((s, r) => s + r.w, 0), names: na.map(r => pfShort(r.input)).join(', ') });
-        document.getElementById('pfWBucket').innerHTML = pfBars(b, false) +
-            `<div class="pf-hint" style="margin-top:8px">${b.filter(x => x.names).map(x => `<b>${x.k}</b>: ${x.names}`).join('<br>')}</div>`;
-    }
-
-    // group weak: average Pct 4W < 50 AND average Pct 6M < 50 (same method as the Groups tab)
-    function pfGroupStats() {
-        const m = {};
-        allData.concat(allDataRoW || []).forEach(d => { const t = pfTheme(d); if (t !== '(n/a)') (m[t] = m[t] || []).push(d); });
-        const out = {};
-        Object.entries(m).forEach(([t, a]) => {
-            const p4 = pfAvg(a.map(d => d.pct_4w)), p6 = pfAvg(a.map(d => d.pct_6m));
-            out[t] = { p4, p6, weak: p4 != null && p6 != null && p4 < 50 && p6 < 50 };
+        ['rs_ibd', 'va_rs', 'pct_6m', 'pct_4w'].forEach(key => {
+            const host = document.getElementById('pfBk-' + key); if (!host) return;
+            const b = [['80–100', 80, 101], ['60–79', 60, 80], ['40–59', 40, 60], ['20–39', 20, 40], ['0–19', 0, 20]]
+                .map(([k, lo, hi]) => {
+                    const rows = pfRows.filter(r => r[key] != null && r[key] >= lo && r[key] < hi);
+                    return { k, w: rows.reduce((s, r) => s + r.w, 0), names: rows.map(r => pfShort(r.input)).join(', ') };
+                });
+            const na = pfRows.filter(r => r[key] == null);
+            if (na.length) b.push({ k: 'n/a', w: na.reduce((s, r) => s + r.w, 0), names: na.map(r => pfShort(r.input)).join(', ') });
+            host.innerHTML = pfBars(b, false) +
+                `<div class="pf-hint" style="margin-top:6px">${b.filter(x => x.names).map(x => `<b>${x.k}</b>: ${x.names}`).join('<br>')}</div>`;
+            const agg = pfWavg(pfRows, key);
+            const el = document.getElementById('pfAgg-' + key);
+            if (el) el.textContent = agg == null ? '—' : Math.round(agg);
         });
-        return out;
     }
     // Alert history (for "new" / "no longer flagged"): one snapshot per day, localStorage + Firestore
     const PF_AH_KEY = 'pfAlertHistory';
@@ -7133,6 +7132,17 @@
     }
     let pfAlertsShowAll = false;
 
+    // group weak: average Pct 4W < 50 AND average Pct 6M < 50 (same method as the Groups tab)
+    function pfGroupStats() {
+        const m = {};
+        allData.concat(allDataRoW || []).forEach(d => { const t = pfTheme(d); if (t !== '(n/a)') (m[t] = m[t] || []).push(d); });
+        const out = {};
+        Object.entries(m).forEach(([t, a]) => {
+            const p4 = pfAvg(a.map(d => d.pct_4w)), p6 = pfAvg(a.map(d => d.pct_6m));
+            out[t] = { p4, p6, weak: p4 != null && p6 != null && p4 < 50 && p6 < 50 };
+        });
+        return out;
+    }
     function pfRenderAlerts(missing) {
         const G = pfGroupStats();
         const held = new Set(pfRows.map(r => r.ticker));
@@ -7705,7 +7715,7 @@
         const bm = window._bmLast;
         const sg = v => (v > 0 ? '+' : '') + v.toFixed(1);
         el.innerHTML = [
-            `Strength: RS IBD <b>${f0(pfWavg(R, 'rs_ibd'))}</b>, VA RS <b>${f0(pfWavg(R, 'va_rs'))}</b>, <b>${f0(a200)}%</b> of weight above the 200 MA`,
+            `<b>${f0(a200)}%</b> of weight above the 200 MA`,
             `<a href="#" onclick="pfSubTab('alerts');return false" style="color:inherit"><b>${A.red}</b> stocks with 3+ alert flags = <b>${A.redW.toFixed(1)}%</b></a>`,
             bm ? `<a href="#" onclick="pfSubTab('bench');return false" style="color:inherit">vs ACWI 1M: <b>${sg(bm.active)} pp</b> (${sg(bm.Rp)}% vs ${sg(bm.Rb)}%)</a>` : ''
         ].filter(Boolean).join('<span class="sep">|</span>');
