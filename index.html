@@ -2186,7 +2186,7 @@
 
     // colA=ticker, colB=name, colC=country, colD=currency, colE=mktcap, colF=mktcap_eur, colG=sector, colH=group (optional)
     // force a fresh info_row on the next load (console: reloadRowInfo())
-    function reloadRowInfo() { try { localStorage.removeItem('infoRowCacheV2'); } catch (e) {} location.reload(); }
+    function reloadRowInfo() { try { localStorage.removeItem('infoRowCacheV2'); localStorage.removeItem('infoCacheV2'); } catch (e) {} location.reload(); }
     function parseInfoRowJSON(data) {
         const map = {};
         for (let i = 1; i < data.length; i++) {
@@ -2518,9 +2518,17 @@
             fetch(`${APPS_SCRIPT_URL}?action=prices`, {
                 signal: AbortSignal.timeout(180000)
             }).then(r => r.json()),
-            fetch(`${APPS_SCRIPT_URL}?action=info`, {
-                signal: AbortSignal.timeout(180000)
-            }).then(r => r.json()).catch(() => null),
+            (async () => {   // US info (name, sector, group, mktcap) rarely changes: cached for 7 days, with one retry
+                try {
+                    const c = JSON.parse(localStorage.getItem('infoCacheV2') || 'null');
+                    if (c && c.map && Date.now() - c.at < 7 * 864e5 && Object.keys(c.map).length > 10) return { cached: c.map };
+                } catch (e) {}
+                for (let i = 0; i < 2; i++) {
+                    try { const r = await fetch(`${APPS_SCRIPT_URL}?action=info&t=${Date.now()}`, { signal: AbortSignal.timeout(180000) });
+                        const j = await r.json(); if (j && j.data && j.data.length > 1) return j; } catch (e) {}
+                }
+                return null;
+            })(),
             fetch(`${APPS_SCRIPT_URL}?action=eps`, {
                 signal: AbortSignal.timeout(180000)
             }).then(r => r.json()).catch(() => null),
@@ -2552,7 +2560,13 @@
             _loadedFromCache = false;
             _dataLoadedAt = Date.now();
             // Parse JSON directly — no CSV conversion
-            const infoMap = infoResp ? parseInfoJSON(infoResp.data) : {};
+            let infoMap = infoResp ? (infoResp.cached || parseInfoJSON(infoResp.data)) : {};
+            if (Object.keys(infoMap).length > 10) {
+                if (!infoResp.cached) { try { localStorage.setItem('infoCacheV2', JSON.stringify({ at: Date.now(), map: infoMap })); } catch (e) {} }
+            } else {
+                try { const c = JSON.parse(localStorage.getItem('infoCacheV2') || 'null');
+                    if (c && c.map && Object.keys(c.map).length) { infoMap = c.map; console.warn('info unavailable — using cached info'); } } catch (e) {}
+            }
             descMap = descResp ? parseDescJSON(descResp.data) : {};
             const epsMap = epsResp ? parseEpsJSON(epsResp.data) : {};
             const salesMap = salesResp ? parseSalesJSON(salesResp.data) : {};
@@ -2893,7 +2907,10 @@
             }
 
             // ── Save PROCESSED data to IndexedDB cache ──
+            const okToCache = allData.length > 0 && allData.filter(d => d.sector).length > allData.length * 0.5;
+            if (!okToCache) console.warn('Sectors missing — this load is not cached, so the next refresh will retry');
             try {
+                if (!okToCache) throw new Error('incomplete load');
                 // Save raw responses + processed allData + rawPrices
                 await Promise.all([
                     idbSet('allData',    allData),
