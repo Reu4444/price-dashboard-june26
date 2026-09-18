@@ -1608,21 +1608,24 @@
         </div>
         <div class="pf-stabs"><button class="pf-stab" data-sub="portfolio" onclick="pfSubTab('portfolio')">PORTFOLIO</button><button class="pf-stab" data-sub="alerts" onclick="pfSubTab('alerts')">ALERTS</button><button class="pf-stab" data-sub="switch" onclick="pfSubTab('switch')">SWITCH</button><button class="pf-stab" data-sub="themes" onclick="pfSubTab('themes')">WHAT TO OWN</button><button class="pf-stab" data-sub="bench" onclick="pfSubTab('bench')">VS ACWI</button><button class="pf-stab" data-sub="models" onclick="pfSubTab('models')">MODEL PORTFOLIOS</button></div>
         <div class="pf-subc" id="pfSub-portfolio">
-        <div class="pf-topline" id="pfTopLine"></div>
+        <div class="pf-h">KEY STATISTICS</div>
         <div class="pf-kpis" id="pfKpis"></div>
 
-        <div class="pf-h">WEIGHTS</div>
+        <div class="pf-h" style="margin-top:18px">RELATIVE STRENGTH</div>
+        <div class="pf-topline" id="pfTopLine"></div>
+        <div class="pf-card" style="max-height:none">
+            <div class="pf-sub"><span id="pfPctTitle">Weight by percentile</span>
+                <select id="pfBucketMetric" onchange="pfRenderBuckets()"><option value="rs_ibd">RS IBD</option><option value="va_rs">VA RS</option><option value="pct_4w">Pct 4W</option><option value="pct_6m">Pct 6M</option></select></div>
+            <div id="pfWBucket"></div>
+        </div>
+
+        <div class="pf-h" style="margin-top:18px">ALLOCATION</div>
         <div class="pf-grid3">
             <div class="pf-card"><div class="pf-sub">By sector</div><div id="pfWSector"></div></div>
             <div class="pf-card"><div class="pf-sub"><span id="pfGeoTitle">By region</span><select id="pfGeoMode" onchange="document.getElementById('pfGeoTitle').textContent = 'By ' + this.value; pfRenderWeights()"><option value="region" selected>Region</option><option value="country">Country</option></select></div><div id="pfWCountry"></div></div>
+            <div class="pf-card"><div class="pf-sub">By theme</div><div id="pfWTheme"></div></div>
             <div class="pf-card"><div class="pf-sub">By group</div><div id="pfWGroup"></div></div>
-            <div class="pf-card"><div class="pf-sub">By percentile
-                <select id="pfBucketMetric" onchange="pfRenderBuckets()">
-                    <option value="rs_ibd">RS IBD</option><option value="va_rs">VA RS</option>
-                    <option value="pct_4w">Pct 4W</option><option value="pct_6m">Pct 6M</option>
-                </select></div><div id="pfWBucket"></div></div>
         </div>
-
 
         <div class="pf-h" style="margin-top:18px;display:flex;justify-content:space-between;align-items:baseline">HOLDINGS STATISTICS <a href="#" id="pfColsLink" onclick="pfToggleCols();return false" style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--accent2);text-decoration:none">Show all columns</a></div>
         <div class="table-wrap"><table id="pfTable"><thead><tr>
@@ -6852,6 +6855,7 @@
             const ex = h.ticker.split(' ')[1];
             const r = Object.assign({}, d, { w: h.w, _src: d, input: h.ticker });
             if (!r.group) r.group = r.sector ? `RoW · ${r.sector}` : '(n/a)';
+            r.theme = pfTheme(d);
             const base0 = h.ticker.split(' ')[0];
             r.country = (window._pfCountryOverride || {})[h.ticker]
                 || (['US','UW','UN'].includes(ex) || !ex ? PF_DOMICILE[base0] : null)
@@ -6959,29 +6963,18 @@
         const growCol = () => 'var(--text)';
         const sc = pfWavg(R, 'score');
         const sec = (title, cards) => `<div class="pf-sec"><div class="pf-sec-t">${title}</div><div class="pf-sec-c">${cards.join('')}</div></div>`;
-        const top10 = [...R].sort((a, b) => b.w - a.w).slice(0, 10).reduce((s, r) => s + r.w, 0);
         const pv = pfPortVol(R, 60), wv = pfWavg(R, 'vol60');
-        window._pfAvgVol = wv;
+        const grp = f => { const a = R.filter(f); return { n: a.length, w: a.reduce((s, r) => s + r.w, 0) }; };
+        const below200 = grp(r => r.above200 === false), small = grp(r => r.w < 2), bad = grp(r => r.perf != null && r.perf < -10);
+        const nw = x => `${x.n} <span style="font-size:11px;color:var(--muted)">/ ${x.w.toFixed(1)}%</span>`;
         el.innerHTML = `<div class="pf-strip">${[
-            pfKpi(R.length, 'Positions'),
             pfKpi(pfFmt(inv, 1, '%'), 'Invested'),
-            pfKpi(pfFmt(top10 / inv * 100, 0, '%'), 'Top 10 weight'),
-            pfKpi(pfFmt(pfWavg(R, 'pct_4w')), 'Pct 4W'),
-            pfKpi(pfFmt(pfWavg(R, 'pct_6m')), 'Pct 6M'),
-            pfKpi(pfFmt(pfWavg(R, 'rs_ibd')), 'RS IBD'),
-            pfKpi(pfFmt(pfWavg(R, 'va_rs')), 'VA RS'),
-            pfKpi(pfSigned(g('ny_yoy_s'), 0), 'Sales 2027'),
-            pfKpi(pfSigned(g('ny_yoy'), 0), 'EPS 2027'),
-            pfKpi(pfFmt(hPE, 1, 'x'), 'Fwd P/E'),
-            pfKpi(pfFmt(wShare(r => r.above50), 0, '%'), 'Above 50 MA'),
-            pfKpi(pfFmt(wShare(r => r.above200), 0, '%'), 'Above 200 MA'),
-            pfKpi(pfSigned(pfWavg(R, 'high52_dist')), 'From 52W high'),
-            pfKpi(pfFmt(pv, 1, '%'), 'Portfolio vol 60D'),
-            pfKpi(pfFmt(wv, 1, '%'), 'Stock vol 60D'),
-            pfKpi(pfSigned(pfWavg(R, 'ret_5d')), '5D'),
-            pfKpi(pfSigned(pfWavg(R, 'm1')), '1M'),
-            pfKpi(pfSigned(pfWavg(R, 'ret_3m')), '3M'),
-            pfKpi(pfSigned(pfWavg(R, 'ret_12m')), '12M'),
+            pfKpi(R.length, 'Positions'),
+            pfKpi(nw(below200), 'Below 200 MA'),
+            pfKpi(nw(small), 'Weight < 2%'),
+            pfKpi(nw(bad), 'Performance < −10%'),
+            pfKpi(pfFmt(pv, 1, '%'), 'Portfolio realized vol 60D'),
+            pfKpi(pfFmt(wv, 1, '%'), 'Stocks realized vol 60D'),
         ].join('')}</div>`;
     }
 
@@ -7081,6 +7074,7 @@
     function pfRenderWeights() {
         document.getElementById('pfWSector').innerHTML = pfBars(pfGroupBy('sector'), true);
         document.getElementById('pfWGroup').innerHTML = pfBars(pfGroupBy('group'), true);
+        const th = document.getElementById('pfWTheme'); if (th) th.innerHTML = pfBars(pfGroupBy('theme'), true);
         document.getElementById('pfWCountry').innerHTML = pfBars(pfGroupBy(document.getElementById('pfGeoMode').value), true);
         pfRenderBuckets();
     }
@@ -7713,7 +7707,6 @@
         el.innerHTML = [
             `Strength: RS IBD <b>${f0(pfWavg(R, 'rs_ibd'))}</b>, VA RS <b>${f0(pfWavg(R, 'va_rs'))}</b>, <b>${f0(a200)}%</b> of weight above the 200 MA`,
             `<a href="#" onclick="pfSubTab('alerts');return false" style="color:inherit"><b>${A.red}</b> stocks with 3+ alert flags = <b>${A.redW.toFixed(1)}%</b></a>`,
-            `<a href="#" onclick="pfSubTab('switch');return false" style="color:inherit">Switch <b>${sw.length}</b> (${ws(sw)}%) · Watch <b>${wa.length}</b> (${ws(wa)}%)</a>`,
             bm ? `<a href="#" onclick="pfSubTab('bench');return false" style="color:inherit">vs ACWI 1M: <b>${sg(bm.active)} pp</b> (${sg(bm.Rp)}% vs ${sg(bm.Rb)}%)</a>` : ''
         ].filter(Boolean).join('<span class="sep">|</span>');
     }
