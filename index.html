@@ -2050,7 +2050,7 @@
                 const resp = await fetch(
                 `${APPS_SCRIPT_URL}?url=${encodeURIComponent(freshUrl)}`,
                 {
-                    signal: AbortSignal.timeout(60000)
+                    signal: AbortSignal.timeout(180000)
                 }
                 );
                 if (resp.ok) {
@@ -2185,6 +2185,8 @@
     }
 
     // colA=ticker, colB=name, colC=country, colD=currency, colE=mktcap, colF=mktcap_eur, colG=sector, colH=group (optional)
+    // force a fresh info_row on the next load (console: reloadRowInfo())
+    function reloadRowInfo() { try { localStorage.removeItem('infoRowCacheV2'); } catch (e) {} location.reload(); }
     function parseInfoRowJSON(data) {
         const map = {};
         for (let i = 1; i < data.length; i++) {
@@ -2514,29 +2516,37 @@
             // Load prices from Apps Script API + other data from Sheets in parallel
             const [pricesResp, infoResp, epsResp, salesResp, descResp, fundResp, pricesRowResp, infoRowResp] = await Promise.all([
             fetch(`${APPS_SCRIPT_URL}?action=prices`, {
-                signal: AbortSignal.timeout(60000)
+                signal: AbortSignal.timeout(180000)
             }).then(r => r.json()),
             fetch(`${APPS_SCRIPT_URL}?action=info`, {
-                signal: AbortSignal.timeout(60000)
+                signal: AbortSignal.timeout(180000)
             }).then(r => r.json()).catch(() => null),
             fetch(`${APPS_SCRIPT_URL}?action=eps`, {
-                signal: AbortSignal.timeout(60000)
+                signal: AbortSignal.timeout(180000)
             }).then(r => r.json()).catch(() => null),
             fetch(`${APPS_SCRIPT_URL}?action=sales`, {
-                signal: AbortSignal.timeout(60000)
+                signal: AbortSignal.timeout(180000)
             }).then(r => r.json()).catch(() => null),
             fetch(`${APPS_SCRIPT_URL}?action=desc`, {
-                signal: AbortSignal.timeout(60000)
+                signal: AbortSignal.timeout(180000)
             }).then(r => r.json()).catch(() => null),
             fetch(`${APPS_SCRIPT_URL}?action=fund`, {
-                signal: AbortSignal.timeout(60000)
+                signal: AbortSignal.timeout(180000)
             }).then(r => r.json()).catch(() => null),
             fetch(`${APPS_SCRIPT_URL}?action=prices_row`, {
-                signal: AbortSignal.timeout(60000)
+                signal: AbortSignal.timeout(180000)
             }).then(r => r.json()).catch(() => null),
-            fetch(`${APPS_SCRIPT_URL}?action=info_row`, {
-                signal: AbortSignal.timeout(60000)
-            }).then(r => r.json()).catch(() => null),
+            (async () => {   // info_row rarely changes: cached for 7 days, so it is usually not fetched at all
+                try {
+                    const c = JSON.parse(localStorage.getItem('infoRowCacheV2') || 'null');
+                    if (c && c.map && Date.now() - c.at < 7 * 864e5 && Object.keys(c.map).length > 10) return { cached: c.map };
+                } catch (e) {}
+                for (let i = 0; i < 2; i++) {
+                    try { const r = await fetch(`${APPS_SCRIPT_URL}?action=info_row&t=${Date.now()}`, { signal: AbortSignal.timeout(180000) });
+                        const j = await r.json(); if (j && j.data && j.data.length > 1) return j; } catch (e) {}
+                }
+                return null;
+            })(),
             ]);
             // Mark as fresh fetch (not from cache)
             _loadedFromCache = false;
@@ -2755,7 +2765,13 @@
 
             // ── LOAD ROW DATA ─────────────────────────────────────────
             if (pricesRowResp && pricesRowResp.prices) {
-                const infoRowMap = infoRowResp ? parseInfoRowJSON(infoRowResp.data) : {};
+                let infoRowMap = infoRowResp ? (infoRowResp.cached || parseInfoRowJSON(infoRowResp.data)) : {};
+                if (Object.keys(infoRowMap).length > 10) {
+                    if (!infoRowResp.cached) { try { localStorage.setItem('infoRowCacheV2', JSON.stringify({ at: Date.now(), map: infoRowMap })); } catch (e) {} }
+                } else {
+                    try { const c = JSON.parse(localStorage.getItem('infoRowCacheV2') || 'null');
+                        if (c && c.map && Object.keys(c.map).length) { infoRowMap = c.map; console.warn('info_row unavailable — using cached info'); } } catch (e) {}
+                }
                 rawPricesRoW = {};
                 allDataRoW = [];
                 for (const [ticker, closes] of Object.entries(pricesRowResp.prices)) {
@@ -7323,7 +7339,7 @@
                 const r = x.r, hot = x.n >= 3, isNew = prev && !prevSet.has(r.input);
                 return `<tr>
                 <td class="td-ticker" style="cursor:pointer${hot ? ';color:#b91c1c' : ''}" onclick="openNews('${r._src.ticker}')"><b>${pfShort(r.input)}</b>${isNew ? ' <span class="pf-new">NEW</span>' : ''}</td>
-                <td class="td-name">${pfTheme(r._src)}</td>
+                <td class="td-name">${pfRowTheme(r)}</td>
                 <td class="td-pct">${r.w.toFixed(1)}%</td>
                 <td class="td-pct" style="${r.perf != null && r.perf < -10 ? 'color:#b91c1c;font-weight:700' : ''}">${r.perf != null ? r.perf.toFixed(1) + '%' : '—'}</td>
                 <td class="td-c">${ck(x.f.perf)}</td>
@@ -7477,6 +7493,11 @@
 
     // ── CLAUDE PORTFOLIO ─────────────────────────────────────────
     const pfTheme = d => d.group || (d.sector ? `RoW · ${d.sector}` : '(n/a)');
+    // for a holding: universe group, else sector, else the theme from the Sheet (col D)
+    function pfRowTheme(r) {
+        const t = pfTheme(r._src);
+        return t !== '(n/a)' ? t : (r.themeSheet && r.themeSheet !== '(none)' ? `${r.themeSheet} (sheet)` : '(n/a)');
+    }
     function pfThemeTable() {
         const m = {};
         allData.concat(allDataRoW || []).forEach(d => { const t = pfTheme(d); if (t !== '(n/a)') (m[t] = m[t] || []).push(d); });
@@ -7974,7 +7995,7 @@
             const cell = k => c[k] ? pfSwCand(c[k], v) : '<td class="pf-swc"></td>';
             return `<tr>
                 <td class="td-ticker" style="cursor:pointer${hot ? ';color:#b91c1c' : ''}" onclick="openNews('${r._src.ticker}')"><b>${pfShort(r.input)}</b></td>
-                <td class="td-name">${pfTheme(r._src)}</td>
+                <td class="td-name">${pfRowTheme(r)}</td>
                 <td class="td-pct">${r.w.toFixed(1)}%</td>
                 <td class="td-c" style="${hot ? 'color:#b91c1c' : ''}"><b>${x.n}/5</b></td>
                 <td class="td-pct">${pfPctC(r.pct_4w)}</td><td class="td-pct">${pfPctC(r.pct_6m)}</td><td class="td-pct">${pfPctC(r.rs_ibd)}</td><td class="td-pct">${pfPctC(r.va_rs)}</td>
@@ -7995,7 +8016,7 @@
                     <span>VA ${v(y.d.va_rs)} · RS ${v(y.d.rs_ibd)} · cap ${y.cap != null ? Math.round(y.cap) : '—'}</span></div></td>`; };
             return `<tr>
                 <td class="td-ticker" style="cursor:pointer" onclick="openNews('${r._src.ticker}')"><b>${pfShort(r.input)}</b></td>
-                <td class="td-name">${pfTheme(r._src)}</td>
+                <td class="td-name">${pfRowTheme(r)}</td>
                 <td class="td-pct">${r.w.toFixed(1)}%</td>
                 <td class="td-pct">${r.perf != null ? r.perf.toFixed(1) + '%' : '—'}</td>
                 <td class="td-pct">${pfPctC(r.va_rs)}</td><td class="td-pct">${pfPctC(r.rs_ibd)}</td><td class="td-pct">${pfPctC(r.pct_4w)}</td>
