@@ -1140,6 +1140,7 @@
                                 <th style="cursor:pointer;width:90px" onclick="rowSort('country')">COUNTRY</th>
                                 <th style="cursor:pointer;width:65px" onclick="rowSort('currency')">CURR.</th>
                                 <th style="cursor:pointer;width:100px" onclick="rowSort('sector')">SECTOR</th>
+                                <th style="cursor:pointer;width:120px" onclick="rowSort('group')">GROUP</th>
                                 <th style="cursor:pointer;width:95px;text-align:center" onclick="rowSort('mktcap_eur')">MKT CAP (€)</th>
                                 <th style="cursor:pointer;text-align:center;border-left:1px solid var(--border2);width:68px" class="th-pct" onclick="rowSort('pct_1w')">PCT 1W</th>
                                 <th style="cursor:pointer;text-align:center;width:68px" class="th-pct" onclick="rowSort('pct_4w')">PCT 4W</th>
@@ -4152,6 +4153,7 @@
                 <td class="td-name">${d.country || ''}</td>
                 <td class="td-name">${d.currency || ''}</td>
                 <td class="td-name">${d.sector || ''}</td>
+                <td class="td-name">${d.group || ''}</td>
                 <td class="td-pct">${fmcEur(d.mktcap_eur)}</td>
                 <td class="td-pct" style="border-left:1px solid var(--border2)">${pctCell(d.pct_1w)}</td>
                 <td class="td-pct">${pctCell(d.pct_4w)}</td>
