@@ -1801,6 +1801,8 @@
                 #bxGroupA .gs,#bxGroupA2 .gs{display:inline;font-size:11px;color:var(--muted);margin-left:8px}
                 #bxGroupA td:nth-child(4),#bxGroupA2 td:nth-child(4){font-weight:700;background:rgba(3,105,161,.07)}
             </style>
+            <div class="pf-bar-top" style="justify-content:flex-start;gap:0;margin-bottom:10px"><button class="pf-swf" id="bxTabExp" onclick="bxSubTab('exp')">Exposure</button><button class="pf-swf" id="bxTabPerf" onclick="bxSubTab('perf')">Performance</button></div>
+            <div id="bxPaneExp">
 
             <div class="pf-h">1 · REGIONS <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">click a row · ticker <span style="color:var(--up)">green</span> = strong relative strength (6M percentile ≥ 70) · <span style="color:var(--down)">red</span> = weak (&lt; 50)</span></div>
             <div class="bx-sp">
@@ -1838,7 +1840,9 @@
                     <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxOverS"></tbody></table></div></div>
             </div>
 
-            <div class="pf-h">ACWI WINNERS I DON'T OWN</div>
+            </div>
+            <div id="bxPanePerf" style="display:none">
+            <div class="pf-h" style="margin-top:0">ACWI WINNERS I DON'T OWN</div>
             <div class="bx-two">
                 <div><div class="pf-sub">1 month</div>
                     <div class="table-wrap bx-w"><table class="bx-t c6"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th><th class="num">Perf</th><th class="num" title="ACWI weight x performance = what it added to the ACWI return (pp)">Contrib</th><th class="num" title="What I miss vs the ACWI average because I do not own it (pp)">Impact</th></tr></thead><tbody id="bxWin1"></tbody></table></div></div>
@@ -1889,6 +1893,7 @@
             </div>
             <div class="pf-hint" style="margin-top:6px"><b>Method (Brinson-Fachler).</b> Allocation = (portfolio sector weight − ACWI sector weight) × (ACWI sector return − ACWI return): being overweight sectors that beat the index. Selection = ACWI sector weight × (portfolio sector return − ACWI sector return): picking stocks that beat their sector. Interaction = active weight × selection gap. Cash earns 0. Effects are in percentage points and add up to the active return. Index names not held: effect = −ACWI weight × (stock return − ACWI return). <b>Limits:</b> ACWI holdings and weights come from the iShares CSV (refreshed daily, via the Apps Script proxy); sector returns use only the constituents the dashboard has prices for (see coverage) — if the file cannot be loaded, a cap-weighted universe proxy is used; current weights are applied to the whole period (no trades); price returns in local currency, dividends and FX excluded. Use it to understand the drivers, not as official performance.</div>
             </details>
+            </div>
         </div>
         <div class="pf-subc" id="pfSub-models">
             <div class="pf-bar-top" style="justify-content:flex-start;gap:0"><button class="pf-mtab" data-m="claude" onclick="pfModelTab('claude')">CLAUDE</button><button class="pf-mtab" data-m="acwi" onclick="pfModelTab('acwi')">ACWI NEUTRAL</button></div>
@@ -8113,12 +8118,21 @@
     // ── SUB-TABS ─────────────────────────────────────────────────
     let pfSub = (() => { try { return localStorage.getItem('pfSub') || 'portfolio'; } catch (e) { return 'portfolio'; } })();
     let pfModel = (() => { try { return localStorage.getItem('pfModel') || 'claude'; } catch (e) { return 'claude'; } })();
+    function bxSubTab(k) {
+        try { localStorage.setItem('bxSub', k); } catch (e) {}
+        const e = document.getElementById('bxPaneExp'), p = document.getElementById('bxPanePerf');
+        if (e) e.style.display = k === 'perf' ? 'none' : '';
+        if (p) p.style.display = k === 'perf' ? '' : 'none';
+        const be = document.getElementById('bxTabExp'), bp = document.getElementById('bxTabPerf');
+        if (be) be.classList.toggle('on', k !== 'perf');
+        if (bp) bp.classList.toggle('on', k === 'perf');
+    }
     function pfSubTab(k) {
         pfSub = k; try { localStorage.setItem('pfSub', k); } catch (e) {}
         document.querySelectorAll('.pf-stab').forEach(b => b.classList.toggle('on', b.dataset.sub === k));
         document.querySelectorAll('.pf-subc').forEach(c => c.classList.toggle('on', c.id === 'pfSub-' + k));
         if (k === 'models' && window._pfModelsDirty) pfRenderModels();
-        if (k === 'bench') pfRenderBench();
+        if (k === 'bench') { pfRenderBench(); let b = 'exp'; try { b = localStorage.getItem('bxSub') || 'exp'; } catch (e) {} bxSubTab(b); }
     }
     function pfModelTab(m) {
         pfModel = m; try { localStorage.setItem('pfModel', m); } catch (e) {}
@@ -8284,7 +8298,7 @@
         if (pfSub === 'bench') pfRenderBench();
     }
     let _acwiMatch = null;
-    let _acwiMatchFor = null;
+    let _acwiMatchFor = null, _acwiMatchAD = null, _acwiMatchAR = null;
     // normalised company name (for matching ACWI names to dashboard names that are spelled differently)
     const _acwiNN = s => String(s || '').toUpperCase().replace(/&/g, ' AND ').replace(/[^A-Z0-9 ]+/g, ' ')
         .replace(/\b(CLASS|CL)\s+[A-Z0-9]{1,2}\b/g, ' ')
@@ -8292,8 +8306,9 @@
         .replace(/\s+/g, ' ').trim();
     const _acwiCN = c => { c = String(c || '').toLowerCase().trim(); if (/korea/.test(c)) return 'korea'; if (/hong kong/.test(c)) return 'hong kong'; if (/united kingdom|^uk$|great britain/.test(c)) return 'uk'; if (/united states|^usa?$/.test(c)) return 'us'; if (/taiwan/.test(c)) return 'taiwan'; return c; };
     function pfAcwiMatch() {
-        if (_acwiMatch && _acwiMatchFor === (_acwi || ACWI_SNAP)) return _acwiMatch;
-        _acwiMatchFor = _acwi || ACWI_SNAP;
+        // rebuild whenever the ACWI file OR the dashboard data arrays are replaced (a fresh load creates new objects)
+        if (_acwiMatch && _acwiMatchFor === (_acwi || ACWI_SNAP) && _acwiMatchAD === allData && _acwiMatchAR === allDataRoW) return _acwiMatch;
+        _acwiMatchFor = _acwi || ACWI_SNAP; _acwiMatchAD = allData; _acwiMatchAR = allDataRoW;
         const us = new Map(allData.map(d => [d.ticker.toUpperCase(), d]));
         const row = new Map((allDataRoW || []).map(d => [d.ticker.toUpperCase(), d]));
         const rowByBase = {}; (allDataRoW || []).forEach(d => (rowByBase[pfBaseSym(d.ticker)] = rowByBase[pfBaseSym(d.ticker)] || []).push(d));
@@ -8355,7 +8370,8 @@
         const list = Object.values(G), used = new Set();
         list.forEach(g => {
             const mine = new Set();
-            pfRows.forEach(r => { if (g.ds.includes(r._src)) mine.add(r); });
+            const dt = new Set(g.ds.map(d => d.ticker));
+            pfRows.forEach(r => { if (g.ds.includes(r._src) || dt.has(r._src.ticker)) mine.add(r); });
             if (g.ub.length) pfRows.forEach(r => { if (g.ub.includes(pfShort(r.input))) mine.add(r); });
             g.mine = [...mine]; g.hw = g.mine.reduce((s, r) => s + r.w, 0);
             g.mine.forEach(r => used.add(r));
@@ -8395,15 +8411,17 @@
         const gp = v => (v > 0.004 ? '+' : v < -0.004 ? '−' : '') + Math.abs(v).toFixed(2);
         const fillPanel = (pre, label, mineRows, topList, p, bw) => {
             const t1 = document.getElementById(pre + 'MineT'), t2 = document.getElementById(pre + 'AcwiT');
+            topList = topList.slice(0, mineRows.length || 10);   // same number of lines as my table
+            const tw = topList.reduce((t, g) => t + g.w, 0);
             if (t1) t1.textContent = `My ${label} stocks · ${p.toFixed(1)}%`;
-            if (t2) t2.textContent = `ACWI top 10 ${label} · ${bw.toFixed(1)}% of ACWI`;
+            if (t2) t2.textContent = `ACWI top ${topList.length} ${label} · ${tw.toFixed(1)}% of ACWI`;
             pfBenchTable(pre + 'Mine', mineRows.map(r => { const bw2 = wOf.has(r) ? wOf.get(r) : 0.1; return `<tr class="${bxRS(r._src)}"><td class="td-ticker tk" onclick="openNews('${r._src.ticker}')">${pfShort(r.input)}</td><td class="td-name nm">${pfShortName(r.name || r.input)}</td><td class="td-pct num">${r.w.toFixed(1)}%</td><td class="td-pct num dim">${bw2.toFixed(2)}%</td><td class="td-pct num">${gp(r.w - bw2)}</td></tr>`; }).join('') || '<tr><td colspan="5" class="dim">None</td></tr>');
             pfBenchTable(pre + 'Acwi', topList.map(g => `<tr class="${bxRS(g.ds[0])}"><td class="td-ticker tk" onclick="${g.ds[0] ? `openNews('${g.ds[0].ticker}')` : ''}">${g.tk}</td><td class="td-name nm">${pfShortName(g.name)}</td><td class="td-pct num">${g.w.toFixed(2)}%</td><td class="td-pct num dim">${g.hw > 0 ? g.hw.toFixed(1) + '%' : '—'}</td><td class="td-pct num">${gp(g.hw - g.w)}</td></tr>`).join('') || '<tr><td colspan="5" class="dim">—</td></tr>');
         };
         {   // sector panel
             const sx = sec.find(x => x.k === bxSel);
             fillPanel('bxSec', bxSel, pfRows.filter(r => r.sector === bxSel).sort((a, b) => b.w - a.w),
-                CS.list.filter(g => g.sector === bxSel).sort((a, b) => b.w - a.w).slice(0, 10), sx.p, sx.b);
+                CS.list.filter(g => g.sector === bxSel).sort((a, b) => b.w - a.w), sx.p, sx.b);
         }
         {   // regions
             const regOfRow = r => bxRegOf(allData.includes(r._src) ? (PF_DOMICILE[r.ticker] || 'United States') : r.country);
@@ -8418,7 +8436,7 @@
                 + (cash > 0.5 ? `<tr style="cursor:default"><td class="td-name" style="cursor:default">Cash</td><td class="td-pct num" style="cursor:default">${cash.toFixed(1)}%</td><td class="td-pct num dim" style="cursor:default">0%</td><td class="td-pct num" style="cursor:default">${pp(cash)}</td></tr>` : ''));
             const rx = reg.find(x => x.k === bxRSel);
             fillPanel('bxReg', bxRSel, pfRows.filter(r => regOfRow(r) === bxRSel).sort((a, b) => b.w - a.w),
-                CS.list.filter(g => bxRegOf(g.loc) === bxRSel).sort((a, b) => b.w - a.w).slice(0, 10), rx.p, rx.b);
+                CS.list.filter(g => bxRegOf(g.loc) === bxRSel).sort((a, b) => b.w - a.w), rx.p, rx.b);
         }
         const ow = sec.filter(x => x.a >= 1).slice(0, 2), uw = sec.filter(x => x.a <= -1).slice(-2).reverse();
         const C = pfAcwiCompanies(1e6);
