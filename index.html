@@ -1708,32 +1708,34 @@
         <div id="pfRecos" style="display:none"></div>
         </div>
         <div class="pf-subc" id="pfSub-bench">
-            <div id="bxConc" class="pf-topline"></div>
-            <div class="pf-hint" id="bxSrc" style="margin-bottom:8px"></div>
             <style>
-                .bx-two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
-                @media(max-width:700px){.bx-two{grid-template-columns:1fr}}
-                .bx-two table{width:100%;border-collapse:collapse}
-                .bx-two th{font-size:11px;letter-spacing:.08em;text-align:right;color:var(--muted);font-weight:600;padding:2px 8px;border-bottom:1px solid var(--border)}
-                .bx-two th:first-child,.bx-two td:first-child{text-align:left}
-                .bx-two td{padding:3px 8px;font-size:13px;text-align:right}
-                .bx-chip{display:inline-block;margin:0 6px 6px 0;padding:3px 9px;border:1px solid var(--border);background:var(--bg2);font-weight:700;font-size:13px;cursor:pointer}
-                .bx-chips{padding:2px 0}
+                .bx-two{display:grid;grid-template-columns:auto auto;justify-content:start;gap:12px 56px;margin-bottom:18px}
+                @media(max-width:900px){.bx-two{grid-template-columns:1fr}}
+                .bx-t{border-collapse:collapse}
+                .bx-t th{font-size:11px;letter-spacing:.08em;text-align:left;color:var(--muted);font-weight:400;padding:2px 18px 4px 0;border-bottom:1px solid var(--border);text-transform:uppercase}
+                .bx-t td{padding:3px 18px 3px 0;font-size:13px;text-align:left;white-space:nowrap}
+                .bx-t td.tk{font-size:17px;letter-spacing:.02em;cursor:pointer;padding-right:16px}
+                .bx-t td.nm{max-width:210px;overflow:hidden;text-overflow:ellipsis}
+                .bx-t td.num{text-align:right;font-variant-numeric:tabular-nums}
+                .bx-t th.num{text-align:right}
+                .bx-t td.dim{color:var(--muted)}
                 #bxSector th,#bxSector td{padding:3px 10px}
             </style>
 
             <div class="pf-h">WEIGHTS</div>
             <div class="bx-two">
                 <div><div class="pf-sub">Big ACWI names I don't own</div>
-                    <table><thead><tr><th>Ticker</th><th>ACWI</th></tr></thead><tbody id="bxMissW"></tbody></table></div>
+                    <table class="bx-t"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th></tr></thead><tbody id="bxMissW"></tbody></table></div>
                 <div><div class="pf-sub">My biggest overweights</div>
-                    <table><thead><tr><th>Ticker</th><th>Me</th><th>ACWI</th></tr></thead><tbody id="bxOverW"></tbody></table></div>
+                    <table class="bx-t"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Me</th><th class="num">ACWI</th></tr></thead><tbody id="bxOverW"></tbody></table></div>
             </div>
 
             <div class="pf-h">ACWI WINNERS I DON'T OWN</div>
             <div class="bx-two">
-                <div><div class="pf-sub">1 month</div><div class="bx-chips" id="bxWin1"></div></div>
-                <div><div class="pf-sub">3 months</div><div class="bx-chips" id="bxWin3"></div></div>
+                <div><div class="pf-sub">1 month</div>
+                    <table class="bx-t"><thead><tr><th>Ticker</th><th>Name</th></tr></thead><tbody id="bxWin1"></tbody></table></div>
+                <div><div class="pf-sub">3 months</div>
+                    <table class="bx-t"><thead><tr><th>Ticker</th><th>Name</th></tr></thead><tbody id="bxWin3"></tbody></table></div>
             </div>
             <input type="hidden" id="bxMinWt" value="0.1">
 
@@ -1741,6 +1743,7 @@
             <div style="max-width:520px;margin-bottom:14px">
                 <table class="bx-sec" style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;font-size:11px;color:var(--muted)">Sector</th><th style="text-align:right;font-size:11px;color:var(--muted)">Me</th><th style="text-align:right;font-size:11px;color:var(--muted)">ACWI</th><th style="text-align:right;font-size:11px;color:var(--muted)">Gap</th></tr></thead><tbody id="bxSector"></tbody></table>
             </div>
+            <div class="pf-hint" id="bxSrc" style="margin-bottom:10px"></div>
 
             <details class="pf-det" data-k="bmAdv"><summary>Detailed attribution (advanced)</summary>
             <div class="pf-bar-top" style="justify-content:flex-start;gap:10px">
@@ -8191,16 +8194,19 @@
     // ── VS ACWI: simple view (conclusion, weights, winners not owned, sectors) ──
     const pfTitle = s => String(s || '').toLowerCase().replace(/(^|[\s\-\/(])(\S)/g, (m, a, b) => a + b.toUpperCase());
     // one line per company (share classes merged) with my weight attached
+    const ACWI_TK_ALIAS = { '2330': 'TSM', '005930': 'SMSN', '000660': 'SKHY' };
+    const pfShortName = n => { const t = pfTitle(n).replace(/\s+Class\s+\w+$/i, '').replace(/\s+Subordinate Voting$/i, '').replace(/\s+(Inc|Corp|Corporation|Ltd|Plc|Ag|Sa|Group|Holdings?|Co)\.?$/i, '').replace(/\s+(Inc|Corp|Ltd|Plc|Ag|Sa)\.?$/i, ''); return t.length > 26 ? t.slice(0, 25) + '…' : t; };
     function pfAcwiCompanies() {
         const G = {};
         const top = pfAcwiMatch().slice().sort((x, y) => y.w - x.w).slice(0, 100);   // top 100 is enough
         top.forEach(r => {
             const key = String(r.name || r.t).toUpperCase().replace(/\s+(CLASS|CL)\s+[A-Z0-9]{1,2}$/, '').trim();
-            const g = G[key] || (G[key] = { name: r.name, sector: r.sector, tk: r.t, tkw: 0, w: 0, ds: [], ub: [] });
+            const al = ACWI_TK_ALIAS[r.t] || r.t;
+            const g = G[key] || (G[key] = { name: r.name, sector: r.sector, tk: al, tkw: 0, w: 0, ds: [], ub: [] });
             g.w += r.w;
-            if (r.w > g.tkw) { g.tkw = r.w; g.tk = r.t; }
+            if (r.w > g.tkw) { g.tkw = r.w; g.tk = al; }
             if (r.d) { if (!g.ds.includes(r.d)) g.ds.push(r.d); }
-            else g.ub.push(pfBaseSym(r.t));
+            else g.ub.push(pfBaseSym(al));
         });
         const list = Object.values(G), used = new Set();
         list.forEach(g => {
@@ -8224,8 +8230,8 @@
         const wp = {}; sectors.forEach(k => wp[k] = 0);
         pfRows.forEach(r => { if (wp[r.sector] != null) wp[r.sector] += r.w; });
         const sec = sectors.map(k => ({ k, p: wp[k], b: ACWI_SECTORS[k] / totB * 100 })).map(x => ({ ...x, a: x.p - x.b })).sort((a, b) => b.a - a.a);
-        pfBenchTable('bxSector', sec.map(x => `<tr><td>${x.k}</td><td style="text-align:right">${x.p.toFixed(1)}%</td><td style="text-align:right;color:var(--muted)">${x.b.toFixed(1)}%</td><td style="text-align:right;font-weight:700">${pp(x.a)}</td></tr>`).join('')
-            + (cash > 0.5 ? `<tr><td>Cash</td><td style="text-align:right">${cash.toFixed(1)}%</td><td style="text-align:right;color:var(--muted)">0%</td><td style="text-align:right;font-weight:700">${pp(cash)}</td></tr>` : ''));
+        pfBenchTable('bxSector', sec.map(x => `<tr><td>${x.k}</td><td style="text-align:right">${x.p.toFixed(1)}%</td><td style="text-align:right;color:var(--muted)">${x.b.toFixed(1)}%</td><td style="text-align:right">${pp(x.a)}</td></tr>`).join('')
+            + (cash > 0.5 ? `<tr><td>Cash</td><td style="text-align:right">${cash.toFixed(1)}%</td><td style="text-align:right;color:var(--muted)">0%</td><td style="text-align:right">${pp(cash)}</td></tr>` : ''));
         const ow = sec.filter(x => x.a >= 1).slice(0, 2), uw = sec.filter(x => x.a <= -1).slice(-2).reverse();
         const C = pfAcwiCompanies();
         const src = document.getElementById('bxSrc');
@@ -8234,10 +8240,11 @@
             const live = !!_acwi;
             if (src) src.innerHTML = `ACWI top 100 · ${(_acwi || ACWI_SNAP).date || '—'}${live ? '' : ' (built-in)'} · <a href="#" onclick="pfLoadAcwi(true);return false" style="color:var(--accent2)">Refresh</a>${_acwiErr && !live ? ' <span style="color:var(--muted)">(' + _acwiErr + ')</span>' : ''}`;
             const all = C.list.concat(C.extra);
-            const miss = C.list.filter(g => g.hw === 0).sort((a, b) => b.w - a.w).slice(0, 10);
-            pfBenchTable('bxMissW', miss.map(g => `<tr><td><b>${g.tk}</b></td><td>${g.w.toFixed(2)}%</td></tr>`).join('') || empty);
-            const ov = all.filter(g => g.hw > 0).map(g => ({ g, a: g.hw - g.w })).sort((a, b) => b.a - a.a).slice(0, 10);
-            pfBenchTable('bxOverW', ov.map(x => `<tr><td><b>${x.g.mine.length === 1 ? pfShort(x.g.mine[0].input) : x.g.tk}</b></td><td>${x.g.hw.toFixed(1)}%</td><td style="color:var(--muted)">${x.g.w.toFixed(1)}%</td></tr>`).join('') || empty);
+            const miss = C.list.filter(g => g.hw === 0).sort((a, b) => b.w - a.w).slice(0, 15);
+            const emp4 = '<tr><td colspan="4" class="dim">—</td></tr>';
+            pfBenchTable('bxMissW', miss.map(g => `<tr><td class="tk" onclick="${g.ds[0] ? `openNews('${g.ds[0].ticker}')` : ''}">${g.tk}</td><td class="nm">${pfShortName(g.name)}</td><td class="num">${g.w.toFixed(2)}%</td></tr>`).join('') || emp4);
+            const ov = all.filter(g => g.hw > 0).map(g => ({ g, a: g.hw - g.w })).sort((a, b) => b.a - a.a).slice(0, 15);
+            pfBenchTable('bxOverW', ov.map(x => { const m = x.g.mine; return `<tr><td class="tk" onclick="openNews('${m[0]._src.ticker}')">${m.length === 1 ? pfShort(m[0].input) : x.g.tk}</td><td class="nm">${pfShortName(m.length === 1 && m[0].name ? m[0].name : x.g.name)}</td><td class="num">${x.g.hw.toFixed(1)}%</td><td class="num dim">${x.g.w.toFixed(1)}%</td></tr>`; }).join('') || emp4);
             const minWt = +document.getElementById('bxMinWt').value;
             const winners = nDays => {
                 let sw = 0, sr = 0;
@@ -8248,15 +8255,9 @@
                     return { g, x };
                 }).filter(o => o.x != null && o.x > Rb).sort((a, b) => b.x - a.x);
             };
-            const chips = L => L.slice(0, 10).map(o => `<span class="bx-chip" onclick="openNews('${o.g.ds[0].ticker}')">${o.g.tk}</span>`).join('') || '<span style="color:var(--muted)">—</span>';
-            pfBenchTable('bxWin1', chips(winners(21))); pfBenchTable('bxWin3', chips(winners(63)));
-            if (ov.length) lines.push(`<b>Biggest overweights:</b> ${ov.slice(0, 3).map(x => (x.g.mine.length === 1 ? pfShort(x.g.mine[0].input) : x.g.tk) + ' ' + pp(x.a)).join(', ')}`);
-            if (miss.length) lines.push(`<b>Big names missing:</b> ${miss.slice(0, 5).map(g => g.tk).join(', ')}`);
-            if (cash > 0.5) lines.push(`<b>Cash:</b> ${cash.toFixed(0)}%`);
+            const rowsW = L => L.slice(0, 15).map(o => `<tr><td class="tk" onclick="openNews('${o.g.ds[0].ticker}')">${o.g.tk}</td><td class="nm">${pfShortName(o.g.name)}</td></tr>`).join('') || '<tr><td colspan="2" class="dim">—</td></tr>';
+            pfBenchTable('bxWin1', rowsW(winners(21))); pfBenchTable('bxWin3', rowsW(winners(63)));
         }
-        if (ow.length || uw.length) lines.splice(0, 0, (ow.length ? `<b>Overweight:</b> ${ow.map(x => `${x.k} ${pp(x.a)}`).join(', ')}` : '') + (ow.length && uw.length ? ' &nbsp;·&nbsp; ' : '') + (uw.length ? `<b>Underweight:</b> ${uw.map(x => `${x.k} ${pp(x.a)}`).join(', ')}` : ''));
-        const el = document.getElementById('bxConc');
-        if (el) el.innerHTML = lines.join('<br>');
     }
 
     function pfRenderBench() {
@@ -8264,7 +8265,7 @@
     }
     function pfRenderBenchInner() {
         if (!pfRows.length || !document.getElementById('bmSec')) return;
-        try { pfRenderBenchSimple(); } catch (e) { console.error('VS ACWI simple view', e); const c = document.getElementById('bxConc'); if (c) c.textContent = 'Error: ' + e.message; }
+        try { pfRenderBenchSimple(); } catch (e) { console.error('VS ACWI simple view', e); const c = document.getElementById('bxSrc'); if (c) c.textContent = 'Error: ' + e.message; }
         const n = pfBenchN, minCap = +document.getElementById('bmCap').value;
         document.querySelectorAll('[data-bp]').forEach(b => b.classList.toggle('on', +b.dataset.bp === n));
         const label = n === 5 ? '1W' : n === 21 ? '1M' : '3M';
