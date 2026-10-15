@@ -1725,10 +1725,27 @@
                 #bxOverW tr.gi{border-bottom:none}
                 #bxOverW tr.gi td{border-bottom:none}
                 #bxOverW tr.ge,#bxOverW tr.ge td{border-bottom-color:var(--border)}
-                #bxGrpTbl{width:566px}
-                #bxGrpTbl thead th{width:70px}
-                #bxGrpTbl thead th:first-child{width:150px;text-align:left}
-                #bxGrpTbl thead th:nth-child(2){width:206px}
+                #bxGrpTbl,
+                
+                #bxGrpTbl2{width:486px}
+                #bxGrpTbl thead th,
+                
+                #bxGrpTbl2 thead th{width:70px}
+                #bxGrpTbl thead th:first-child,
+                
+                #bxGrpTbl2 thead th:first-child{width:276px;text-align:left}
+                #bxGrpTbl thead th:nth-child(2),
+                
+                #bxGrpTbl2 thead th:nth-child(2){width:70px;text-align:center}
+                #bxGroup td,
+                
+                #bxGroup2 td{padding-top:8px;padding-bottom:8px;vertical-align:middle}
+                #bxGroup .gn,
+                
+                #bxGroup2 .gn{font-weight:700;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis}
+                #bxGroup .gs,
+                
+                #bxGroup2 .gs{font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis}
                 #bxPerfTbl{width:336px}
                 #bxPerfTbl thead th{width:80px}
                 #bxPerfTbl thead th:first-child{width:176px;text-align:left}
@@ -1751,7 +1768,7 @@
                 #bxWin3 td:nth-child(6),
                 #bxSector td:nth-child(4),
                 #bxRegion td:nth-child(4),
-                #bxGroup td:nth-child(5),
+                #bxGroup td:nth-child(4),
                 #bxSecMine td:nth-child(5),
                 #bxRegMine td:nth-child(5),
                 #bxSecAcwi td:nth-child(5),
@@ -1760,19 +1777,57 @@
                 #bxGrpAcwi td:nth-child(5),
                 #bxPerfUp td:nth-child(6),
                 #bxPerfDn td:nth-child(6),
-                #bxPerf td:nth-child(3){font-weight:700;background:rgba(3,105,161,.07)}
-                .bx-t tbody tr.rsu td{background:rgba(21,128,61,.13)}
-                .bx-t tbody tr.rsd td{background:rgba(185,28,28,.12)}
-                .bx-t tbody tr.rsu td.tk,.bx-t tbody tr.rsu td.nm{color:var(--up)}
-                .bx-t tbody tr.rsd td.tk,.bx-t tbody tr.rsd td.nm{color:var(--down)}
+                #bxPerf td:nth-child(3),
+                #bxGroup2 td:nth-child(4),
+                #bxGrpMine2 td:nth-child(5),
+                #bxGrpAcwi2 td:nth-child(5){font-weight:700;background:rgba(3,105,161,.07)}
+                .bx-t tbody tr.rsu td.tk{color:var(--up)}
+                .bx-t tbody tr.rsd td.tk{color:var(--down)}
                 .bx-t tbody tr.tot td{background:var(--faint)!important;color:var(--text);font-weight:600!important;border-top:1px solid var(--border);border-bottom:none}
                 .bx-t tbody tr.tot:hover td{background:var(--faint)}
-                #bxSector td,#bxRegion td,#bxGroup td{cursor:pointer}
-                #bxSector tr.sel td,#bxRegion tr.sel td,#bxGroup tr.sel td{background:var(--bg3)}
-                #bxSector tr.sel td:first-child,#bxRegion tr.sel td:first-child,#bxGroup tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent2)}
+                #bxSector td,#bxRegion td,#bxGroup td,
+                #bxGroup2 td{cursor:pointer}
+                #bxSector tr.sel td,#bxRegion tr.sel td,#bxGroup tr.sel td,
+                #bxGroup2 tr.sel td{background:var(--bg3)}
+                #bxSector tr.sel td:first-child,#bxRegion tr.sel td:first-child,#bxGroup tr.sel td:first-child,
+                #bxGroup2 tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent2)}
             </style>
 
-            <div class="pf-h">WEIGHTS</div>
+            <div class="pf-h">1 · REGIONS <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">click a row · ticker <span style="color:var(--up)">green</span> = strong relative strength (6M percentile ≥ 70) · <span style="color:var(--down)">red</span> = weak (&lt; 50)</span></div>
+            <div class="bx-sp">
+                <div><div class="pf-sub">Allocation vs ACWI</div><div class="table-wrap bx-w"><table class="bx-t" id="bxRegTbl"><thead><tr><th>Region</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxRegion"></tbody></table></div></div>
+                <div><div class="pf-sub" id="bxRegMineT"></div>
+                    <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxRegMine"></tbody></table></div></div>
+                <div><div class="pf-sub" id="bxRegAcwiT"></div>
+                    <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th><th class="num">Me</th><th class="num">Gap</th></tr></thead><tbody id="bxRegAcwi"></tbody></table></div></div>
+            </div>
+            <div class="pf-h">2 · SECTORS <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">click a sector</span></div>
+            <div class="bx-sp">
+                <div><div class="pf-sub">Allocation vs ACWI</div><div class="table-wrap bx-w"><table class="bx-t" id="bxSecTbl"><thead><tr><th>Sector</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxSector"></tbody></table></div></div>
+                <div><div class="pf-sub" id="bxSecMineT"></div>
+                    <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxSecMine"></tbody></table></div></div>
+                <div><div class="pf-sub" id="bxSecAcwiT"></div>
+                    <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th><th class="num">Me</th><th class="num">Gap</th></tr></thead><tbody id="bxSecAcwi"></tbody></table></div></div>
+            </div>
+            <div class="pf-h">3a · GROUPS <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">my Sheet groups (+ built-in classification for ACWI stocks not in my Sheet) · click a group</span></div>
+            <div class="bx-sp">
+                <div><div class="pf-sub">Allocation vs ACWI</div><div class="table-wrap bx-w"><table class="bx-t" id="bxGrpTbl"><thead><tr><th>Group / main stocks</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxGroup"></tbody></table></div></div>
+                <div><div class="pf-sub" id="bxGrpMineT"></div>
+                    <div class="table-wrap bx-w"><table class="bx-t c7"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th><th class="num">1M vs peers</th><th class="num">3M vs peers</th></tr></thead><tbody id="bxGrpMine"></tbody></table></div></div>
+                <div><div class="pf-sub" id="bxGrpAcwiT"></div>
+                    <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th><th class="num">Me</th><th class="num">Gap</th></tr></thead><tbody id="bxGrpAcwi"></tbody></table></div></div>
+            </div>
+
+            <div class="pf-h">3b · GROUPS <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">built-in classification only (every ACWI stock, 30 groups) · click a group</span></div>
+            <div class="bx-sp">
+                <div><div class="pf-sub">Allocation vs ACWI</div><div class="table-wrap bx-w"><table class="bx-t" id="bxGrpTbl2"><thead><tr><th>Group / main stocks</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxGroup2"></tbody></table></div></div>
+                <div><div class="pf-sub" id="bxGrpMineT2"></div>
+                    <div class="table-wrap bx-w"><table class="bx-t c7"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th><th class="num">1M vs peers</th><th class="num">3M vs peers</th></tr></thead><tbody id="bxGrpMine2"></tbody></table></div></div>
+                <div><div class="pf-sub" id="bxGrpAcwiT2"></div>
+                    <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th><th class="num">Me</th><th class="num">Gap</th></tr></thead><tbody id="bxGrpAcwi2"></tbody></table></div></div>
+            </div>
+
+            <div class="pf-h">4 · STOCKS <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">individual names</span></div>
             <div class="bx-two" style="grid-template-columns:336px auto auto">
                 <div><div class="pf-sub">Stocks I Don't Own</div>
                     <div class="table-wrap bx-w"><table class="bx-t"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th></tr></thead><tbody id="bxMissW"></tbody></table></div></div>
@@ -1790,31 +1845,6 @@
                     <div class="table-wrap bx-w"><table class="bx-t c6"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th><th class="num">Perf</th><th class="num" title="ACWI weight x performance = what it added to the ACWI return (pp)">Contrib</th><th class="num" title="What I miss vs the ACWI average because I do not own it (pp)">Impact</th></tr></thead><tbody id="bxWin3"></tbody></table></div></div>
             </div>
             <input type="hidden" id="bxMinWt" value="0.1">
-
-            <div class="pf-h">SECTORS <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">click a sector · <span style="color:var(--up)">green</span> = strong relative strength · <span style="color:var(--down)">red</span> = relative weakness</span></div>
-            <div class="bx-sp">
-                <div><div class="pf-sub">Allocation vs ACWI</div><div class="table-wrap bx-w"><table class="bx-t" id="bxSecTbl"><thead><tr><th>Sector</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxSector"></tbody></table></div></div>
-                <div><div class="pf-sub" id="bxSecMineT"></div>
-                    <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxSecMine"></tbody></table></div></div>
-                <div><div class="pf-sub" id="bxSecAcwiT"></div>
-                    <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th><th class="num">Me</th><th class="num">Gap</th></tr></thead><tbody id="bxSecAcwi"></tbody></table></div></div>
-            </div>
-            <div class="pf-h">REGIONS <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">click a region</span></div>
-            <div class="bx-sp">
-                <div><div class="pf-sub">Allocation vs ACWI</div><div class="table-wrap bx-w"><table class="bx-t" id="bxRegTbl"><thead><tr><th>Region</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxRegion"></tbody></table></div></div>
-                <div><div class="pf-sub" id="bxRegMineT"></div>
-                    <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxRegMine"></tbody></table></div></div>
-                <div><div class="pf-sub" id="bxRegAcwiT"></div>
-                    <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th><th class="num">Me</th><th class="num">Gap</th></tr></thead><tbody id="bxRegAcwi"></tbody></table></div></div>
-            </div>
-            <div class="pf-h">GROUPS <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">click a group</span></div>
-            <div class="bx-sp">
-                <div><div class="pf-sub">Allocation vs ACWI</div><div class="table-wrap bx-w"><table class="bx-t" id="bxGrpTbl"><thead><tr><th>Group</th><th>Main stocks</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxGroup"></tbody></table></div></div>
-                <div><div class="pf-sub" id="bxGrpMineT"></div>
-                    <div class="table-wrap bx-w"><table class="bx-t c7"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th><th class="num">1M vs peers</th><th class="num">3M vs peers</th></tr></thead><tbody id="bxGrpMine"></tbody></table></div></div>
-                <div><div class="pf-sub" id="bxGrpAcwiT"></div>
-                    <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th><th class="num">Me</th><th class="num">Gap</th></tr></thead><tbody id="bxGrpAcwi"></tbody></table></div></div>
-            </div>
 
             <div class="pf-h">PERFORMANCE vs ACWI <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">today's weights held constant</span></div>
             <div class="bx-sp">
@@ -8184,7 +8214,7 @@
         'consumer discretionary': 'Discretionary', 'communication': 'Communications', 'communication services': 'Communications', 'consumer staples': 'Staples',
         'energy': 'Energy', 'materials': 'Materials', 'utilities': 'Utilities', 'real estate': 'Real Estate' };
     const ACWI_EXCH_TV = [['london', 'LON'], ['paris', 'EPA'], ['amsterdam', 'AMS'], ['brussels', 'EBR'], ['borsa italiana', 'BIT'], ['milan', 'BIT'], ['xetra', 'ETR'],
-        ['deutsche', 'ETR'], ['six swiss', 'SWX'], ['swiss', 'SWX'], ['stockholm', 'STO'], ['copenhagen', 'CPH'], ['helsinki', 'HEL'], ['oslo', 'OSL'], ['madrid', 'BME'],
+        ['deutsche', 'ETR'], ['six swiss', 'SWX'], ['swiss', 'SWX'], ['stockholm', 'STO'], ['nordic', 'STO'], ['copenhagen', 'CPH'], ['helsinki', 'HEL'], ['oslo', 'OSL'], ['madrid', 'BME'],
         ['wiener', 'VIE'], ['vienna', 'VIE'], ['warsaw', 'WSE'], ['tel aviv', 'TLV'], ['lisbon', 'ELI'], ['dublin', 'EURONEXT'], ['irish', 'EURONEXT']];
     // built-in ACWI snapshot (964 holdings, top-160 inline + compact remainder below) (iShares, Oct 13, 2026) — used until live holdings load
     const ACWI_SNAP = {"date":"Oct 13, 2026","rows":[{"t":"NVDA","name":"NVIDIA","sector":"Technology","w":5.06,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"AAPL","name":"APPLE","sector":"Technology","w":4.83,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"MSFT","name":"MICROSOFT","sector":"Technology","w":3.69,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"AMZN","name":"AMAZON.COM INC","sector":"Discretionary","w":2.41,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"GOOGL","name":"ALPHABET CLASS A","sector":"Communications","w":2,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"2330","name":"TAIWAN SEMICONDUCTOR MANUFACTURING","sector":"Technology","w":1.83,"loc":"Taiwan","exch":"Taiwan Stock Exchange","cur":"USD"},{"t":"META","name":"META PLATFORMS CLASS A","sector":"Communications","w":1.61,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"GOOG","name":"ALPHABET CLASS C","sector":"Communications","w":1.57,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"AVGO","name":"BROADCOM INC","sector":"Technology","w":1.56,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"MU","name":"MICRON TECHNOLOGY","sector":"Technology","w":1.04,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"TSLA","name":"TESLA INC","sector":"Discretionary","w":1.03,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"AMD","name":"ADVANCED MICRO DEVICES","sector":"Technology","w":0.95,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"LLY","name":"ELI LILLY","sector":"Healthcare","w":0.9,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"JPM","name":"JPMORGAN CHASE & CO","sector":"Financials","w":0.85,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"005930","name":"SAMSUNG ELECTRONICS LTD","sector":"Technology","w":0.77,"loc":"Korea (South)","exch":"Korea Exchange (Stock Market)","cur":"USD"},{"t":"BRK B","name":"BERKSHIRE HATHAWAY INC CLASS B","sector":"Financials","w":0.71,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"XOM","name":"EXXONMOBIL HOLDINGS CORP","sector":"Energy","w":0.69,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"V","name":"VISA CLASS A","sector":"Financials","w":0.63,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"ASML","name":"ASML HOLDING","sector":"Technology","w":0.63,"loc":"Netherlands","exch":"Euronext Amsterdam","cur":"USD"},{"t":"JNJ","name":"JOHNSON & JOHNSON","sector":"Healthcare","w":0.58,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"000660","name":"SK HYNIX","sector":"Technology","w":0.57,"loc":"Korea (South)","exch":"Korea Exchange (Stock Market)","cur":"USD"},{"t":"WMT","name":"WALMART","sector":"Staples","w":0.47,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"MA","name":"MASTERCARD CLASS A","sector":"Financials","w":0.47,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"ABBV","name":"ABBVIE","sector":"Healthcare","w":0.47,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"PLTR","name":"PALANTIR TECHNOLOGIES CLASS A","sector":"Technology","w":0.44,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"CSCO","name":"CISCO SYSTEMS INC","sector":"Technology","w":0.44,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"INTC","name":"INTEL CORPORATION","sector":"Technology","w":0.44,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"COST","name":"COSTCO WHOLESALE CORP","sector":"Staples","w":0.41,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"CVX","name":"CHEVRON","sector":"Energy","w":0.39,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"LRCX","name":"LAM RESEARCH","sector":"Technology","w":0.36,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"AMAT","name":"APPLIED MATERIAL INC","sector":"Technology","w":0.35,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"CAT","name":"CATERPILLAR INC","sector":"Industrials","w":0.34,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"PG","name":"PROCTER & GAMBLE","sector":"Staples","w":0.34,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"BAC","name":"BANK OF AMERICA","sector":"Financials","w":0.34,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"MRK","name":"MERCK & CO INC","sector":"Healthcare","w":0.34,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"KO","name":"COCA-COLA","sector":"Staples","w":0.34,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"UNH","name":"UNITEDHEALTH GROUP","sector":"Healthcare","w":0.33,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"700","name":"TENCENT HOLDINGS","sector":"Communications","w":0.32,"loc":"China","exch":"Hong Kong Exchanges And Clearing Ltd","cur":"USD"},{"t":"HSBA","name":"HSBC HOLDINGS PLC","sector":"Financials","w":0.32,"loc":"United Kingdom","exch":"London Stock Exchange","cur":"USD"},{"t":"PANW","name":"PALO ALTO NETWORKS","sector":"Technology","w":0.31,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"GE","name":"GE AEROSPACE","sector":"Industrials","w":0.31,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"PM","name":"PHILIP MORRIS INTERNATIONAL","sector":"Staples","w":0.3,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"SHEL","name":"SHELL","sector":"Energy","w":0.29,"loc":"United Kingdom","exch":"London Stock Exchange","cur":"USD"},{"t":"ROP","name":"ROCHE PS PAR AG","sector":"Healthcare","w":0.29,"loc":"Switzerland","exch":"SIX Swiss Exchange","cur":"USD"},{"t":"NFLX","name":"NETFLIX","sector":"Communications","w":0.28,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"HD","name":"HOME DEPOT","sector":"Discretionary","w":0.28,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"RY","name":"ROYAL BANK OF CANADA","sector":"Financials","w":0.26,"loc":"Canada","exch":"Toronto Stock Exchange","cur":"USD"},{"t":"GEV","name":"GE VERNOVA","sector":"Industrials","w":0.26,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"GS","name":"GOLDMAN SACHS GROUP","sector":"Financials","w":0.25,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"NOVN","name":"NOVARTIS AG","sector":"Healthcare","w":0.25,"loc":"Switzerland","exch":"SIX Swiss Exchange","cur":"USD"},{"t":"TXN","name":"TEXAS INSTRUMENT INC","sector":"Technology","w":0.25,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"CRWD","name":"CROWDSTRIKE HOLDINGS CLASS A","sector":"Technology","w":0.25,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"ORCL","name":"ORACLE","sector":"Technology","w":0.24,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"TMO","name":"THERMO FISHER SCIENTIFIC INC","sector":"Healthcare","w":0.24,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"RTX","name":"RTX","sector":"Industrials","w":0.24,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"WFC","name":"WELLS FARGO","sector":"Financials","w":0.24,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"KLAC","name":"KLA","sector":"Technology","w":0.23,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"8306","name":"MITSUBISHI UFJ FINANCIAL GROUP","sector":"Financials","w":0.23,"loc":"Japan","exch":"Tokyo Stock Exchange","cur":"USD"},{"t":"NESN","name":"NESTLE SA","sector":"Staples","w":0.23,"loc":"Switzerland","exch":"SIX Swiss Exchange","cur":"USD"},{"t":"AZN","name":"ASTRAZENECA PLC","sector":"Healthcare","w":0.23,"loc":"United Kingdom","exch":"London Stock Exchange","cur":"USD"},{"t":"MRVL","name":"MARVELL TECHNOLOGY","sector":"Technology","w":0.22,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"9988","name":"ALIBABA GROUP HOLDING","sector":"Discretionary","w":0.22,"loc":"China","exch":"Hong Kong Exchanges And Clearing Ltd","cur":"USD"},{"t":"LIN","name":"LINDE PLC","sector":"Materials","w":0.22,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"SAP","name":"SAP","sector":"Technology","w":0.22,"loc":"Germany","exch":"Xetra","cur":"USD"},{"t":"SIE","name":"SIEMENS N AG","sector":"Industrials","w":0.21,"loc":"Germany","exch":"Xetra","cur":"USD"},{"t":"AMGN","name":"AMGEN INC","sector":"Healthcare","w":0.21,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"MS","name":"MORGAN STANLEY","sector":"Financials","w":0.21,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"ANET","name":"ARISTA NETWORKS","sector":"Technology","w":0.21,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"SNDK","name":"SANDISK","sector":"Technology","w":0.21,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"BHP","name":"BHP GROUP LTD","sector":"Materials","w":0.21,"loc":"Australia","exch":"Asx - All Markets","cur":"USD"},{"t":"IBM","name":"INTERNATIONAL BUSINESS MACHINES","sector":"Technology","w":0.21,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"SHOP","name":"SHOPIFY SUBORDINATE VOTING CLASS A","sector":"Technology","w":0.21,"loc":"Canada","exch":"Toronto Stock Exchange","cur":"USD"},{"t":"C","name":"CITIGROUP","sector":"Financials","w":0.2,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"APH","name":"AMPHENOL CORP CLASS A","sector":"Technology","w":0.2,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"2454","name":"MEDIATEK","sector":"Technology","w":0.2,"loc":"Taiwan","exch":"Taiwan Stock Exchange","cur":"USD"},{"t":"ADI","name":"ANALOG DEVICES","sector":"Technology","w":0.19,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"SAN","name":"BANCO SANTANDER","sector":"Financials","w":0.19,"loc":"Spain","exch":"Bolsa De Madrid","cur":"USD"},{"t":"TD","name":"TORONTO DOMINION","sector":"Financials","w":0.19,"loc":"Canada","exch":"Toronto Stock Exchange","cur":"USD"},{"t":"CRM","name":"SALESFORCE","sector":"Technology","w":0.18,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"DIS","name":"WALT DISNEY","sector":"Communications","w":0.18,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"6857","name":"ADVANTEST","sector":"Technology","w":0.18,"loc":"Japan","exch":"Tokyo Stock Exchange","cur":"USD"},{"t":"QCOM","name":"QUALCOMM","sector":"Technology","w":0.18,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"GILD","name":"GILEAD SCIENCES","sector":"Healthcare","w":0.18,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"VZ","name":"VERIZON COMMUNICATIONS INC","sector":"Communications","w":0.17,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"CBA","name":"COMMONWEALTH BANK OF AUSTRALIA","sector":"Financials","w":0.17,"loc":"Australia","exch":"Asx - All Markets","cur":"USD"},{"t":"ALV","name":"ALLIANZ","sector":"Financials","w":0.17,"loc":"Germany","exch":"Xetra","cur":"USD"},{"t":"7203","name":"TOYOTA MOTOR","sector":"Discretionary","w":0.17,"loc":"Japan","exch":"Tokyo Stock Exchange","cur":"USD"},{"t":"ABT","name":"ABBOTT LABORATORIES","sector":"Healthcare","w":0.17,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"TTE","name":"TOTALENERGIES","sector":"Energy","w":0.17,"loc":"France","exch":"Nyse Euronext - Euronext Paris","cur":"USD"},{"t":"PEP","name":"PEPSICO","sector":"Staples","w":0.17,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"DELL","name":"DELL TECHNOLOGIES INC CLASS C","sector":"Technology","w":0.17,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"COP","name":"CONOCOPHILLIPS","sector":"Energy","w":0.16,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"MCD","name":"MCDONALDS CORP","sector":"Discretionary","w":0.16,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"UNP","name":"UNION PACIFIC","sector":"Industrials","w":0.16,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"ETN","name":"EATON PLC","sector":"Industrials","w":0.16,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"STX","name":"SEAGATE TECHNOLOGY HOLDINGS PLC","sector":"Technology","w":0.16,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"NEE","name":"NEXTERA ENERGY","sector":"Utilities","w":0.16,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"AXP","name":"AMERICAN EXPRESS","sector":"Financials","w":0.16,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"8035","name":"TOKYO ELECTRON","sector":"Technology","w":0.16,"loc":"Japan","exch":"Tokyo Stock Exchange","cur":"USD"},{"t":"WELL","name":"WELLTOWER","sector":"Real Estate","w":0.16,"loc":"United States","exch":"NYSE","cur":"USD"}],"sectors":{"Technology":32.66,"Discretionary":8.33,"Communications":7.91,"Healthcare":8.33,"Financials":15.82,"Energy":4.16,"Staples":4.61,"Industrials":10.09,"Materials":3.42,"Utilities":2.19,"Real Estate":1.39}};
@@ -8268,17 +8298,19 @@
         const rowByBase = {}; (allDataRoW || []).forEach(d => (rowByBase[pfBaseSym(d.ticker)] = rowByBase[pfBaseSym(d.ticker)] || []).push(d));
         const pool = allData.concat(allDataRoW || []).map(d => ({ d, k: _acwiNN(d.name || ''), c: _acwiCN(d.country) })).filter(x => x.k.length >= 4);
         const byName = r => {   // fallback: same company, name spelled differently (ACWI names can be cut at 22 chars)
-            const a = _acwiNN(r.name); if (a.length < 4) return null;
-            let c = pool.filter(x => x.k === a || (a.length >= 8 && x.k.startsWith(a)) || x.k.startsWith(a + ' ') || (x.k.length >= 8 && a.startsWith(x.k)) || a.startsWith(x.k + ' '));
+            const a = _acwiNN(r.name); if (a.length < 3) return null;
+            let c = pool.filter(x => x.k === a || (((a.length >= 8 && x.k.startsWith(a)) || (a.length >= 4 && x.k.startsWith(a + ' ')) || (x.k.length >= 8 && a.startsWith(x.k))) && (!x.c || !r.loc || x.c === _acwiCN(r.loc))));
             if (c.length > 1) { const same = c.filter(x => x.c === _acwiCN(r.loc)); if (same.length) c = same; }
             if (c.length > 1) { const ex = c.filter(x => x.k === a); if (ex.length) c = ex; }
-            const u = [...new Set(c.map(x => x.d))];
-            return u.length === 1 ? u[0] : null;
+            let u = [...new Set(c.map(x => x.d))];
+            if (u.length > 1) { const g = u.filter(d => d.group); if (g.length) u = g; }
+            if (u.length > 1 && new Set(u.map(d => d.group || '')).size === 1) u.sort((p, q) => (parseFloat(q.mktcap) || 0) - (parseFloat(p.mktcap) || 0));
+            return u.length === 1 || (u.length > 1 && new Set(u.map(d => d.group || '')).size === 1) ? u[0] : null;
         };
         _acwiMatch = (_acwi || ACWI_SNAP).rows.map(r => {
             const t = r.t.toUpperCase().replace(/\s+/g, '');
             let d = null;
-            if (/united states/i.test(r.loc || '') || /nasdaq|nyse|cboe|bats/i.test(r.exch)) {
+            if (/united states/i.test(r.loc || '') || /^(nasdaq(?! omx)|nyse(?! euronext)|cboe|bats)/i.test(r.exch || '')) {
                 d = us.get(t) || us.get(t.replace(/([A-Z]+)([AB])$/, '$1-$2')) || us.get(t.replace(/([A-Z]+)([AB])$/, '$1.$2')) || us.get(t.replace(/\./g, '-'));
             } else {
                 const ex = ACWI_EXCH_TV.find(([k]) => r.exch.toLowerCase().includes(k));
@@ -8327,6 +8359,12 @@
             g.mine = [...mine]; g.hw = g.mine.reduce((s, r) => s + r.w, 0);
             g.mine.forEach(r => used.add(r));
         });
+        {   // learn which Sheet group each built-in group corresponds to
+            const acc = {};
+            list.forEach(g => { const sg = bxSheetG(g); if (!sg) return; const B = bxGroupByName(g.name, g.sector); if (/^Other /.test(B)) return; const a = acc[B] || (acc[B] = { n: 0 }); a.n++; a[sg] = (a[sg] || 0) + Math.max(g.w, 0.01); });
+            _bxLearn = {};
+            Object.keys(acc).forEach(B => { if (acc[B].n < 2) return; const e = Object.entries(acc[B]).filter(x => x[0] !== 'n').sort((p, q) => q[1] - p[1]), tot = e.reduce((t, x) => t + x[1], 0); if (e[0][1] / tot >= 0.5) _bxLearn[B] = e[0][0]; });
+        }
         // holdings not in the list (outside ~92% of index): assume ACWI weight 0.1%
         const extra = pfRows.filter(r => !used.has(r)).map(r => ({ name: r.name, sector: r.sector, tk: pfShort(r.input), w: 0.1, hw: r.w, ds: [r._src], ub: [], mine: [r] }));
         return { list, extra };
@@ -8414,8 +8452,25 @@
         }
     }
 
-    // total weight (mine / ACWI) per dashboard group, so a stock's gap can be read against its whole group (XOM vs oil & gas, FTNT vs cybersecurity)
-    function pfGroupOf(g) { const m = g.mine[0]; return m ? pfRowTheme(m) : (g.ds[0] ? pfTheme(g.ds[0]) : '(n/a)'); }
+    // ── built-in group taxonomy: every ACWI stock (and every holding) is classified by company name; unmatched ones fall back to "Other <sector>" ──
+    const BX_GRP_RULES = [["Cybersecurity", "PALO ALTO|CROWDSTRIKE|FORTINET|ZSCALER|CLOUDFLARE|OKTA|CHECK POINT|CYBERARK"], ["Memory & Storage", "SK HYNIX|SAMSUNG ELECTRONICS|NANYA|WINBOND|MICRON|SANDISK|SEAGATE|WESTERN DIGITAL|KIOXIA|NETAPP|PURE STORAGE"], ["Semiconductors", "TAIWAN SEMICONDUCTOR|MEDIATEK|UNITED MICRO|ASE TECHNOLOGY|DELTA ELECTRONICS|UNIMICRON|GLOBAL UNICHIP|ASPEED|ELITE MATERIAL|SAMSUNG ELECTRO|SAMSUNG SDI|LARGAN|NVIDIA|BROADCOM|ADVANCED MICRO|ASML|LAM RESEARCH|APPLIED MATERIAL|KLA$|^KLA|TEXAS INSTRUMENT|MARVELL|ANALOG DEVICES|QUALCOMM|INTEL CORP|TOKYO ELECTRON|ADVANTEST|MICROCHIP|NXP|ON SEMI|MONOLITHIC|INFINEON|STMICRO|ASM INTERNATIONAL|TERADYNE|ASTERA|CREDO|ENTEGRIS|SKYWORKS|LASERTEC|DISCO CORP|RENESAS|TOWER SEMI|FIRST SOLAR|COHERENT|LUMENTUM|CIENA|ARISTA|CORNING|SOLAREDGE|ENPHASE|QNITY"], ["Software & Cloud", "MICROSOFT|ORACLE|SALESFORCE|SERVICENOW|ADOBE|INTUIT|PALANTIR|^SAP$|SNOWFLAKE|WORKDAY|AUTODESK|DATADOG|CADENCE|SYNOPSYS|ATLASSIAN|ROPER|MONGODB|STRATEGY INC|VEEVA|TWILIO|ZOOM|PTC|FAIR ISAAC|DASSAULT|CONSTELLATION SOFTWARE|NEBIUS|COREWEAVE|APPLOVIN|SS AND C|TYLER|VERISIGN|GARTNER|NEMETSCHEK|XERO|WISETECH|NICE"], ["IT Services & Hardware", "HON HAI|QUANTA COMPUTER|WIWYNN|ACCTON|ASUSTEK|WISTRON|LITE ON|YAGEO|LENOVO|XIAOMI|INFOSYS|TATA CONSULTANCY|CHROMA|JENTECH|KING SLIDE|ASIA VITAL|IBIDEN|TELEDYNE|INTERNATIONAL BUSINESS|ACCENTURE|COGNIZANT|CAPGEMINI|APPLE|CISCO|DELL TECH|HP INC|HEWLETT|SUPER MICRO|AMPHENOL|TE CONNECTIVITY|KEYSIGHT|MOTOROLA|JABIL|FLEX LTD|CDW|F5|LOGITECH|FUJITSU|^NEC$|CANON|KEYENCE|MURATA|TDK|KYOCERA|FUJIFILM|HEXAGON|ERICSSON|NOKIA|GARMIN|TRIMBLE|TELEDYNE|ZEBRA|SONY|NINTENDO"], ["Mega-cap Internet", "TENCENT|BAIDU|NETEASE|ALPHABET|META PLATFORMS|NETFLIX|SPOTIFY|ROBLOX|REDDIT|TAKE TWO|LIVE NATION|SPACE EXPLORATION|UNIVERSAL MUSIC|WALT DISNEY|COMCAST|WARNER|PARAMOUNT|PUBLICIS|OMNICOM|LIBERTY MEDIA|NINTENDO|SOFTBANK GROUP|NAVER|SEA ADS"], ["Online Commerce & Travel", "ALIBABA|MEITUAN|JD.COM|PDD|TRIP.COM|AMAZON|SHOPIFY|MERCADO|EBAY|DOORDASH|BOOKING|AIRBNB|EXPEDIA|UBER|CARVANA|ETERNAL|PROSUS|NASPERS|ADYEN|DELIVERY|ZALANDO|COUPANG"], ["Luxury", "LVMH|^HERMES|RICHEMONT|COMPAGNIE FINANCIERE R|KERING|FERRARI|MONCLER|PRADA|BURBERRY|SWATCH"], ["Autos & Mobility", "BYD|KIA CORP|MAHINDRA|TESLA|TOYOTA MOTOR|FORD MOTOR|GENERAL MOTORS|MERCEDES|BMW|VOLKSWAGEN|HONDA MOTOR|SUZUKI|STELLANTIS|MICHELIN|BRIDGESTONE|DENSO|MAGNA|PORSCHE|DAIMLER TRUCK|VOLVO|PACCAR|AUTOZONE|OREILLY|GENUINE PARTS|APTIV|HYUNDAI"], ["Banks", "CANADIAN IMPERIAL|SKANDINAVISKA|CHINA CONSTRUCTION|INDUSTRIAL AND COMMERC|BANK OF CHINA|AGRICULTURAL BANK|CHINA MERCHANTS BANK|HDFC|ICICI|AXIS BANK|KOTAK|STATE BANK OF INDIA|BAJAJ FIN|SHRIRAM|AL RAJHI|SAUDI NATIONAL|FIRST ABU DHABI|EMIRATES NBD|QATAR NATIONAL|ITAU|BRADESCO|BTG|B3 BRASIL|BANK CENTRAL ASIA|BANORTE|CREDICORP|STANDARD BANK|FIRSTRAND|CAPITEC|KUWAIT|OTP|POWSZECHNA|CIBEST|FUBON|CTBC|CATHAY|YUANTA|MEGA FINANCIAL|E.SUN|KGI|SINOPAC|FIRST FINANCIAL|TS FINANCIAL|PING AN|JPMORGAN|BANK OF AMERICA|WELLS FARGO|CITIGROUP|HSBC|ROYAL BANK|TORONTO DOMINION|MITSUBISHI UFJ|SUMITOMO MITSUI|MIZUHO|UBS GROUP|BANCO|BANK OF|BANQUE|BNP|SANTANDER|BBVA|UNICREDIT|INTESA|ING GROEP|COMMONWEALTH BANK|NATIONAL AUSTRALIA|WESTPAC|ANZ GROUP|BARCLAYS|LLOYDS|NATWEST|STANDARD CHARTERED|DEUTSCHE BANK|COMMERZBANK|SOCIETE GENERALE|CREDIT AGRICOLE|DBS|OVERSEA-CHINESE|UNITED OVERSEAS|NORDEA|DANSKE|SEB|SWEDBANK|HANDELSBANKEN|DNB|KBC|ERSTE|ABN AMRO|CAIXABANK|SABADELL|BPER|MONTE DEI|PNC|US BANCORP|TRUIST|FIFTH THIRD|CAPITAL ONE|CITIZENS FIN|M&T|HUNTINGTON|REGIONS|KEYCORP|FIRST CITIZENS|NATIONAL BANK|SMBC|RESONA|JAPAN POST BANK|SUMITOMO MITSUI TRUST|AIB|JULIUS BAER|BOC HONG|HANG SENG|LEUMI|HAPOALIM|MEDIOBANCA|FINECOBANK|SHINHAN|KB FINANCIAL|HANA FIN|ORIX"], ["Capital Markets & Exchanges", "GOLDMAN|MORGAN STANLEY|CHARLES SCHWAB|BLACKROCK|BLACKSTONE|KKR|APOLLO|ARES|BROOKFIELD|CME GROUP|INTERCONTINENTAL EXCH|LONDON STOCK|DEUTSCHE BOERSE|NASDAQ INC|CBOE|S&P GLOBAL|MOODYS|MSCI|STATE STREET|BANK OF NEW YORK|NORTHERN TRUST|T ROWE|AMERIPRISE|RAYMOND JAMES|LPL|INTERACTIVE BROKERS|ROBINHOOD|COINBASE|PARTNERS GROUP|3I GROUP|NOMURA|MACQUARIE|HONG KONG EXCHANGES|EQT|INVESTOR CLASS|FRANKLIN|VERISK|EQUIFAX|MARSH|AON|ARTHUR J|WILLIS|BROWN & BROWN"], ["Payments & Fintech", "VISA|MASTERCARD|PAYPAL|BLOCK CLASS|FISERV|FIDELITY NATIONAL INFO|GLOBAL PAYMENTS|AMERICAN EXPRESS|SYNCHRONY|AFFIRM|SOFI|NU HOLDINGS|CORPAY|BROADRIDGE|PAYCHEX|AUTOMATIC DATA"], ["Insurance", "AIA GROUP|CHINA LIFE|BERKSHIRE|CHUBB|PROGRESSIVE|TRAVELERS|ALLSTATE|AMERICAN INTERNATIONAL|METLIFE|AFLAC|PRUDENTIAL|ALLIANZ|MUENCHENER|ZURICH INSURANCE|AXA|SWISS RE|SWISS LIFE|GENERALI|AVIVA|LEGAL AND GENERAL|TOKIO MARINE|SOMPO|MS&AD|DAIICHI LIFE|NN GROUP|HANNOVER|SAMPO|POSTE ITALIANE|QBE|SUN LIFE|MANULIFE|GREAT WEST|INTACT|FAIRFAX|POWER CORP|HARTFORD|ARCH CAPITAL|CINCINNATI|MARKEL|LOEWS|PRINCIPAL|WR BERKLEY|HELVETIA|ASSICURAZIONI|JAPAN POST HOLDINGS"], ["Pharma & Biotech", "WUXI|CELLTRION|ELI LILLY|JOHNSON & JOHNSON|ABBVIE|MERCK|NOVARTIS|ASTRAZENECA|ROCHE|PFIZER|AMGEN|GILEAD|BRISTOL|NOVO NORDISK|SANOFI|GLAXO|VERTEX|REGENERON|TAKEDA|DAIICHI SANKYO|ASTELLAS|CHUGAI|OTSUKA|ZOETIS|BIOGEN|ILLUMINA|ALNYLAM|NATERA|ARGENX|GENMAB|UCB|CSL|BAYER|SANDOZ|HALEON|TEVA|INCYTE|REVOLUTION MED|INSMED|ROIVANT|ROYALTY PHARMA|UNITED THERAPEUTICS|KENVUE|GALDERMA|INNOVENT|BEONE|SUN PHARMA|IPSEN|ALCON"], ["MedTech & Life Sciences", "THERMO FISHER|ABBOTT|DANAHER|INTUITIVE SURGICAL|STRYKER|BOSTON SCIENTIFIC|MEDTRONIC|BECTON|EDWARDS|IQVIA|AGILENT|WATERS|METTLER|IDEXX|DEXCOM|RESMED|STERIS|ZIMMER|WEST PHARMA|GE HEALTHCARE|LONZA|SIEMENS HEALTH|PHILIPS|COLOPLAST|SONOVA|TERUMO|HOYA|FISHER AND PAYKEL|ESSILOR|SMITH & NEPHEW|ALCON|QUEST DIAG|LABCORP|FRESENIUS|STRAUMANN|BIOMERIEUX"], ["Managed Care & Health Services", "UNITEDHEALTH|ELEVANCE|CIGNA|HUMANA|CENTENE|CVS|HCA|MCKESSON|CENCORA|CARDINAL"], ["Oil & Gas", "RELIANCE INDUSTRIES|CHINA SHENHUA|PETROBRAS|EXXON|CHEVRON|SHELL|TOTALENERGIES|CONOCOPHILLIPS|^BP PLC|EOG|^ENI$|EQUINOR|OCCIDENTAL|SLB|HALLIBURTON|BAKER HUGHES|SCHLUMBERGER|MARATHON PETROLEUM|VALERO|PHILLIPS 66|CANADIAN NATURAL|SUNCOR|CENOVUS|IMPERIAL OIL|WOODSIDE|SANTOS|INPEX|ENEOS|REPSOL|ORLEN|DEVON|DIAMONDBACK|EXPAND ENERGY|EQT|TEXAS PACIFIC|TOURMALINE|WHITECAP|TECHNIPFMC|CAMECO|PETROCHINA|SHENHUA|ARAMCO|SAUDI ARABIAN OIL|PETROLEO|ENBRIDGE|KINDER MORGAN|WILLIAMS|ONEOK|TARGA|CHENIERE|TC ENERGY|PEMBINA"], ["Aerospace & Defense", "GE AEROSPACE|RTX|BOEING|LOCKHEED|NORTHROP|GENERAL DYNAMICS|SAFRAN|AIRBUS|ROLLS-ROYCE|BAE SYSTEMS|RHEINMETALL|HOWMET|TRANSDIGM|L3HARRIS|LEONARDO|THALES|MTU AERO|SAAB|ROCKET LAB|HEICO|ELBIT|HONEYWELL AEROSPACE|AXON|CURTISS|BOMBARDIER|HANWHA AERO|KONGSBERG|FTAI|HITACHI ZOSEN|MITSUBISHI HEAVY|IHI"], ["Electrification & Electrical Equip.", "LARSEN AND TOUBRO|WEG|DOOSAN|EATON|GE VERNOVA|SCHNEIDER|ABB LTD|SIEMENS ENERGY|PARKER|EMERSON|VERTIV|QUANTA SERVICES|ROCKWELL|HUBBELL|NVENT|LEGRAND|PRYSMIAN|BLOOM ENERGY|JOHNSON CONTROLS|TRANE|CARRIER|COMFORT SYSTEMS|EMCOR|AMETEK|VESTAS|FURUKAWA|FUJIKURA|MITSUBISHI ELECTRIC|DAIKIN|OTIS|SUMITOMO ELECTRIC|NEXANS|SIEMENS N|SIEMENS$|HITACHI|XYLEM|AMERICAN ELECTRIC|SPIRAX|SCHINDLER|KONE|OTIS|FANUC|SMC|ABB"], ["Industrial Machinery & Distribution", "CATERPILLAR|DEERE|KOMATSU|ILLINOIS TOOL|CUMMINS|DOVER|INGERSOLL|IDEX|ALFA LAVAL|ATLAS COPCO|SANDVIK|EPIROC|ASSA ABLOY|GEBERIT|VAT GROUP|WARTSILA|NORDSON|SNAP ON|FORTIVE|VERALTO|GRAINGER|FASTENAL|UNITED RENTALS|SUNBELT|FERGUSON|WESCO|MITSUI|MITSUBISHI$|MARUBENI|ITOCHU|SUMITOMO$|TOYOTA TSUSHO|3M|HONEYWELL|JACOBS|SGS|ATI$|CARPENTER|SSAB|WABTEC|WESTINGHOUSE|ROLLS|AMRIZE|FERROVIAL|ACS ACT|VINCI|SAINT GOB|CRH|HEIDELBERG|HOLCIM|VULCAN|MARTIN MARIETTA|SIKA|SMURFIT"], ["Transport & Logistics", "UNION PACIFIC|CSX|NORFOLK|CANADIAN PACIFIC|CANADIAN NATIONAL|UNITED PARCEL|FEDEX|DHL|DSV|J B HUNT|JB HUNT|OLD DOMINION|XPO|EXPEDITORS|ROBINSON|NIPPON YUSEN|MITSUI OSK|EAST JAPAN|CENTRAL JAPAN|AERCAP|RYANAIR|AENA|TRANSURBAN|BRAMBLES|DELTA AIR|UNITED AIRLINES|RB GLOBAL|COPART|CINTAS|WASTE MANAGEMENT|REPUBLIC SERVICES|WASTE CONNECTIONS|SECOM|RECRUIT|ADP|EXPERIAN|RELX|WOLTERS|THOMSON|TELEPERFORMANCE|COMPASS GROUP"], ["Food, Beverage & Household", "LOREAL|FOMENTO|AMBEV|COCA|PEPSICO|NESTLE|UNILEVER|PROCTER|COLGATE|MONDELEZ|DIAGEO|ANHEUSER|HEINEKEN|DANONE|KIMBERLY|GENERAL MILLS|HERSHEY|KRAFT|ARCHER|MONSTER|KEURIG|CONSTELLATION BRANDS|CHURCH AND DWIGHT|RECKITT|HENKEL|KERRY|AJINOMOTO|KAO|COCA COLA EUROPACIFIC|FEMSA|AMBEV|CARLSBERG|PERNOD|REMY|ESTEE|KENVUE|BUNGE|TYSON|CHR HANSEN|NESTLE|LINDT|BARRY|GIVAUDAN|DSM|NOVOZYMES|IFF|INTERNATIONAL FLAVORS|HORMEL|MCCORMICK|CAMPBELL|CONAGRA|J M SMUCKER|LAMB WESTON|KELLANOVA"], ["Tobacco", "BRITISH AMERICAN TOBAC|PHILIP MORRIS|ALTRIA|BRITISH AMERICAN TOBACCO|IMPERIAL BRANDS|JAPAN TOBACCO"], ["Food & Staples Retail", "WALMART|COSTCO|TARGET|KROGER|SYSCO|DOLLAR GENERAL|DOLLAR TREE|TESCO|LOBLAW|ALIMENTATION|AHOLD|COLES|WOOLWORTHS|SEVEN & I|AEON|CASEY|CARREFOUR|JERONIMO|ICA GRUPPEN|WESFARMERS"], ["Retail & Consumer Disc.", "TITAN COMPANY|HOME DEPOT|LOWES|TJX|ROSS STORES|MCDONALD|STARBUCKS|NIKE|CHIPOTLE|YUM|DARDEN|MARRIOTT|HILTON|ROYAL CARIBBEAN|CARNIVAL|INTERCONTINENTAL HOTEL|ACCOR|FAST RETAILING|INDITEX|INDUSTRIA DE DISENO|ADIDAS|LULULEMON|TAPESTRY|ULTA|BEST BUY|TRACTOR SUPPLY|WILLIAMS SONOMA|BURLINGTON|D R HORTON|PULTEGROUP|LENNAR|NEXT PLC|KERING|PANASONIC|SEKISUI|DAIWA HOUSE|ORIENTAL LAND|BANDAI|ASICS|RESTAURANTS BRANDS|AMADEUS|ARISTOCRAT|FLUTTER|ENTAIN|MONCLER|ZALANDO|GRAND CANYON|DOLLARAMA|MAGNA"], ["Telecom", "BHARTI|CHUNGHWA|MTN GROUP|SAUDI TELECOM|AMERICA MOVIL|VERIZON|AT&T|T MOBILE|DEUTSCHE TELEKOM|VODAFONE|ORANGE|TELEFONICA|SWISSCOM|KPN|BT GROUP|SINGAPORE TELECOM|KDDI|NTT|SOFTBANK$|TELSTRA|TELIA|TELENOR|ROGERS|BCE|TELUS|CELLNEX|CROWN CASTLE|AMERICAN TOWER|SBA COMM|EMIRATES TEL"], ["Utilities", "AXIA|NEXTERA|SOUTHERN|DUKE ENERGY|IBERDROLA|ENEL|NATIONAL GRID|CONSTELLATION ENERGY|VISTRA|DOMINION|SEMPRA|ENTERGY|XCEL|EXELON|CONSOLIDATED EDISON|PUBLIC SERVICE ENT|PG&E|EDISON INTER|WEC ENERGY|AMEREN|DTE ENERGY|ENGIE|E.ON|RWE|SSE|VEOLIA|TERNA|EDP|FORTIS|FIRSTENERGY|PPL CORP|EVERSOURCE|ATMOS|CMS|CENTERPOINT|NRG|EVERGY|ALLIANT|NISOURCE|AMERICAN WATER|CLP|HONG KONG|ORSTED|ENDESA|REDEIA|SNAM|NATIONAL GRID|KANSAI|TOKYO ELECTRIC|AXIA ENERGIA"], ["Mining & Metals", "CIA VALE|VALE|ZIJIN|GOLD FIELDS|GRUPO MEXICO|BHP|RIO TINTO|FREEPORT|NEWMONT|GLENCORE|ANGLO|BARRICK|AGNICO|WHEATON|FRANCO|KINROSS|GOLD FIELDS|ANGLOGOLD|NORTHERN STAR|EVOLUTION|FORTESCUE|SOUTH32|TECK|FIRST QUANTUM|LUNDIN|ANTOFAGASTA|NUCOR|STEEL DYNAMICS|RELIANCE STEEL|ARCELOR|NIPPON STEEL|PAN AMERICAN|COEUR|SOUTHERN COPPER|ZIJIN|VALTERRA|SAUDI ARABIAN MINING|GMEXICO|NUTRIEN|CF INDUSTRIES|MOSAIC"], ["Chemicals & Materials", "LINDE|AIR LIQUIDE|LAIR LIQUIDE|AIR PRODUCTS|SHERWIN|ECOLAB|PPG|DUPONT|DOW|BASF|SHIN ETSU|RESONAC|AMCOR|BALL CORP|INTERNATIONAL PAPER|PACKAGING CORP|NIPPON PAINT|SYMRISE|AKZO|COVESTRO|EVONIK|NAN YA"], ["Real Estate", "REIT|PROLOGIS|EQUINIX|DIGITAL REALTY|WELLTOWER|PUBLIC STORAGE|REALTY INCOME|VENTAS|CBRE|VICI|EXTRA SPACE|IRON MOUNTAIN|INVITATION|ESSEX|GOODMAN|MITSUI FUDOSAN|MITSUBISHI ESTATE|SUN HUNG KAI|SIMON PROPERTY|VMRK|VIVMARK|CK ASSET|UNIBAIL|SEGRO|LINK REIT|SCENTRE|VONOVIA"]];
+    const BX_GRP_FALLBACK = { Technology: 'Other Tech', Financials: 'Other Financials', Industrials: 'Other Industrials', Healthcare: 'Other Healthcare', Discretionary: 'Other Discretionary', Communications: 'Other Communications', Staples: 'Other Staples', Energy: 'Oil & Gas', Materials: 'Chemicals & Materials', Utilities: 'Utilities', 'Real Estate': 'Real Estate' };
+    const _bxGrpRx = BX_GRP_RULES.map(([g, p]) => [g, new RegExp(p, 'i')]), _bxGrpCache = {};
+    function bxGroupByName(name, sector) {
+        const k = name + '|' + sector; if (k in _bxGrpCache) return _bxGrpCache[k];
+        let g = null; for (const [n, rx] of _bxGrpRx) if (rx.test(name || '')) { g = n; break; }
+        return _bxGrpCache[k] = g || BX_GRP_FALLBACK[sector] || '(n/a)';
+    }
+    let bxGroupMode = 'hybrid';
+        // total weight (mine / ACWI) per group, so a stock's gap can be read against its whole group (XOM vs oil & gas, FTNT vs cybersecurity)
+    let _bxLearn = {};   // built-in group -> the dominant group name used in my Google Sheet for the same stocks (so ACWI names missing from the Sheet get MY group names)
+    const bxMapped = B => _bxLearn[B] || B;
+    function bxSheetG(g) { const m = g.mine[0]; const t = m ? pfRowTheme(m) : (g.ds[0] ? pfTheme(g.ds[0]) : null); return t && t !== '(n/a)' && !/^RoW ·/.test(t) ? t : null; }
+    function pfGroupOf(g) {
+        if (bxGroupMode === 'built') return bxGroupByName(g.name, g.sector);
+        if (bxGroupMode === 'sheet') { const m = g.mine[0]; return m ? pfRowTheme(m) : (g.ds[0] ? pfTheme(g.ds[0]) : '(n/a)'); }
+        return bxSheetG(g) || bxMapped(bxGroupByName(g.name, g.sector));
+    }
     function pfGroupTotals(C) {
         const agg = {};
         C.list.concat(C.extra).forEach(g => { const G = pfGroupOf(g); const a = agg[G] || (agg[G] = { p: 0, b: 0 }); a.p += g.hw; a.b += g.w; });
@@ -8424,7 +8479,7 @@
     // peers = other stocks of the same dashboard group (cap-weighted, cap >= selector, else equal-weighted)
     function pfPeerFn() {
         const gm = {};
-        allData.concat(allDataRoW || []).forEach(d => { const t = pfTheme(d); if (t !== '(n/a)') (gm[t] = gm[t] || []).push(d); });
+        allData.concat(allDataRoW || []).forEach(d => { const t = bxGroupMode === 'sheet' ? pfTheme(d) : bxGroupMode === 'built' ? bxGroupByName(d.name || d.ticker, d.sector) : (d.group ? d.group : bxMapped(bxGroupByName(d.name || d.ticker, d.sector))); if (t !== '(n/a)') (gm[t] = gm[t] || []).push(d); });
         const minCap = +(document.getElementById('bmCap') || {}).value || 0, cache = {};
         return (G, n, self) => {
             const key = G + '|' + n + '|' + (self ? self.ticker : '');
@@ -8436,20 +8491,22 @@
             return cache[key] = c >= 2 ? sr / sw : null;
         };
     }
-    // relative strength flag (same rule as the dashboard's weakness screen): green = RS IBD >= 70, red = relative weakness (IBD < 50, or 4W and 6M percentiles both < 50)
-    function bxRS(d) {
-        if (!d || d.rs_ibd == null) return '';
-        if (d.rs_ibd < 50 || (d.pct_4w != null && d.pct_6m != null && d.pct_4w < 50 && d.pct_6m < 50)) return 'rsd';
-        return d.rs_ibd >= 70 ? 'rsu' : '';
-    }
+    // relative strength flag, on the 6M percentile: green = strong (>= 70), red = weak (< 50), otherwise neutral
+    function bxRS(d) { const p = d && d.pct_6m; if (p == null || !isFinite(p)) return ''; return p >= 70 ? 'rsu' : p < 50 ? 'rsd' : ''; }
     const bxDp = v => v == null || !isFinite(v) ? '—' : (v > 0.04 ? '+' : v < -0.04 ? '−' : '') + Math.abs(v).toFixed(1);
-    let bxGSel = null;
-    function bxPickGroup(k) { bxGSel = k; try { pfRenderBenchGroups(); } catch (e) { console.error(e); } }
+    const bxGSelMap = { '': null, '2': null };
+    function bxPickGroup(k, sfx) { bxGSelMap[sfx || ''] = k; try { pfRenderBenchGroups(); } catch (e) { console.error(e); } }
+    // two versions side by side: (1) my Sheet groups + built-in for ACWI names missing from the Sheet, (2) built-in classification only
     function pfRenderBenchGroups() {
+        const prev = bxGroupMode;
+        try { bxGroupMode = 'hybrid'; bxRenderGroupsFor(''); bxGroupMode = 'built'; bxRenderGroupsFor('2'); }
+        finally { bxGroupMode = prev; }
+    }
+    function bxRenderGroupsFor(sfx) {
         const C = pfAcwiCompanies(1e6), PF = pfPeerFn();
         const items = C.list.concat(C.extra).map(g => {
             const m = g.mine[0];
-            const G = m ? pfRowTheme(m) : (g.ds[0] ? pfTheme(g.ds[0]) : '(n/a)');
+            const G = pfGroupOf(g);
             const self = m ? m._src : g.ds[0];
             const v = n => { if (!m) return null; const r = pfPeriodRet(self.ticker, n), pr = PF(G, n, self); return r == null || pr == null ? null : r - pr; };
             return { g, G, m, v1: v(21), v3: v(63) };
@@ -8462,28 +8519,29 @@
         const rows = Object.values(agg).map(a => ({ ...a, gap: a.p - a.b, v1: a.w1 ? a.s1 / a.w1 : null, v3: a.w3 ? a.s3 / a.w3 : null }))
             .sort((a, b) => Math.abs(b.gap) - Math.abs(a.gap)).slice(0, 15);
         if (!rows.length) return;
-        if (!bxGSel || !rows.some(x => x.G === bxGSel)) bxGSel = rows[0].G;
+        let bxGSel = bxGSelMap[sfx]; if (!bxGSel || !rows.some(x => x.G === bxGSel)) bxGSel = bxGSelMap[sfx] = rows[0].G;
         const gp = v => (v > 0.004 ? '+' : v < -0.004 ? '−' : '') + Math.abs(v).toFixed(2);
         const mainOf = x => {   // up to 3 main stocks: mine by weight, else the biggest ACWI names of the group
             const mine = x.it.filter(i => i.g.hw > 0).sort((p, q) => q.g.hw - p.g.hw);
             if (mine.length) return mine.slice(0, 3).map(i => pfShort(i.m.input)).join(' · ');
-            return '<span class="dim">' + x.it.slice().sort((p, q) => q.g.w - p.g.w).slice(0, 3).map(i => i.g.tk).join(' · ') + '</span>';
+            return x.it.slice().sort((p, q) => q.g.w - p.g.w).slice(0, 3).map(i => i.g.tk).join(' · ') + ' <i>(not owned)</i>';
         };
-        pfBenchTable('bxGroup', rows.map(x => `<tr class="${x.G === bxGSel ? 'sel' : ''}" onclick="bxPickGroup('${x.G.replace(/'/g, "\\'")}')"><td class="td-name nm">${x.G}</td><td class="td-name nm">${mainOf(x)}</td><td class="td-pct num">${x.p.toFixed(1)}%</td><td class="td-pct num dim">${x.b.toFixed(1)}%</td><td class="td-pct num">${bxDp(x.gap)}</td></tr>`).join(''));
-        const sel = rows.find(x => x.G === bxGSel);
-        const t1 = document.getElementById('bxGrpMineT'), t2 = document.getElementById('bxGrpAcwiT');
+        pfBenchTable('bxGroup' + sfx, rows.map(x => `<tr class="${x.G === bxGSel ? 'sel' : ''}" onclick="bxPickGroup('${x.G.replace(/'/g, "\\'")}','${sfx}')"><td class="td-name"><div class="gn">${x.G}</div><div class="gs">${mainOf(x)}</div></td><td class="td-pct num">${x.p.toFixed(1)}%</td><td class="td-pct num dim">${x.b.toFixed(1)}%</td><td class="td-pct num">${bxDp(x.gap)}</td></tr>`).join('')
+            + (() => { const P = rows.reduce((t, x) => t + x.p, 0), B = rows.reduce((t, x) => t + x.b, 0); return `<tr class="tot"><td class="td-name">Total ${rows.length} groups</td><td class="td-pct num">${P.toFixed(1)}%</td><td class="td-pct num">${B.toFixed(1)}%</td><td class="td-pct num">${bxDp(P - B)}</td></tr>`; })());
+                const sel = rows.find(x => x.G === bxGSel);
+        const t1 = document.getElementById('bxGrpMineT' + sfx), t2 = document.getElementById('bxGrpAcwiT' + sfx);
         const mine = sel.it.filter(x => x.g.hw > 0).sort((a, b) => b.g.hw - a.g.hw);
         const acw = sel.it.filter(x => x.g.w > 0).sort((a, b) => b.g.w - a.g.w);
         if (t1) t1.textContent = `My ${sel.G} stocks · ${mine.length}`;
         if (t2) t2.textContent = `ACWI ${sel.G} stocks · ${acw.length} names counted`;
         const sumHw = mine.reduce((t, x) => t + x.g.hw, 0), sumBw = mine.reduce((t, x) => t + x.g.w, 0);
-        pfBenchTable('bxGrpMine', mine.map(x => `<tr><td class="td-ticker tk" onclick="openNews('${x.m._src.ticker}')">${pfShort(x.m.input)}</td><td class="td-name nm">${pfShortName(x.m.name || x.m.input)}</td><td class="td-pct num">${x.g.hw.toFixed(1)}%</td><td class="td-pct num dim">${x.g.w.toFixed(2)}%</td><td class="td-pct num">${gp(x.g.hw - x.g.w)}</td><td class="td-pct num">${bxDp(x.v1)}</td><td class="td-pct num">${bxDp(x.v3)}</td></tr>`).join('')
+        pfBenchTable('bxGrpMine' + sfx, mine.map(x => `<tr class="${bxRS(x.m._src)}"><td class="td-ticker tk" onclick="openNews('${x.m._src.ticker}')">${pfShort(x.m.input)}</td><td class="td-name nm">${pfShortName(x.m.name || x.m.input)}</td><td class="td-pct num">${x.g.hw.toFixed(1)}%</td><td class="td-pct num dim">${x.g.w.toFixed(2)}%</td><td class="td-pct num">${gp(x.g.hw - x.g.w)}</td><td class="td-pct num">${bxDp(x.v1)}</td><td class="td-pct num">${bxDp(x.v3)}</td></tr>`).join('')
             + (mine.length ? `<tr class="tot"><td></td><td class="td-name">Total</td><td class="td-pct num">${sumHw.toFixed(1)}%</td><td class="td-pct num">${sumBw.toFixed(2)}%</td><td class="td-pct num">${gp(sumHw - sumBw)}</td><td></td><td></td></tr>` : '<tr><td colspan="7" class="dim">None</td></tr>'));
         // ACWI side: every name counted in the group weight (top 12 + "others" so the total always adds up)
         const show = acw.slice(0, 12), rest = acw.slice(12);
         const restW = rest.reduce((t, x) => t + x.g.w, 0), restH = rest.reduce((t, x) => t + x.g.hw, 0);
-        const aRow = x => `<tr><td class="td-ticker tk" onclick="${x.g.ds[0] ? `openNews('${x.g.ds[0].ticker}')` : ''}">${x.g.tk}</td><td class="td-name nm">${pfShortName(x.g.name)}</td><td class="td-pct num">${x.g.w.toFixed(2)}%</td><td class="td-pct num dim">${x.g.hw > 0 ? x.g.hw.toFixed(1) + '%' : '—'}</td><td class="td-pct num">${gp(x.g.hw - x.g.w)}</td></tr>`;
-        pfBenchTable('bxGrpAcwi', show.map(aRow).join('')
+        const aRow = x => `<tr class="${bxRS(x.g.ds[0])}"><td class="td-ticker tk" onclick="${x.g.ds[0] ? `openNews('${x.g.ds[0].ticker}')` : ''}">${x.g.tk}</td><td class="td-name nm">${pfShortName(x.g.name)}</td><td class="td-pct num">${x.g.w.toFixed(2)}%</td><td class="td-pct num dim">${x.g.hw > 0 ? x.g.hw.toFixed(1) + '%' : '—'}</td><td class="td-pct num">${gp(x.g.hw - x.g.w)}</td></tr>`;
+        pfBenchTable('bxGrpAcwi' + sfx, show.map(aRow).join('')
             + (rest.length ? `<tr><td></td><td class="td-name dim">+ ${rest.length} smaller names</td><td class="td-pct num dim">${restW.toFixed(2)}%</td><td class="td-pct num dim">${restH > 0 ? restH.toFixed(1) + '%' : '—'}</td><td class="td-pct num dim">${gp(restH - restW)}</td></tr>` : '')
             + (acw.length ? `<tr class="tot"><td></td><td class="td-name">Total ${acw.length}</td><td class="td-pct num">${sel.b.toFixed(2)}%</td><td class="td-pct num">${sel.p.toFixed(1)}%</td><td class="td-pct num">${gp(sel.p - sel.b)}</td></tr>` : '<tr><td colspan="5" class="dim">—</td></tr>'));
     }
