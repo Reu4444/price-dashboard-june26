@@ -1714,16 +1714,23 @@
                 .bx-t{border-collapse:collapse;background:var(--bg2)}
                 .bx-t th{font-size:11px;letter-spacing:.08em;text-align:left;color:var(--muted);font-weight:400;padding:4px 34px 6px 10px;border-bottom:1px solid var(--border);text-transform:uppercase;white-space:nowrap}
                 .bx-t th:first-child{text-align:center}
-                .bx-t td{padding:8px 34px 8px 10px;font-size:13px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--faint)}
-                .bx-t td.tk{text-align:center;font-weight:700;font-size:15px;color:var(--accent2);cursor:pointer;min-width:78px;padding:8px 18px}
+                .bx-t td{padding:7px 28px 7px 10px;font-size:12.5px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--faint)}
+                .bx-t td.tk{text-align:center;font-weight:700;font-size:13px;color:var(--accent2);cursor:pointer;min-width:64px;padding:7px 14px}
                 .bx-t td.nm{max-width:260px;overflow:hidden;text-overflow:ellipsis}
                 .bx-t td.num{text-align:right;font-variant-numeric:tabular-nums}
                 .bx-t th.num{text-align:right}
                 .bx-t td.dim{color:var(--muted)}
-                #bxSector td{cursor:pointer;font-size:14px}
-                #bxSector tr:hover td{background:var(--bg3)}
-                #bxSector tr.sel td{background:var(--bg3)}
-                #bxSector tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent2)}
+                #bxSector td,#bxRegion td{cursor:pointer;font-size:13px}
+                #bxSector tr:hover td,#bxRegion tr:hover td{background:var(--bg3)}
+                #bxSector tr.sel td,#bxRegion tr.sel td{background:var(--bg3)}
+                #bxSector tr.sel td:first-child,#bxRegion tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent2)}
+                .bx-sp{display:flex;flex-wrap:nowrap;gap:36px;align-items:flex-start;overflow-x:auto;margin-bottom:14px}
+                .bx-sp .bx-t td{padding:7px 16px 7px 8px}
+                .bx-sp .bx-t th{padding:4px 16px 6px 8px}
+                .bx-sp .bx-t td.tk{padding:7px 10px;min-width:52px}
+                .bx-sp .bx-t th:first-child{text-align:left}
+                .bx-sp .bx-t td.tk{text-align:left}
+                .bx-t tr.tot td{border-top:1px solid var(--border);border-bottom:none;color:var(--muted)}
             </style>
 
             <div class="pf-h">WEIGHTS</div>
@@ -1731,25 +1738,33 @@
                 <div><div class="pf-sub">Stocks I Don't Own</div>
                     <table class="bx-t"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th></tr></thead><tbody id="bxMissW"></tbody></table></div>
                 <div><div class="pf-sub">My Overweights</div>
-                    <table class="bx-t"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Me</th><th class="num">ACWI</th></tr></thead><tbody id="bxOverW"></tbody></table></div>
+                    <table class="bx-t"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxOverW"></tbody></table></div>
             </div>
 
             <div class="pf-h">ACWI WINNERS I DON'T OWN</div>
             <div class="bx-two">
                 <div><div class="pf-sub">1 month</div>
-                    <table class="bx-t"><thead><tr><th>Ticker</th><th>Name</th></tr></thead><tbody id="bxWin1"></tbody></table></div>
+                    <table class="bx-t"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th></tr></thead><tbody id="bxWin1"></tbody></table></div>
                 <div><div class="pf-sub">3 months</div>
-                    <table class="bx-t"><thead><tr><th>Ticker</th><th>Name</th></tr></thead><tbody id="bxWin3"></tbody></table></div>
+                    <table class="bx-t"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th></tr></thead><tbody id="bxWin3"></tbody></table></div>
             </div>
             <input type="hidden" id="bxMinWt" value="0.1">
 
             <div class="pf-h">SECTORS <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">click a sector</span></div>
-            <div style="display:flex;flex-wrap:wrap;gap:14px 70px;margin-bottom:14px;align-items:flex-start">
+            <div class="bx-sp">
                 <table class="bx-t" id="bxSecTbl"><thead><tr><th>Sector</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxSector"></tbody></table>
                 <div><div class="pf-sub" id="bxSecMineT"></div>
                     <table class="bx-t"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Me</th></tr></thead><tbody id="bxSecMine"></tbody></table></div>
                 <div><div class="pf-sub" id="bxSecAcwiT"></div>
                     <table class="bx-t"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th><th class="num">Me</th></tr></thead><tbody id="bxSecAcwi"></tbody></table></div>
+            </div>
+            <div class="pf-h">REGIONS <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">click a region</span></div>
+            <div class="bx-sp">
+                <table class="bx-t" id="bxRegTbl"><thead><tr><th>Region</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxRegion"></tbody></table>
+                <div><div class="pf-sub" id="bxRegMineT"></div>
+                    <table class="bx-t"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Me</th></tr></thead><tbody id="bxRegMine"></tbody></table></div>
+                <div><div class="pf-sub" id="bxRegAcwiT"></div>
+                    <table class="bx-t"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th><th class="num">Me</th></tr></thead><tbody id="bxRegAcwi"></tbody></table></div>
             </div>
             <div class="pf-hint" id="bxSrc" style="margin-bottom:10px"></div>
 
@@ -8212,7 +8227,7 @@
         top.forEach(r => {
             const key = String(r.name || r.t).toUpperCase().replace(/\s+(CLASS|CL)\s+[A-Z0-9]{1,2}$/, '').trim();
             const al = ACWI_TK_ALIAS[r.t] || r.t;
-            const g = G[key] || (G[key] = { name: r.name, sector: r.sector, tk: al, tkw: 0, w: 0, ds: [], ub: [] });
+            const g = G[key] || (G[key] = { name: r.name, sector: r.sector, tk: al, loc: r.loc, tkw: 0, w: 0, ds: [], ub: [] });
             g.w += r.w;
             if (r.w > g.tkw) { g.tkw = r.w; g.tk = al; }
             if (r.d) { if (!g.ds.includes(r.d)) g.ds.push(r.d); }
@@ -8231,7 +8246,12 @@
         return { list, extra };
     }
     function pfBenchTable(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+    const BX_REG = {"united states":"United States","canada":"Canada","united kingdom":"Europe","france":"Europe","germany":"Europe","italy":"Europe","spain":"Europe","netherlands":"Europe","belgium":"Europe","switzerland":"Europe","sweden":"Europe","denmark":"Europe","norway":"Europe","finland":"Europe","ireland":"Europe","portugal":"Europe","austria":"Europe","poland":"Europe","luxembourg":"Europe","greece":"Europe","turkey":"Europe","hungary":"Europe","czech republic":"Europe","japan":"Japan","china":"Asia ex-Japan","hong kong":"Asia ex-Japan","taiwan":"Asia ex-Japan","korea (south)":"Asia ex-Japan","south korea":"Asia ex-Japan","korea":"Asia ex-Japan","india":"Asia ex-Japan","singapore":"Asia ex-Japan","australia":"Asia ex-Japan","new zealand":"Asia ex-Japan","indonesia":"Asia ex-Japan","thailand":"Asia ex-Japan","malaysia":"Asia ex-Japan","philippines":"Asia ex-Japan","vietnam":"Asia ex-Japan","brazil":"Other EM","mexico":"Other EM","chile":"Other EM","colombia":"Other EM","peru":"Other EM","argentina":"Other EM","uruguay":"Other EM","israel":"Other EM","saudi arabia":"Other EM","united arab emirates":"Other EM","uae":"Other EM","qatar":"Other EM","kuwait":"Other EM","egypt":"Other EM","south africa":"Other EM"};
+    const bxRegOf = c => BX_REG[String(c || '').toLowerCase()] || 'Other EM';
+    const ACWI_REGIONS = {"Asia ex-Japan":10.93,"Europe":13.36,"Other EM":1.87,"Canada":2.98,"Japan":5.08,"United States":64.69};   // iShares ACWI, Oct 13 2026
+    let bxRSel = null;
     let bxSel = null;
+    function bxPickRegion(k) { bxRSel = k; try { pfRenderBenchSimple(); } catch (e) { console.error(e); } }
     function bxPickSector(k) { bxSel = k; try { pfRenderBenchSimple(); } catch (e) { console.error(e); } }
     function pfRenderBenchSimple() {
         const pp = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(1);
@@ -8245,16 +8265,33 @@
         if (!bxSel || !sec.some(x => x.k === bxSel)) bxSel = sec.slice().sort((a, b) => Math.abs(b.a) - Math.abs(a.a))[0].k;
         pfBenchTable('bxSector', sec.map(x => `<tr class="${x.k === bxSel ? 'sel' : ''}" onclick="bxPickSector('${x.k}')"><td>${x.k}</td><td class="num">${x.p.toFixed(1)}%</td><td class="num dim">${x.b.toFixed(1)}%</td><td class="num">${pp(x.a)}</td></tr>`).join('')
             + (cash > 0.5 ? `<tr style="cursor:default"><td style="cursor:default">Cash</td><td class="num" style="cursor:default">${cash.toFixed(1)}%</td><td class="num dim" style="cursor:default">0%</td><td class="num" style="cursor:default">${pp(cash)}</td></tr>` : ''));
-        {   // right-hand panel for the selected sector
+        const CS = pfAcwiCompanies(1e6);
+        const fillPanel = (pre, label, mineRows, topList, p, bw) => {
+            const t1 = document.getElementById(pre + 'MineT'), t2 = document.getElementById(pre + 'AcwiT');
+            if (t1) t1.textContent = `My ${label} stocks · ${p.toFixed(1)}%`;
+            if (t2) t2.textContent = `ACWI top 10 ${label} · ${bw.toFixed(1)}% of ACWI`;
+            pfBenchTable(pre + 'Mine', mineRows.map(r => `<tr><td class="tk" onclick="openNews('${r._src.ticker}')">${pfShort(r.input)}</td><td class="nm">${pfShortName(r.name || r.input)}</td><td class="num">${r.w.toFixed(1)}%</td></tr>`).join('') || '<tr><td colspan="3" class="dim">None</td></tr>');
+            pfBenchTable(pre + 'Acwi', topList.map(g => `<tr><td class="tk" onclick="${g.ds[0] ? `openNews('${g.ds[0].ticker}')` : ''}">${g.tk}</td><td class="nm">${pfShortName(g.name)}</td><td class="num">${g.w.toFixed(2)}%</td><td class="num dim">${g.hw > 0 ? g.hw.toFixed(1) + '%' : '—'}</td></tr>`).join('') || '<tr><td colspan="4" class="dim">—</td></tr>');
+        };
+        {   // sector panel
             const sx = sec.find(x => x.k === bxSel);
-            const mine = pfRows.filter(r => r.sector === bxSel).sort((a, b) => b.w - a.w);
-            const CS = pfAcwiCompanies(1e6);
-            const top = CS.list.filter(g => g.sector === bxSel).sort((a, b) => b.w - a.w).slice(0, 10);
-            const t1 = document.getElementById('bxSecMineT'), t2 = document.getElementById('bxSecAcwiT');
-            if (t1) t1.textContent = `My ${bxSel} stocks · ${sx.p.toFixed(1)}%`;
-            if (t2) t2.textContent = `ACWI top 10 ${bxSel} · ${sx.b.toFixed(1)}% of ACWI`;
-            pfBenchTable('bxSecMine', mine.map(r => `<tr><td class="tk" onclick="openNews('${r._src.ticker}')">${pfShort(r.input)}</td><td class="nm">${pfShortName(r.name || r.input)}</td><td class="num">${r.w.toFixed(1)}%</td></tr>`).join('') || '<tr><td colspan="3" class="dim">None</td></tr>');
-            pfBenchTable('bxSecAcwi', top.map(g => `<tr><td class="tk" onclick="${g.ds[0] ? `openNews('${g.ds[0].ticker}')` : ''}">${g.tk}</td><td class="nm">${pfShortName(g.name)}</td><td class="num">${g.w.toFixed(2)}%</td><td class="num dim">${g.hw > 0 ? g.hw.toFixed(1) + '%' : '—'}</td></tr>`).join(''));
+            fillPanel('bxSec', bxSel, pfRows.filter(r => r.sector === bxSel).sort((a, b) => b.w - a.w),
+                CS.list.filter(g => g.sector === bxSel).sort((a, b) => b.w - a.w).slice(0, 10), sx.p, sx.b);
+        }
+        {   // regions
+            const regOfRow = r => bxRegOf(allData.includes(r._src) ? (PF_DOMICILE[r.ticker] || 'United States') : r.country);
+            const A = {};
+            if (_acwi) _acwi.rows.forEach(r => { const k = bxRegOf(r.loc); A[k] = (A[k] || 0) + r.w; }); else Object.assign(A, ACWI_REGIONS);
+            const tA = Object.values(A).reduce((a, b) => a + b, 0) || 1;
+            const M = {}; pfRows.forEach(r => { const k = regOfRow(r); M[k] = (M[k] || 0) + r.w; });
+            const keys = [...new Set([...Object.keys(A), ...Object.keys(M)])];
+            const reg = keys.map(k => ({ k, p: M[k] || 0, b: (A[k] || 0) / tA * 100 })).map(x => ({ ...x, a: x.p - x.b })).sort((a, b) => b.b - a.b);
+            if (!bxRSel || !reg.some(x => x.k === bxRSel)) bxRSel = reg.slice().sort((a, b) => Math.abs(b.a) - Math.abs(a.a))[0].k;
+            pfBenchTable('bxRegion', reg.map(x => `<tr class="${x.k === bxRSel ? 'sel' : ''}" onclick="bxPickRegion('${x.k}')"><td>${x.k}</td><td class="num">${x.p.toFixed(1)}%</td><td class="num dim">${x.b.toFixed(1)}%</td><td class="num">${pp(x.a)}</td></tr>`).join('')
+                + (cash > 0.5 ? `<tr style="cursor:default"><td style="cursor:default">Cash</td><td class="num" style="cursor:default">${cash.toFixed(1)}%</td><td class="num dim" style="cursor:default">0%</td><td class="num" style="cursor:default">${pp(cash)}</td></tr>` : ''));
+            const rx = reg.find(x => x.k === bxRSel);
+            fillPanel('bxReg', bxRSel, pfRows.filter(r => regOfRow(r) === bxRSel).sort((a, b) => b.w - a.w),
+                CS.list.filter(g => bxRegOf(g.loc) === bxRSel).sort((a, b) => b.w - a.w).slice(0, 10), rx.p, rx.b);
         }
         const ow = sec.filter(x => x.a >= 1).slice(0, 2), uw = sec.filter(x => x.a <= -1).slice(-2).reverse();
         const C = pfAcwiCompanies();
@@ -8264,11 +8301,16 @@
             const live = !!_acwi;
             if (src) src.innerHTML = `ACWI top 100 · ${(_acwi || ACWI_SNAP).date || '—'}${live ? '' : ' (built-in)'} · <a href="#" onclick="pfLoadAcwi(true);return false" style="color:var(--accent2)">Refresh</a>${_acwiErr && !live ? ' <span style="color:var(--muted)">(' + _acwiErr + ')</span>' : ''}`;
             const all = C.list.concat(C.extra);
-            const miss = C.list.filter(g => g.hw === 0).sort((a, b) => b.w - a.w).slice(0, 15);
             const emp4 = '<tr><td colspan="4" class="dim">—</td></tr>';
-            pfBenchTable('bxMissW', miss.map(g => `<tr><td class="tk" onclick="${g.ds[0] ? `openNews('${g.ds[0].ticker}')` : ''}">${g.tk}</td><td class="nm">${pfShortName(g.name)}</td><td class="num">${g.w.toFixed(2)}%</td></tr>`).join('') || emp4);
+            const missAll = C.list.filter(g => g.hw === 0).sort((a, b) => b.w - a.w);
+            const miss15 = missAll.slice(0, 15);
+            const missRows = miss15.map(g => `<tr><td class="tk" onclick="${g.ds[0] ? `openNews('${g.ds[0].ticker}')` : ''}">${g.tk}</td><td class="nm">${pfShortName(g.name)}</td><td class="num">${g.w.toFixed(2)}%</td></tr>`).join('');
+            const missTot = `<tr class="tot"><td></td><td>Total ${miss15.length}</td><td class="num">${miss15.reduce((a, g) => a + g.w, 0).toFixed(1)}%</td></tr>`;
+            pfBenchTable('bxMissW', missRows ? missRows + missTot : emp4);
             const ov = all.filter(g => g.hw > 0).map(g => ({ g, a: g.hw - g.w })).sort((a, b) => b.a - a.a).slice(0, 15);
-            pfBenchTable('bxOverW', ov.map(x => { const m = x.g.mine; return `<tr><td class="tk" onclick="openNews('${m[0]._src.ticker}')">${m.length === 1 ? pfShort(m[0].input) : x.g.tk}</td><td class="nm">${pfShortName(m.length === 1 && m[0].name ? m[0].name : x.g.name)}</td><td class="num">${x.g.hw.toFixed(1)}%</td><td class="num dim">${x.g.w.toFixed(1)}%</td></tr>`; }).join('') || emp4);
+            const ovRows = ov.map(x => { const m = x.g.mine; return `<tr><td class="tk" onclick="openNews('${m[0]._src.ticker}')">${m.length === 1 ? pfShort(m[0].input) : x.g.tk}</td><td class="nm">${pfShortName(m.length === 1 && m[0].name ? m[0].name : x.g.name)}</td><td class="num">${x.g.hw.toFixed(1)}%</td><td class="num dim">${x.g.w.toFixed(1)}%</td><td class="num">${pp(x.a)}</td></tr>`; }).join('');
+            const ovTot = `<tr class="tot"><td></td><td>Total ${ov.length}</td><td class="num">${ov.reduce((a, x) => a + x.g.hw, 0).toFixed(1)}%</td><td class="num">${ov.reduce((a, x) => a + x.g.w, 0).toFixed(1)}%</td><td class="num">${pp(ov.reduce((a, x) => a + x.a, 0))}</td></tr>`;
+            pfBenchTable('bxOverW', ovRows ? ovRows + ovTot : emp4);
             const minWt = +document.getElementById('bxMinWt').value;
             const winners = nDays => {
                 let sw = 0, sr = 0;
@@ -8279,7 +8321,7 @@
                     return { g, x };
                 }).filter(o => o.x != null && o.x > Rb).sort((a, b) => b.x - a.x);
             };
-            const rowsW = L => L.slice(0, 15).map(o => `<tr><td class="tk" onclick="openNews('${o.g.ds[0].ticker}')">${o.g.tk}</td><td class="nm">${pfShortName(o.g.name)}</td></tr>`).join('') || '<tr><td colspan="2" class="dim">—</td></tr>';
+            const rowsW = L => L.slice(0, 15).map(o => `<tr><td class="tk" onclick="openNews('${o.g.ds[0].ticker}')">${o.g.tk}</td><td class="nm">${pfShortName(o.g.name)}</td><td class="num">${o.g.w.toFixed(2)}%</td></tr>`).join('') || '<tr><td colspan="3" class="dim">—</td></tr>';
             pfBenchTable('bxWin1', rowsW(winners(21))); pfBenchTable('bxWin3', rowsW(winners(63)));
         }
     }
