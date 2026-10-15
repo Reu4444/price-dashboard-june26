@@ -1725,9 +1725,10 @@
                 #bxOverW tr.gi{border-bottom:none}
                 #bxOverW tr.gi td{border-bottom:none}
                 #bxOverW tr.ge,#bxOverW tr.ge td{border-bottom-color:var(--border)}
-                #bxGrpTbl{width:536px}
-                #bxGrpTbl thead th{width:72px}
-                #bxGrpTbl thead th:first-child{width:176px;text-align:left}
+                #bxGrpTbl{width:566px}
+                #bxGrpTbl thead th{width:70px}
+                #bxGrpTbl thead th:first-child{width:150px;text-align:left}
+                #bxGrpTbl thead th:nth-child(2){width:206px}
                 #bxPerfTbl{width:336px}
                 #bxPerfTbl thead th{width:80px}
                 #bxPerfTbl thead th:first-child{width:176px;text-align:left}
@@ -1746,11 +1747,11 @@
                 #bxMissW td:nth-child(3),
                 #bxOverW td:nth-child(6),
                 #bxOverS td:nth-child(5),
-                #bxWin1 td:nth-child(5),
-                #bxWin3 td:nth-child(5),
+                #bxWin1 td:nth-child(6),
+                #bxWin3 td:nth-child(6),
                 #bxSector td:nth-child(4),
                 #bxRegion td:nth-child(4),
-                #bxGroup td:nth-child(4),
+                #bxGroup td:nth-child(5),
                 #bxSecMine td:nth-child(5),
                 #bxRegMine td:nth-child(5),
                 #bxSecAcwi td:nth-child(5),
@@ -1760,6 +1761,10 @@
                 #bxPerfUp td:nth-child(6),
                 #bxPerfDn td:nth-child(6),
                 #bxPerf td:nth-child(3){font-weight:700;background:rgba(3,105,161,.07)}
+                .bx-t tbody tr.rsu td{background:rgba(21,128,61,.13)}
+                .bx-t tbody tr.rsd td{background:rgba(185,28,28,.12)}
+                .bx-t tbody tr.rsu td.tk,.bx-t tbody tr.rsu td.nm{color:var(--up)}
+                .bx-t tbody tr.rsd td.tk,.bx-t tbody tr.rsd td.nm{color:var(--down)}
                 .bx-t tbody tr.tot td{background:var(--faint)!important;color:var(--text);font-weight:600!important;border-top:1px solid var(--border);border-bottom:none}
                 .bx-t tbody tr.tot:hover td{background:var(--faint)}
                 #bxSector td,#bxRegion td,#bxGroup td{cursor:pointer}
@@ -1780,13 +1785,13 @@
             <div class="pf-h">ACWI WINNERS I DON'T OWN</div>
             <div class="bx-two">
                 <div><div class="pf-sub">1 month</div>
-                    <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th><th class="num">Perf</th><th class="num">Impact</th></tr></thead><tbody id="bxWin1"></tbody></table></div></div>
+                    <div class="table-wrap bx-w"><table class="bx-t c6"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th><th class="num">Perf</th><th class="num" title="ACWI weight x performance = what it added to the ACWI return (pp)">Contrib</th><th class="num" title="What I miss vs the ACWI average because I do not own it (pp)">Impact</th></tr></thead><tbody id="bxWin1"></tbody></table></div></div>
                 <div><div class="pf-sub">3 months</div>
-                    <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th><th class="num">Perf</th><th class="num">Impact</th></tr></thead><tbody id="bxWin3"></tbody></table></div></div>
+                    <div class="table-wrap bx-w"><table class="bx-t c6"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th><th class="num">Perf</th><th class="num" title="ACWI weight x performance = what it added to the ACWI return (pp)">Contrib</th><th class="num" title="What I miss vs the ACWI average because I do not own it (pp)">Impact</th></tr></thead><tbody id="bxWin3"></tbody></table></div></div>
             </div>
             <input type="hidden" id="bxMinWt" value="0.1">
 
-            <div class="pf-h">SECTORS <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">click a sector</span></div>
+            <div class="pf-h">SECTORS <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">click a sector · <span style="color:var(--up)">green</span> = strong relative strength · <span style="color:var(--down)">red</span> = relative weakness</span></div>
             <div class="bx-sp">
                 <div><div class="pf-sub">Allocation vs ACWI</div><div class="table-wrap bx-w"><table class="bx-t" id="bxSecTbl"><thead><tr><th>Sector</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxSector"></tbody></table></div></div>
                 <div><div class="pf-sub" id="bxSecMineT"></div>
@@ -1804,7 +1809,7 @@
             </div>
             <div class="pf-h">GROUPS <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">click a group</span></div>
             <div class="bx-sp">
-                <div><div class="pf-sub">Allocation vs ACWI</div><div class="table-wrap bx-w"><table class="bx-t" id="bxGrpTbl"><thead><tr><th>Group</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th><th class="num">1M vs peers</th><th class="num">3M vs peers</th></tr></thead><tbody id="bxGroup"></tbody></table></div></div>
+                <div><div class="pf-sub">Allocation vs ACWI</div><div class="table-wrap bx-w"><table class="bx-t" id="bxGrpTbl"><thead><tr><th>Group</th><th>Main stocks</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxGroup"></tbody></table></div></div>
                 <div><div class="pf-sub" id="bxGrpMineT"></div>
                     <div class="table-wrap bx-w"><table class="bx-t c7"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th><th class="num">1M vs peers</th><th class="num">3M vs peers</th></tr></thead><tbody id="bxGrpMine"></tbody></table></div></div>
                 <div><div class="pf-sub" id="bxGrpAcwiT"></div>
@@ -8353,8 +8358,8 @@
             const t1 = document.getElementById(pre + 'MineT'), t2 = document.getElementById(pre + 'AcwiT');
             if (t1) t1.textContent = `My ${label} stocks · ${p.toFixed(1)}%`;
             if (t2) t2.textContent = `ACWI top 10 ${label} · ${bw.toFixed(1)}% of ACWI`;
-            pfBenchTable(pre + 'Mine', mineRows.map(r => { const bw2 = wOf.has(r) ? wOf.get(r) : 0.1; return `<tr><td class="td-ticker tk" onclick="openNews('${r._src.ticker}')">${pfShort(r.input)}</td><td class="td-name nm">${pfShortName(r.name || r.input)}</td><td class="td-pct num">${r.w.toFixed(1)}%</td><td class="td-pct num dim">${bw2.toFixed(2)}%</td><td class="td-pct num">${gp(r.w - bw2)}</td></tr>`; }).join('') || '<tr><td colspan="5" class="dim">None</td></tr>');
-            pfBenchTable(pre + 'Acwi', topList.map(g => `<tr><td class="td-ticker tk" onclick="${g.ds[0] ? `openNews('${g.ds[0].ticker}')` : ''}">${g.tk}</td><td class="td-name nm">${pfShortName(g.name)}</td><td class="td-pct num">${g.w.toFixed(2)}%</td><td class="td-pct num dim">${g.hw > 0 ? g.hw.toFixed(1) + '%' : '—'}</td><td class="td-pct num">${gp(g.hw - g.w)}</td></tr>`).join('') || '<tr><td colspan="5" class="dim">—</td></tr>');
+            pfBenchTable(pre + 'Mine', mineRows.map(r => { const bw2 = wOf.has(r) ? wOf.get(r) : 0.1; return `<tr class="${bxRS(r._src)}"><td class="td-ticker tk" onclick="openNews('${r._src.ticker}')">${pfShort(r.input)}</td><td class="td-name nm">${pfShortName(r.name || r.input)}</td><td class="td-pct num">${r.w.toFixed(1)}%</td><td class="td-pct num dim">${bw2.toFixed(2)}%</td><td class="td-pct num">${gp(r.w - bw2)}</td></tr>`; }).join('') || '<tr><td colspan="5" class="dim">None</td></tr>');
+            pfBenchTable(pre + 'Acwi', topList.map(g => `<tr class="${bxRS(g.ds[0])}"><td class="td-ticker tk" onclick="${g.ds[0] ? `openNews('${g.ds[0].ticker}')` : ''}">${g.tk}</td><td class="td-name nm">${pfShortName(g.name)}</td><td class="td-pct num">${g.w.toFixed(2)}%</td><td class="td-pct num dim">${g.hw > 0 ? g.hw.toFixed(1) + '%' : '—'}</td><td class="td-pct num">${gp(g.hw - g.w)}</td></tr>`).join('') || '<tr><td colspan="5" class="dim">—</td></tr>');
         };
         {   // sector panel
             const sx = sec.find(x => x.k === bxSel);
@@ -8406,18 +8411,6 @@
             const ovTot = (L, withGG) => `<tr class="tot"><td></td><td class="td-name">Total ${L.length}</td><td class="td-pct num">${L.reduce((a, x) => a + x.g.hw, 0).toFixed(1)}%</td><td class="td-pct num">${L.reduce((a, x) => a + x.g.w, 0).toFixed(1)}%</td><td class="td-pct num">${pp(L.reduce((a, x) => a + x.a, 0))}</td>${withGG ? '<td></td>' : ''}</tr>`;
             pfBenchTable('bxOverW', ovG.length ? ovG.map((x, i) => ovRow(x, true, ovG[i + 1] && ovG[i + 1].G === x.G ? 'gi' : 'ge')).join('') + ovTot(ovG, true) : emp4);
             pfBenchTable('bxOverS', ovS.length ? ovS.map(x => ovRow(x, false)).join('') + ovTot(ovS, false) : emp4);
-            const minWt = +document.getElementById('bxMinWt').value;
-            const winners = nDays => {
-                let sw = 0, sr = 0;
-                pfAcwiMatch().forEach(r => { if (!r.d) return; const x = pfPeriodRet(r.d.ticker, nDays); if (x != null && isFinite(x)) { sw += r.w; sr += r.w * x; } });
-                const Rb = sw ? sr / sw : 0;
-                return C.list.filter(g => g.hw === 0 && g.w >= minWt && g.ds.length).map(g => {
-                    let x = null; for (const d of g.ds) { x = pfPeriodRet(d.ticker, nDays); if (x != null && isFinite(x)) break; }
-                    return { g, x };
-                }).filter(o => o.x != null && o.x > Rb).sort((a, b) => b.x - a.x);
-            };
-            const rowsW = L => L.slice(0, 15).map(o => `<tr><td class="td-ticker tk" onclick="openNews('${o.g.ds[0].ticker}')">${o.g.tk}</td><td class="td-name nm">${pfShortName(o.g.name)}</td><td class="td-pct num">${o.g.w.toFixed(2)}%</td></tr>`).join('') || '<tr><td colspan="3" class="dim">—</td></tr>';
-            pfBenchTable('bxWin1', rowsW(winners(21))); pfBenchTable('bxWin3', rowsW(winners(63)));
         }
     }
 
@@ -8443,6 +8436,12 @@
             return cache[key] = c >= 2 ? sr / sw : null;
         };
     }
+    // relative strength flag (same rule as the dashboard's weakness screen): green = RS IBD >= 70, red = relative weakness (IBD < 50, or 4W and 6M percentiles both < 50)
+    function bxRS(d) {
+        if (!d || d.rs_ibd == null) return '';
+        if (d.rs_ibd < 50 || (d.pct_4w != null && d.pct_6m != null && d.pct_4w < 50 && d.pct_6m < 50)) return 'rsd';
+        return d.rs_ibd >= 70 ? 'rsu' : '';
+    }
     const bxDp = v => v == null || !isFinite(v) ? '—' : (v > 0.04 ? '+' : v < -0.04 ? '−' : '') + Math.abs(v).toFixed(1);
     let bxGSel = null;
     function bxPickGroup(k) { bxGSel = k; try { pfRenderBenchGroups(); } catch (e) { console.error(e); } }
@@ -8465,15 +8464,28 @@
         if (!rows.length) return;
         if (!bxGSel || !rows.some(x => x.G === bxGSel)) bxGSel = rows[0].G;
         const gp = v => (v > 0.004 ? '+' : v < -0.004 ? '−' : '') + Math.abs(v).toFixed(2);
-        pfBenchTable('bxGroup', rows.map(x => `<tr class="${x.G === bxGSel ? 'sel' : ''}" onclick="bxPickGroup('${x.G.replace(/'/g, "\\'")}')"><td class="td-name nm">${x.G}</td><td class="td-pct num">${x.p.toFixed(1)}%</td><td class="td-pct num dim">${x.b.toFixed(1)}%</td><td class="td-pct num">${bxDp(x.gap)}</td><td class="td-pct num">${bxDp(x.v1)}</td><td class="td-pct num">${bxDp(x.v3)}</td></tr>`).join(''));
+        const mainOf = x => {   // up to 3 main stocks: mine by weight, else the biggest ACWI names of the group
+            const mine = x.it.filter(i => i.g.hw > 0).sort((p, q) => q.g.hw - p.g.hw);
+            if (mine.length) return mine.slice(0, 3).map(i => pfShort(i.m.input)).join(' · ');
+            return '<span class="dim">' + x.it.slice().sort((p, q) => q.g.w - p.g.w).slice(0, 3).map(i => i.g.tk).join(' · ') + '</span>';
+        };
+        pfBenchTable('bxGroup', rows.map(x => `<tr class="${x.G === bxGSel ? 'sel' : ''}" onclick="bxPickGroup('${x.G.replace(/'/g, "\\'")}')"><td class="td-name nm">${x.G}</td><td class="td-name nm">${mainOf(x)}</td><td class="td-pct num">${x.p.toFixed(1)}%</td><td class="td-pct num dim">${x.b.toFixed(1)}%</td><td class="td-pct num">${bxDp(x.gap)}</td></tr>`).join(''));
         const sel = rows.find(x => x.G === bxGSel);
         const t1 = document.getElementById('bxGrpMineT'), t2 = document.getElementById('bxGrpAcwiT');
-        if (t1) t1.textContent = `My ${sel.G} stocks · ${sel.p.toFixed(1)}%`;
-        if (t2) t2.textContent = `ACWI ${sel.G} stocks · ${sel.b.toFixed(1)}% of ACWI`;
         const mine = sel.it.filter(x => x.g.hw > 0).sort((a, b) => b.g.hw - a.g.hw);
-        pfBenchTable('bxGrpMine', mine.map(x => `<tr><td class="td-ticker tk" onclick="openNews('${x.m._src.ticker}')">${pfShort(x.m.input)}</td><td class="td-name nm">${pfShortName(x.m.name || x.m.input)}</td><td class="td-pct num">${x.g.hw.toFixed(1)}%</td><td class="td-pct num dim">${x.g.w.toFixed(2)}%</td><td class="td-pct num">${gp(x.g.hw - x.g.w)}</td><td class="td-pct num">${bxDp(x.v1)}</td><td class="td-pct num">${bxDp(x.v3)}</td></tr>`).join('') || '<tr><td colspan="7" class="dim">None</td></tr>');
-        const top = sel.it.filter(x => x.g.w > 0 && !x.g.mine.length || x.g.w > 0).sort((a, b) => b.g.w - a.g.w).slice(0, 10);
-        pfBenchTable('bxGrpAcwi', top.map(x => `<tr><td class="td-ticker tk" onclick="${x.g.ds[0] ? `openNews('${x.g.ds[0].ticker}')` : ''}">${x.g.tk}</td><td class="td-name nm">${pfShortName(x.g.name)}</td><td class="td-pct num">${x.g.w.toFixed(2)}%</td><td class="td-pct num dim">${x.g.hw > 0 ? x.g.hw.toFixed(1) + '%' : '—'}</td><td class="td-pct num">${gp(x.g.hw - x.g.w)}</td></tr>`).join('') || '<tr><td colspan="5" class="dim">—</td></tr>');
+        const acw = sel.it.filter(x => x.g.w > 0).sort((a, b) => b.g.w - a.g.w);
+        if (t1) t1.textContent = `My ${sel.G} stocks · ${mine.length}`;
+        if (t2) t2.textContent = `ACWI ${sel.G} stocks · ${acw.length} names counted`;
+        const sumHw = mine.reduce((t, x) => t + x.g.hw, 0), sumBw = mine.reduce((t, x) => t + x.g.w, 0);
+        pfBenchTable('bxGrpMine', mine.map(x => `<tr><td class="td-ticker tk" onclick="openNews('${x.m._src.ticker}')">${pfShort(x.m.input)}</td><td class="td-name nm">${pfShortName(x.m.name || x.m.input)}</td><td class="td-pct num">${x.g.hw.toFixed(1)}%</td><td class="td-pct num dim">${x.g.w.toFixed(2)}%</td><td class="td-pct num">${gp(x.g.hw - x.g.w)}</td><td class="td-pct num">${bxDp(x.v1)}</td><td class="td-pct num">${bxDp(x.v3)}</td></tr>`).join('')
+            + (mine.length ? `<tr class="tot"><td></td><td class="td-name">Total</td><td class="td-pct num">${sumHw.toFixed(1)}%</td><td class="td-pct num">${sumBw.toFixed(2)}%</td><td class="td-pct num">${gp(sumHw - sumBw)}</td><td></td><td></td></tr>` : '<tr><td colspan="7" class="dim">None</td></tr>'));
+        // ACWI side: every name counted in the group weight (top 12 + "others" so the total always adds up)
+        const show = acw.slice(0, 12), rest = acw.slice(12);
+        const restW = rest.reduce((t, x) => t + x.g.w, 0), restH = rest.reduce((t, x) => t + x.g.hw, 0);
+        const aRow = x => `<tr><td class="td-ticker tk" onclick="${x.g.ds[0] ? `openNews('${x.g.ds[0].ticker}')` : ''}">${x.g.tk}</td><td class="td-name nm">${pfShortName(x.g.name)}</td><td class="td-pct num">${x.g.w.toFixed(2)}%</td><td class="td-pct num dim">${x.g.hw > 0 ? x.g.hw.toFixed(1) + '%' : '—'}</td><td class="td-pct num">${gp(x.g.hw - x.g.w)}</td></tr>`;
+        pfBenchTable('bxGrpAcwi', show.map(aRow).join('')
+            + (rest.length ? `<tr><td></td><td class="td-name dim">+ ${rest.length} smaller names</td><td class="td-pct num dim">${restW.toFixed(2)}%</td><td class="td-pct num dim">${restH > 0 ? restH.toFixed(1) + '%' : '—'}</td><td class="td-pct num dim">${gp(restH - restW)}</td></tr>` : '')
+            + (acw.length ? `<tr class="tot"><td></td><td class="td-name">Total ${acw.length}</td><td class="td-pct num">${sel.b.toFixed(2)}%</td><td class="td-pct num">${sel.p.toFixed(1)}%</td><td class="td-pct num">${gp(sel.p - sel.b)}</td></tr>` : '<tr><td colspan="5" class="dim">—</td></tr>'));
     }
     // ── VS ACWI: why am I ahead / behind? (today's weights held constant over the period) ──
     function pfBenchCalc(n) {
@@ -8518,7 +8530,11 @@
         const minWt = +document.getElementById('bxMinWt').value;
         const winRows = a => {
             const W = a.items.filter(x => !x.extra && x.wp === 0 && x.wb >= minWt && x.r != null && x.r > a.Rb).sort((x, y) => x.e - y.e).slice(0, 15);
-            return W.map(x => `<tr><td class="td-ticker tk" onclick="${x.open ? `openNews('${x.open}')` : ''}">${x.tk}</td><td class="td-name nm">${pfShortName(x.name)}</td><td class="td-pct num dim">${x.wb.toFixed(2)}%</td><td class="td-pct num">${pc(x.r)}</td><td class="td-pct num">${gp(x.e)}</td></tr>`).join('') || '<tr><td colspan="5" class="dim">—</td></tr>';
+            if (!W.length) return '<tr><td colspan="6" class="dim">—</td></tr>';
+            const ct = x => x.wb * x.r / 100;                       // contribution to the ACWI return (pp) = ACWI weight x performance
+            const sw = W.reduce((t, x) => t + x.wb, 0), sc = W.reduce((t, x) => t + ct(x), 0), se = W.reduce((t, x) => t + x.e, 0);
+            return W.map(x => `<tr><td class="td-ticker tk" onclick="${x.open ? `openNews('${x.open}')` : ''}">${x.tk}</td><td class="td-name nm">${pfShortName(x.name)}</td><td class="td-pct num dim">${x.wb.toFixed(2)}%</td><td class="td-pct num">${pc(x.r)}</td><td class="td-pct num">${gp(ct(x))}</td><td class="td-pct num">${gp(x.e)}</td></tr>`).join('')
+                + `<tr class="tot"><td></td><td class="td-name">Total ${W.length}</td><td class="td-pct num">${sw.toFixed(2)}%</td><td class="td-pct num">${sw ? pc(sc / sw * 100) : '—'}</td><td class="td-pct num">${gp(sc)}</td><td class="td-pct num">${gp(se)}</td></tr>`;
         };
         pfBenchTable('bxWin1', winRows(a1)); pfBenchTable('bxWin3', winRows(a3));
         const src = document.getElementById('bxSrc');
@@ -8531,6 +8547,8 @@
     function pfRenderBenchInner() {
         if (!pfRows.length || !document.getElementById('bmSec')) return;
         try { pfRenderBenchSimple(); } catch (e) { console.error('VS ACWI simple view', e); const c = document.getElementById('bxSrc'); if (c) c.textContent = 'Error: ' + e.message; }
+        try { pfRenderBenchGroups(); } catch (e) { console.error('VS ACWI groups', e); }
+        try { pfRenderBenchPerf(); } catch (e) { console.error('VS ACWI perf', e); }
         const n = pfBenchN, minCap = +document.getElementById('bmCap').value;
         document.querySelectorAll('[data-bp]').forEach(b => b.classList.toggle('on', +b.dataset.bp === n));
         const label = n === 5 ? '1W' : n === 21 ? '1M' : '3M';
