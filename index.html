@@ -8249,12 +8249,27 @@
     }
     let _acwiMatch = null;
     let _acwiMatchFor = null;
+    // normalised company name (for matching ACWI names to dashboard names that are spelled differently)
+    const _acwiNN = s => String(s || '').toUpperCase().replace(/&/g, ' AND ').replace(/[^A-Z0-9 ]+/g, ' ')
+        .replace(/\b(CLASS|CL)\s+[A-Z0-9]{1,2}\b/g, ' ')
+        .replace(/\b(THE|INC|INCORPORATED|CORP|CORPORATION|CO|COMPANY|LTD|LIMITED|PLC|AG|SA|SPA|NV|SE|SAB|AB|ASA|OYJ|LP|LLC|HOLDINGS?|GROUP|GRP|ORD|ADR|REIT|N|PS|PAR|SHS|SUBORDINATE|VOTING|DE|CV|SAPI)\b/g, ' ')
+        .replace(/\s+/g, ' ').trim();
+    const _acwiCN = c => { c = String(c || '').toLowerCase().trim(); if (/korea/.test(c)) return 'korea'; if (/hong kong/.test(c)) return 'hong kong'; if (/united kingdom|^uk$|great britain/.test(c)) return 'uk'; if (/united states|^usa?$/.test(c)) return 'us'; if (/taiwan/.test(c)) return 'taiwan'; return c; };
     function pfAcwiMatch() {
         if (_acwiMatch && _acwiMatchFor === (_acwi || ACWI_SNAP)) return _acwiMatch;
         _acwiMatchFor = _acwi || ACWI_SNAP;
         const us = new Map(allData.map(d => [d.ticker.toUpperCase(), d]));
         const row = new Map((allDataRoW || []).map(d => [d.ticker.toUpperCase(), d]));
         const rowByBase = {}; (allDataRoW || []).forEach(d => (rowByBase[pfBaseSym(d.ticker)] = rowByBase[pfBaseSym(d.ticker)] || []).push(d));
+        const pool = allData.concat(allDataRoW || []).map(d => ({ d, k: _acwiNN(d.name || ''), c: _acwiCN(d.country) })).filter(x => x.k.length >= 4);
+        const byName = r => {   // fallback: same company, name spelled differently (ACWI names can be cut at 22 chars)
+            const a = _acwiNN(r.name); if (a.length < 4) return null;
+            let c = pool.filter(x => x.k === a || (a.length >= 8 && x.k.startsWith(a)) || x.k.startsWith(a + ' ') || (x.k.length >= 8 && a.startsWith(x.k)) || a.startsWith(x.k + ' '));
+            if (c.length > 1) { const same = c.filter(x => x.c === _acwiCN(r.loc)); if (same.length) c = same; }
+            if (c.length > 1) { const ex = c.filter(x => x.k === a); if (ex.length) c = ex; }
+            const u = [...new Set(c.map(x => x.d))];
+            return u.length === 1 ? u[0] : null;
+        };
         _acwiMatch = (_acwi || ACWI_SNAP).rows.map(r => {
             const t = r.t.toUpperCase().replace(/\s+/g, '');
             let d = null;
@@ -8263,8 +8278,9 @@
             } else {
                 const ex = ACWI_EXCH_TV.find(([k]) => r.exch.toLowerCase().includes(k));
                 if (ex) d = row.get(ex[1] + ':' + t) || row.get(ex[1] + ':' + t.replace(/\./g, '_'));
-                if (!d) { const c = (rowByBase[t] || []).filter(x => !r.loc || String(x.country || '').toLowerCase() === String(r.loc).toLowerCase()); if (c.length === 1) d = c[0]; }
+                if (!d) { const c = (rowByBase[t] || []).filter(x => !r.loc || _acwiCN(x.country) === _acwiCN(r.loc)); if (c.length === 1) d = c[0]; }
             }
+            if (!d) d = byName(r);
             return { ...r, d };
         });
         return _acwiMatch;
@@ -8367,6 +8383,13 @@
         {
             const live = !!_acwi;
             if (src) src.innerHTML = `ACWI · ${(_acwi || ACWI_SNAP).rows.length} holdings · ${(_acwi || ACWI_SNAP).date || '—'}${live ? '' : ' (built-in)'} · <a href="#" onclick="pfLoadAcwi(true);return false" style="color:var(--accent2)">Refresh</a>${_acwiErr && !live ? ' <span style="color:var(--muted)">(' + _acwiErr + ')</span>' : ''}`;
+            if (src) {   // coverage: how much of the ACWI is matched to a dashboard stock that has a group
+                const M = pfAcwiMatch(), tot = M.reduce((a, r) => a + r.w, 0) || 1;
+                const okW = M.filter(r => r.d && r.d.group).reduce((a, r) => a + r.w, 0);
+                const lost = M.filter(r => !(r.d && r.d.group)).sort((a, b) => b.w - a.w).slice(0, 10).map(r => pfShortName(r.name) + ' ' + r.w.toFixed(2)).join(' · ');
+                window.__acwiUnmatched = M.filter(r => !(r.d && r.d.group)).sort((a, b) => b.w - a.w).map(r => r.t + ' | ' + r.name + ' | ' + r.loc + ' | ' + r.w);
+                src.innerHTML += `<br>Groups cover ${(okW / tot * 100).toFixed(0)}% of ACWI weight — not in a group: <span style="color:var(--muted)">${lost}</span>`;
+            }
             const all = C.list.concat(C.extra);
             const emp4 = '<tr><td colspan="4" class="dim">—</td></tr>';
             const missAll = C.list.filter(g => g.hw === 0).sort((a, b) => b.w - a.w);
