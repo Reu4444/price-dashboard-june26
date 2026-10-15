@@ -1774,7 +1774,6 @@
                 #bxRegMine td:nth-child(5),
                 #bxSecAcwi td:nth-child(5),
                 #bxRegAcwi td:nth-child(5),
-                #bxGrpMine tr.sub td,#bxGrpMine2 tr.sub td{font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--text-dim,#64748b);background:rgba(100,116,139,.10);padding:4px 8px}
                 #bxGrpMine td:nth-child(5),
                 #bxGrpAcwi td:nth-child(5),
                 #bxPerfUp td:nth-child(6),
@@ -8411,7 +8410,7 @@
         const gp = v => (v > 0.004 ? '+' : v < -0.004 ? '−' : '') + Math.abs(v).toFixed(2);
         const fillPanel = (pre, label, mineRows, topList, p, bw) => {
             const t1 = document.getElementById(pre + 'MineT'), t2 = document.getElementById(pre + 'AcwiT');
-            topList = topList.slice(0, mineRows.length || 10);   // same number of lines as my table
+            topList = topList.slice(0, Math.max(mineRows.length, 10));   // at least 10 lines, more if I hold more names
             const tw = topList.reduce((t, g) => t + g.w, 0);
             if (t1) t1.textContent = `My ${label} stocks · ${p.toFixed(1)}%`;
             if (t2) t2.textContent = `ACWI top ${topList.length} ${label} · ${tw.toFixed(1)}% of ACWI`;
@@ -8568,8 +8567,7 @@
                 if (!no.length) return '';
                 const vp = (x, n) => { const s = x.g.ds[0]; if (!s) return null; const r = pfPeriodRet(s.ticker, n), pr = PF(x.G, n, s); return r == null || pr == null ? null : r - pr; };
                 const nRestW = nRest.reduce((t, x) => t + x.g.w, 0), nAllW = no.reduce((t, x) => t + x.g.w, 0);
-                return `<tr class="sub"><td colspan="5">NOT OWNED · ${no.length} ACWI names · ${nAllW.toFixed(2)}%</td></tr>`
-                    + nShow.map(x => `<tr class="${bxRS(x.g.ds[0])}"><td class="td-ticker tk" onclick="${x.g.ds[0] ? `openNews('${x.g.ds[0].ticker}')` : ''}">${x.g.tk}</td><td class="td-name nm">${pfShortName(x.g.name)}</td><td class="td-pct num dim">—</td><td class="td-pct num dim">${x.g.w.toFixed(2)}%</td><td class="td-pct num">${gp(-x.g.w)}</td></tr>`).join('')
+                return nShow.map(x => `<tr class="${bxRS(x.g.ds[0])}"><td class="td-ticker tk" onclick="${x.g.ds[0] ? `openNews('${x.g.ds[0].ticker}')` : ''}">${x.g.tk}</td><td class="td-name nm">${pfShortName(x.g.name)}</td><td class="td-pct num dim">—</td><td class="td-pct num dim">${x.g.w.toFixed(2)}%</td><td class="td-pct num">${gp(-x.g.w)}</td></tr>`).join('')
                     + (nRest.length ? `<tr><td></td><td class="td-name dim">+ ${nRest.length} smaller names</td><td class="td-pct num dim">—</td><td class="td-pct num dim">${nRestW.toFixed(2)}%</td><td class="td-pct num dim">${gp(-nRestW)}</td></tr>` : '');
             })());
         // ACWI side: every name counted in the group weight (top 12 + "others" so the total always adds up)
