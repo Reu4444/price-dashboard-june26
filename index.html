@@ -1791,6 +1791,13 @@
                 #bxGroup2 tr.sel td{background:var(--bg3)}
                 #bxSector tr.sel td:first-child,#bxRegion tr.sel td:first-child,#bxGroup tr.sel td:first-child,
                 #bxGroup2 tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent2)}
+                #bxGrpTblA,#bxGrpTblA2{width:486px}
+                #bxGrpTblA thead th,#bxGrpTblA2 thead th{width:70px}
+                #bxGrpTblA thead th:first-child,#bxGrpTblA2 thead th:first-child{width:276px;text-align:left}
+                #bxGroupA td,#bxGroupA2 td{padding-top:8px;padding-bottom:8px;vertical-align:middle}
+                #bxGroupA .gn,#bxGroupA2 .gn{font-weight:700;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis}
+                #bxGroupA .gs,#bxGroupA2 .gs{font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis}
+                #bxGroupA td:nth-child(4),#bxGroupA2 td:nth-child(4){font-weight:700;background:rgba(3,105,161,.07)}
             </style>
 
             <div class="pf-h">1 · REGIONS <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">click a row · ticker <span style="color:var(--up)">green</span> = strong relative strength (6M percentile ≥ 70) · <span style="color:var(--down)">red</span> = weak (&lt; 50)</span></div>
@@ -1818,6 +1825,7 @@
                     <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th><th class="num">Me</th><th class="num">Gap</th></tr></thead><tbody id="bxGrpAcwi"></tbody></table></div></div>
             </div>
 
+            <div class="bx-sp"><div><div class="pf-sub">ACWI's 15 biggest groups</div><div class="table-wrap bx-w"><table class="bx-t" id="bxGrpTblA"><thead><tr><th>Group / main stocks</th><th class="num">ACWI</th><th class="num">Me</th><th class="num">Gap</th></tr></thead><tbody id="bxGroupA"></tbody></table></div></div></div>
             <div class="pf-h">3b · GROUPS <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">built-in classification only (every ACWI stock, 30 groups) · click a group</span></div>
             <div class="bx-sp">
                 <div><div class="pf-sub">Allocation vs ACWI</div><div class="table-wrap bx-w"><table class="bx-t" id="bxGrpTbl2"><thead><tr><th>Group / main stocks</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxGroup2"></tbody></table></div></div>
@@ -1827,6 +1835,7 @@
                     <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th><th class="num">Me</th><th class="num">Gap</th></tr></thead><tbody id="bxGrpAcwi2"></tbody></table></div></div>
             </div>
 
+            <div class="bx-sp"><div><div class="pf-sub">ACWI's 15 biggest groups</div><div class="table-wrap bx-w"><table class="bx-t" id="bxGrpTblA2"><thead><tr><th>Group / main stocks</th><th class="num">ACWI</th><th class="num">Me</th><th class="num">Gap</th></tr></thead><tbody id="bxGroupA2"></tbody></table></div></div></div>
             <div class="pf-h">4 · STOCKS <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">individual names</span></div>
             <div class="bx-two" style="grid-template-columns:336px auto auto">
                 <div><div class="pf-sub">Stocks I Don't Own</div>
@@ -8517,7 +8526,14 @@
             if (x.g.hw > 0 && x.v1 != null) { a.s1 += x.g.hw * x.v1; a.w1 += x.g.hw; }
             if (x.g.hw > 0 && x.v3 != null) { a.s3 += x.g.hw * x.v3; a.w3 += x.g.hw; } });
         const rows = Object.values(agg).map(a => ({ ...a, gap: a.p - a.b, v1: a.w1 ? a.s1 / a.w1 : null, v3: a.w3 ? a.s3 / a.w3 : null }))
-            .sort((a, b) => Math.abs(b.gap) - Math.abs(a.gap)).slice(0, 15);
+            .filter(x => x.p > 0.001).sort((a, b) => b.p - a.p).slice(0, 15);   // my 15 biggest groups
+        {   // ACWI's 15 biggest groups
+            const top = Object.values(agg).sort((a, b) => b.b - a.b).slice(0, 15);
+            const mainA = x => x.it.slice().sort((p, q) => q.g.w - p.g.w).slice(0, 3).map(i => i.g.tk).join(' · ');
+            const P = top.reduce((t, x) => t + x.p, 0), B = top.reduce((t, x) => t + x.b, 0);
+            pfBenchTable('bxGroupA' + sfx, top.map(x => `<tr><td class="td-name"><div class="gn">${x.G}</div><div class="gs">${mainA(x)}</div></td><td class="td-pct num">${x.b.toFixed(1)}%</td><td class="td-pct num dim">${x.p.toFixed(1)}%</td><td class="td-pct num">${bxDp(x.p - x.b)}</td></tr>`).join('')
+                + `<tr class="tot"><td class="td-name">Total ${top.length} groups</td><td class="td-pct num">${B.toFixed(1)}%</td><td class="td-pct num">${P.toFixed(1)}%</td><td class="td-pct num">${bxDp(P - B)}</td></tr>`);
+        }
         if (!rows.length) return;
         let bxGSel = bxGSelMap[sfx]; if (!bxGSel || !rows.some(x => x.G === bxGSel)) bxGSel = bxGSelMap[sfx] = rows[0].G;
         const gp = v => (v > 0.004 ? '+' : v < -0.004 ? '−' : '') + Math.abs(v).toFixed(2);
