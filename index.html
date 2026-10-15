@@ -1710,27 +1710,37 @@
         <div class="pf-subc" id="pfSub-bench">
             <div id="bxConc" class="pf-topline"></div>
             <div class="pf-hint" id="bxSrc" style="margin-bottom:8px"></div>
+            <style>
+                .bx-two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+                @media(max-width:700px){.bx-two{grid-template-columns:1fr}}
+                .bx-two table{width:100%;border-collapse:collapse}
+                .bx-two th{font-size:11px;letter-spacing:.08em;text-align:right;color:var(--muted);font-weight:600;padding:2px 8px;border-bottom:1px solid var(--border)}
+                .bx-two th:first-child,.bx-two td:first-child{text-align:left}
+                .bx-two td{padding:3px 8px;font-size:13px;text-align:right}
+                .bx-chip{display:inline-block;margin:0 6px 6px 0;padding:3px 9px;border:1px solid var(--border);background:var(--bg2);font-weight:700;font-size:13px;cursor:pointer}
+                .bx-chips{padding:2px 0}
+                #bxSector th,#bxSector td{padding:3px 10px}
+            </style>
 
-            <div class="pf-h" style="margin-top:4px">1 · WEIGHTS vs ACWI</div>
-            <div class="pf-grid2" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
-                <div class="pf-card" style="max-height:none"><div class="pf-sub">Largest ACWI stocks I don't own <span style="font-family:Arial;font-size:11px;color:var(--muted)">top 10</span></div>
-                    <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr><th>#</th><th>TICKER</th><th>NAME</th><th>SECTOR</th><th class="th-pct">ACWI WT</th></tr></thead><tbody id="bxMissW"></tbody></table></div></div>
-                <div class="pf-card" style="max-height:none"><div class="pf-sub">My biggest overweights vs ACWI <span style="font-family:Arial;font-size:11px;color:var(--muted)">top 10</span></div>
-                    <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr><th>#</th><th>TICKER</th><th>NAME</th><th class="th-pct">MY WT</th><th class="th-pct">ACWI WT</th><th class="th-pct">ACTIVE</th></tr></thead><tbody id="bxOverW"></tbody></table></div></div>
+            <div class="pf-h">WEIGHTS</div>
+            <div class="bx-two">
+                <div><div class="pf-sub">Big ACWI names I don't own</div>
+                    <table><thead><tr><th>Ticker</th><th>ACWI</th></tr></thead><tbody id="bxMissW"></tbody></table></div>
+                <div><div class="pf-sub">My biggest overweights</div>
+                    <table><thead><tr><th>Ticker</th><th>Me</th><th>ACWI</th></tr></thead><tbody id="bxOverW"></tbody></table></div>
             </div>
 
-            <div class="pf-h">2 · ACWI STOCKS THAT BEAT ACWI AND I DON'T OWN</div>
-            <div class="pf-bar-top" style="justify-content:flex-start;gap:10px"><label>Only stocks with ACWI weight ≥ <select id="bxMinWt" onchange="pfRenderBench()"><option value="0">any</option><option value="0.05">0.05%</option><option value="0.1" selected>0.10%</option><option value="0.2">0.20%</option></select></label><span style="color:var(--muted)">ranked by performance, best first · top 15</span></div>
-            <div class="pf-grid2" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
-                <div class="pf-card" style="max-height:none"><div class="pf-sub">Best performers 1M</div>
-                    <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr><th>#</th><th>TICKER</th><th>NAME</th><th>SECTOR</th></tr></thead><tbody id="bxWin1"></tbody></table></div></div>
-                <div class="pf-card" style="max-height:none"><div class="pf-sub">Best performers 3M</div>
-                    <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr><th>#</th><th>TICKER</th><th>NAME</th><th>SECTOR</th></tr></thead><tbody id="bxWin3"></tbody></table></div></div>
+            <div class="pf-h">ACWI WINNERS I DON'T OWN</div>
+            <div class="bx-two">
+                <div><div class="pf-sub">1 month</div><div class="bx-chips" id="bxWin1"></div></div>
+                <div><div class="pf-sub">3 months</div><div class="bx-chips" id="bxWin3"></div></div>
             </div>
+            <input type="hidden" id="bxMinWt" value="0.1">
 
-            <div class="pf-h">3 · MY SECTORS vs ACWI</div>
-            <div class="pf-card" style="max-height:none;margin-bottom:14px">
-                <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr><th>SECTOR</th><th class="th-pct">MY WT</th><th class="th-pct">ACWI WT</th><th class="th-pct">ACTIVE (pp)</th><th style="min-width:240px">MINE (dark) vs ACWI (light)</th></tr></thead><tbody id="bxSector"></tbody></table></div></div>
+            <div class="pf-h">SECTORS</div>
+            <div style="max-width:520px;margin-bottom:14px">
+                <table class="bx-sec" style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;font-size:11px;color:var(--muted)">Sector</th><th style="text-align:right;font-size:11px;color:var(--muted)">Me</th><th style="text-align:right;font-size:11px;color:var(--muted)">ACWI</th><th style="text-align:right;font-size:11px;color:var(--muted)">Gap</th></tr></thead><tbody id="bxSector"></tbody></table>
+            </div>
 
             <details class="pf-det" data-k="bmAdv"><summary>Detailed attribution (advanced)</summary>
             <div class="pf-bar-top" style="justify-content:flex-start;gap:10px">
@@ -7833,9 +7843,8 @@
 
     // ── ACWI SECTOR-NEUTRAL PORTFOLIO ───────────────────────────
     // iShares MSCI ACWI ETF sector weights, % of market value as of Sep 15, 2026 (cash 0.33% excluded)
-    const ACWI_DATE = '15 Sep 2026';
-    const ACWI_SECTORS = { Technology: 31.34, Financials: 16.85, Industrials: 10.35, Healthcare: 8.41, Discretionary: 8.37,
-        Communications: 8.09, Staples: 4.65, Energy: 4.19, Materials: 3.63, Utilities: 2.30, 'Real Estate': 1.50 };
+    const ACWI_DATE = '13 Oct 2026';
+    const ACWI_SECTORS = {Technology: 32.66, Discretionary: 8.33, Communications: 7.91, Healthcare: 8.33, Financials: 15.82, Energy: 4.16, Staples: 4.61, Industrials: 10.09, Materials: 3.42, Utilities: 2.19, 'Real Estate': 1.39};
     let _aw = null;
     function pfBuildAcwi() {
         const N = +document.getElementById('awN').value, minW = +document.getElementById('awMinW').value;
@@ -8084,13 +8093,16 @@
 
 
     // ── ACWI HOLDINGS (iShares CSV via Apps Script proxy, cached 1 day) ──
-    const ACWI_URL = 'https://www.ishares.com/us/products/239600/ishares-msci-acwi-etf/1467271812596.ajax?fileType=csv&fileName=ACWI_holdings&dataType=fund';
+    const ACWI_URLS = ['https://www.ishares.com/us/products/239600/ishares-msci-acwi-etf/latest-holdings.csv',
+        'https://www.ishares.com/us/products/239600/ishares-msci-acwi-etf/1467271812596.ajax?fileType=csv&fileName=ACWI_holdings&dataType=fund'];
     const ACWI_SECTOR_MAP = { 'information technology': 'Technology', 'financials': 'Financials', 'industrials': 'Industrials', 'health care': 'Healthcare',
         'consumer discretionary': 'Discretionary', 'communication': 'Communications', 'communication services': 'Communications', 'consumer staples': 'Staples',
         'energy': 'Energy', 'materials': 'Materials', 'utilities': 'Utilities', 'real estate': 'Real Estate' };
     const ACWI_EXCH_TV = [['london', 'LON'], ['paris', 'EPA'], ['amsterdam', 'AMS'], ['brussels', 'EBR'], ['borsa italiana', 'BIT'], ['milan', 'BIT'], ['xetra', 'ETR'],
         ['deutsche', 'ETR'], ['six swiss', 'SWX'], ['swiss', 'SWX'], ['stockholm', 'STO'], ['copenhagen', 'CPH'], ['helsinki', 'HEL'], ['oslo', 'OSL'], ['madrid', 'BME'],
         ['wiener', 'VIE'], ['vienna', 'VIE'], ['warsaw', 'WSE'], ['tel aviv', 'TLV'], ['lisbon', 'ELI'], ['dublin', 'EURONEXT'], ['irish', 'EURONEXT']];
+    // built-in ACWI top-100 snapshot (iShares, Oct 13, 2026) — used until live holdings load
+    const ACWI_SNAP = {"date":"Oct 13, 2026","rows":[{"t":"NVDA","name":"NVIDIA","sector":"Technology","w":5.06,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"AAPL","name":"APPLE","sector":"Technology","w":4.83,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"MSFT","name":"MICROSOFT","sector":"Technology","w":3.69,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"AMZN","name":"AMAZON.COM INC","sector":"Discretionary","w":2.41,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"GOOGL","name":"ALPHABET CLASS A","sector":"Communications","w":2,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"2330","name":"TAIWAN SEMICONDUCTOR MANUFACTURING","sector":"Technology","w":1.83,"loc":"Taiwan","exch":"Taiwan Stock Exchange","cur":"USD"},{"t":"META","name":"META PLATFORMS CLASS A","sector":"Communications","w":1.61,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"GOOG","name":"ALPHABET CLASS C","sector":"Communications","w":1.57,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"AVGO","name":"BROADCOM INC","sector":"Technology","w":1.56,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"MU","name":"MICRON TECHNOLOGY","sector":"Technology","w":1.04,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"TSLA","name":"TESLA INC","sector":"Discretionary","w":1.03,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"AMD","name":"ADVANCED MICRO DEVICES","sector":"Technology","w":0.95,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"LLY","name":"ELI LILLY","sector":"Healthcare","w":0.9,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"JPM","name":"JPMORGAN CHASE & CO","sector":"Financials","w":0.85,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"005930","name":"SAMSUNG ELECTRONICS LTD","sector":"Technology","w":0.77,"loc":"Korea (South)","exch":"Korea Exchange (Stock Market)","cur":"USD"},{"t":"BRK B","name":"BERKSHIRE HATHAWAY INC CLASS B","sector":"Financials","w":0.71,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"XOM","name":"EXXONMOBIL HOLDINGS CORP","sector":"Energy","w":0.69,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"V","name":"VISA CLASS A","sector":"Financials","w":0.63,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"ASML","name":"ASML HOLDING","sector":"Technology","w":0.63,"loc":"Netherlands","exch":"Euronext Amsterdam","cur":"USD"},{"t":"JNJ","name":"JOHNSON & JOHNSON","sector":"Healthcare","w":0.58,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"000660","name":"SK HYNIX","sector":"Technology","w":0.57,"loc":"Korea (South)","exch":"Korea Exchange (Stock Market)","cur":"USD"},{"t":"WMT","name":"WALMART","sector":"Staples","w":0.47,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"MA","name":"MASTERCARD CLASS A","sector":"Financials","w":0.47,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"ABBV","name":"ABBVIE","sector":"Healthcare","w":0.47,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"PLTR","name":"PALANTIR TECHNOLOGIES CLASS A","sector":"Technology","w":0.44,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"CSCO","name":"CISCO SYSTEMS INC","sector":"Technology","w":0.44,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"INTC","name":"INTEL CORPORATION","sector":"Technology","w":0.44,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"COST","name":"COSTCO WHOLESALE CORP","sector":"Staples","w":0.41,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"CVX","name":"CHEVRON","sector":"Energy","w":0.39,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"LRCX","name":"LAM RESEARCH","sector":"Technology","w":0.36,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"AMAT","name":"APPLIED MATERIAL INC","sector":"Technology","w":0.35,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"CAT","name":"CATERPILLAR INC","sector":"Industrials","w":0.34,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"PG","name":"PROCTER & GAMBLE","sector":"Staples","w":0.34,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"BAC","name":"BANK OF AMERICA","sector":"Financials","w":0.34,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"MRK","name":"MERCK & CO INC","sector":"Healthcare","w":0.34,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"KO","name":"COCA-COLA","sector":"Staples","w":0.34,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"UNH","name":"UNITEDHEALTH GROUP","sector":"Healthcare","w":0.33,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"700","name":"TENCENT HOLDINGS","sector":"Communications","w":0.32,"loc":"China","exch":"Hong Kong Exchanges And Clearing Ltd","cur":"USD"},{"t":"HSBA","name":"HSBC HOLDINGS PLC","sector":"Financials","w":0.32,"loc":"United Kingdom","exch":"London Stock Exchange","cur":"USD"},{"t":"PANW","name":"PALO ALTO NETWORKS","sector":"Technology","w":0.31,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"GE","name":"GE AEROSPACE","sector":"Industrials","w":0.31,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"PM","name":"PHILIP MORRIS INTERNATIONAL","sector":"Staples","w":0.3,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"SHEL","name":"SHELL","sector":"Energy","w":0.29,"loc":"United Kingdom","exch":"London Stock Exchange","cur":"USD"},{"t":"ROP","name":"ROCHE PS PAR AG","sector":"Healthcare","w":0.29,"loc":"Switzerland","exch":"SIX Swiss Exchange","cur":"USD"},{"t":"NFLX","name":"NETFLIX","sector":"Communications","w":0.28,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"HD","name":"HOME DEPOT","sector":"Discretionary","w":0.28,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"RY","name":"ROYAL BANK OF CANADA","sector":"Financials","w":0.26,"loc":"Canada","exch":"Toronto Stock Exchange","cur":"USD"},{"t":"GEV","name":"GE VERNOVA","sector":"Industrials","w":0.26,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"GS","name":"GOLDMAN SACHS GROUP","sector":"Financials","w":0.25,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"NOVN","name":"NOVARTIS AG","sector":"Healthcare","w":0.25,"loc":"Switzerland","exch":"SIX Swiss Exchange","cur":"USD"},{"t":"TXN","name":"TEXAS INSTRUMENT INC","sector":"Technology","w":0.25,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"CRWD","name":"CROWDSTRIKE HOLDINGS CLASS A","sector":"Technology","w":0.25,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"ORCL","name":"ORACLE","sector":"Technology","w":0.24,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"TMO","name":"THERMO FISHER SCIENTIFIC INC","sector":"Healthcare","w":0.24,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"RTX","name":"RTX","sector":"Industrials","w":0.24,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"WFC","name":"WELLS FARGO","sector":"Financials","w":0.24,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"KLAC","name":"KLA","sector":"Technology","w":0.23,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"8306","name":"MITSUBISHI UFJ FINANCIAL GROUP","sector":"Financials","w":0.23,"loc":"Japan","exch":"Tokyo Stock Exchange","cur":"USD"},{"t":"NESN","name":"NESTLE SA","sector":"Staples","w":0.23,"loc":"Switzerland","exch":"SIX Swiss Exchange","cur":"USD"},{"t":"AZN","name":"ASTRAZENECA PLC","sector":"Healthcare","w":0.23,"loc":"United Kingdom","exch":"London Stock Exchange","cur":"USD"},{"t":"MRVL","name":"MARVELL TECHNOLOGY","sector":"Technology","w":0.22,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"9988","name":"ALIBABA GROUP HOLDING","sector":"Discretionary","w":0.22,"loc":"China","exch":"Hong Kong Exchanges And Clearing Ltd","cur":"USD"},{"t":"LIN","name":"LINDE PLC","sector":"Materials","w":0.22,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"SAP","name":"SAP","sector":"Technology","w":0.22,"loc":"Germany","exch":"Xetra","cur":"USD"},{"t":"SIE","name":"SIEMENS N AG","sector":"Industrials","w":0.21,"loc":"Germany","exch":"Xetra","cur":"USD"},{"t":"AMGN","name":"AMGEN INC","sector":"Healthcare","w":0.21,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"MS","name":"MORGAN STANLEY","sector":"Financials","w":0.21,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"ANET","name":"ARISTA NETWORKS","sector":"Technology","w":0.21,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"SNDK","name":"SANDISK","sector":"Technology","w":0.21,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"BHP","name":"BHP GROUP LTD","sector":"Materials","w":0.21,"loc":"Australia","exch":"Asx - All Markets","cur":"USD"},{"t":"IBM","name":"INTERNATIONAL BUSINESS MACHINES","sector":"Technology","w":0.21,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"SHOP","name":"SHOPIFY SUBORDINATE VOTING CLASS A","sector":"Technology","w":0.21,"loc":"Canada","exch":"Toronto Stock Exchange","cur":"USD"},{"t":"C","name":"CITIGROUP","sector":"Financials","w":0.2,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"APH","name":"AMPHENOL CORP CLASS A","sector":"Technology","w":0.2,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"2454","name":"MEDIATEK","sector":"Technology","w":0.2,"loc":"Taiwan","exch":"Taiwan Stock Exchange","cur":"USD"},{"t":"ADI","name":"ANALOG DEVICES","sector":"Technology","w":0.19,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"SAN","name":"BANCO SANTANDER","sector":"Financials","w":0.19,"loc":"Spain","exch":"Bolsa De Madrid","cur":"USD"},{"t":"TD","name":"TORONTO DOMINION","sector":"Financials","w":0.19,"loc":"Canada","exch":"Toronto Stock Exchange","cur":"USD"},{"t":"CRM","name":"SALESFORCE","sector":"Technology","w":0.18,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"DIS","name":"WALT DISNEY","sector":"Communications","w":0.18,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"6857","name":"ADVANTEST","sector":"Technology","w":0.18,"loc":"Japan","exch":"Tokyo Stock Exchange","cur":"USD"},{"t":"QCOM","name":"QUALCOMM","sector":"Technology","w":0.18,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"GILD","name":"GILEAD SCIENCES","sector":"Healthcare","w":0.18,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"VZ","name":"VERIZON COMMUNICATIONS INC","sector":"Communications","w":0.17,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"CBA","name":"COMMONWEALTH BANK OF AUSTRALIA","sector":"Financials","w":0.17,"loc":"Australia","exch":"Asx - All Markets","cur":"USD"},{"t":"ALV","name":"ALLIANZ","sector":"Financials","w":0.17,"loc":"Germany","exch":"Xetra","cur":"USD"},{"t":"7203","name":"TOYOTA MOTOR","sector":"Discretionary","w":0.17,"loc":"Japan","exch":"Tokyo Stock Exchange","cur":"USD"},{"t":"ABT","name":"ABBOTT LABORATORIES","sector":"Healthcare","w":0.17,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"TTE","name":"TOTALENERGIES","sector":"Energy","w":0.17,"loc":"France","exch":"Nyse Euronext - Euronext Paris","cur":"USD"},{"t":"PEP","name":"PEPSICO","sector":"Staples","w":0.17,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"DELL","name":"DELL TECHNOLOGIES INC CLASS C","sector":"Technology","w":0.17,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"COP","name":"CONOCOPHILLIPS","sector":"Energy","w":0.16,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"MCD","name":"MCDONALDS CORP","sector":"Discretionary","w":0.16,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"UNP","name":"UNION PACIFIC","sector":"Industrials","w":0.16,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"ETN","name":"EATON PLC","sector":"Industrials","w":0.16,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"STX","name":"SEAGATE TECHNOLOGY HOLDINGS PLC","sector":"Technology","w":0.16,"loc":"United States","exch":"NASDAQ","cur":"USD"},{"t":"NEE","name":"NEXTERA ENERGY","sector":"Utilities","w":0.16,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"AXP","name":"AMERICAN EXPRESS","sector":"Financials","w":0.16,"loc":"United States","exch":"NYSE","cur":"USD"},{"t":"8035","name":"TOKYO ELECTRON","sector":"Technology","w":0.16,"loc":"Japan","exch":"Tokyo Stock Exchange","cur":"USD"},{"t":"WELL","name":"WELLTOWER","sector":"Real Estate","w":0.16,"loc":"United States","exch":"NYSE","cur":"USD"}],"sectors":{"Technology":32.66,"Discretionary":8.33,"Communications":7.91,"Healthcare":8.33,"Financials":15.82,"Energy":4.16,"Staples":4.61,"Industrials":10.09,"Materials":3.42,"Utilities":2.19,"Real Estate":1.39}};
     let _acwi = null;   // { date, rows:[{t,name,sector,w,loc,exch,cur}], sectors:{} }
     function pfParseAcwi(csv) {
         const lines = String(csv).replace(/^\uFEFF/, '').split(/\r?\n/).map(l => parseCSVRow(l));
@@ -8107,18 +8119,40 @@
         const sectors = {}; rows.forEach(r => sectors[r.sector] = (sectors[r.sector] || 0) + r.w);
         return { date, rows, sectors };
     }
+    let _acwiErr = '';
     async function pfLoadAcwi(force) {
         try {
             const c = JSON.parse(localStorage.getItem('acwiHoldings') || 'null');
             if (c && !force && Date.now() - c.at < 864e5) { _acwi = c.data; pfApplyAcwi(); return; }
             if (c) { _acwi = c.data; pfApplyAcwi(); }
         } catch (e) {}
+        _acwiErr = 'loading…'; if (pfSub === 'bench') pfRenderBench();
         try {
-            const csv = await fetchWithProxy(ACWI_URL);
-            const data = pfParseAcwi(csv);
-            if (data) { _acwi = data; pfApplyAcwi();
+            let data = null, csv = '';
+            for (const u of ACWI_URLS) {
+                try { csv = await fetchWithProxy(u); } catch (e) { continue; }
+                if (/^\s*<(!doctype|html)/i.test(csv)) continue;   // got a web page, not the CSV
+                data = pfParseAcwi(csv); if (data) break;
+            }
+            if (data) { _acwi = data; _acwiErr = ''; pfApplyAcwi();
                 try { localStorage.setItem('acwiHoldings', JSON.stringify({ at: Date.now(), data })); } catch (e) {} }
-        } catch (e) { console.warn('ACWI holdings not loaded', e); }
+            else { _acwiErr = 'iShares file received but could not be read (format changed?)'; console.warn('ACWI parse failed', String(csv).slice(0, 500)); }
+        } catch (e) { _acwiErr = 'download blocked or failed (proxy)'; console.warn('ACWI holdings not loaded', e); }
+        if (!_acwi || _acwiErr) { if (pfSub === 'bench') pfRenderBench(); }
+    }
+    // manual fallback: user picks the iShares ACWI holdings CSV he downloaded himself
+    function pfAcwiFile(inp) {
+        const f = inp.files && inp.files[0]; if (!f) return;
+        const rd = new FileReader();
+        rd.onload = () => {
+            try {
+                const data = pfParseAcwi(String(rd.result));
+                if (!data) { _acwiErr = 'this file is not an iShares ACWI holdings CSV'; pfRenderBench(); return; }
+                _acwi = data; _acwiErr = ''; pfApplyAcwi();
+                try { localStorage.setItem('acwiHoldings', JSON.stringify({ at: Date.now(), data })); } catch (e) {}
+            } catch (e) { _acwiErr = 'file could not be read: ' + e.message; pfRenderBench(); }
+        };
+        rd.readAsText(f);
     }
     function pfApplyAcwi() {
         if (!_acwi) return;
@@ -8128,12 +8162,14 @@
         if (pfSub === 'bench') pfRenderBench();
     }
     let _acwiMatch = null;
+    let _acwiMatchFor = null;
     function pfAcwiMatch() {
-        if (_acwiMatch) return _acwiMatch;
+        if (_acwiMatch && _acwiMatchFor === (_acwi || ACWI_SNAP)) return _acwiMatch;
+        _acwiMatchFor = _acwi || ACWI_SNAP;
         const us = new Map(allData.map(d => [d.ticker.toUpperCase(), d]));
         const row = new Map((allDataRoW || []).map(d => [d.ticker.toUpperCase(), d]));
         const rowByBase = {}; (allDataRoW || []).forEach(d => (rowByBase[pfBaseSym(d.ticker)] = rowByBase[pfBaseSym(d.ticker)] || []).push(d));
-        _acwiMatch = _acwi.rows.map(r => {
+        _acwiMatch = (_acwi || ACWI_SNAP).rows.map(r => {
             const t = r.t.toUpperCase().replace(/\s+/g, '');
             let d = null;
             if (/united states/i.test(r.loc || '') || /nasdaq|nyse|cboe|bats/i.test(r.exch)) {
@@ -8156,9 +8192,9 @@
     const pfTitle = s => String(s || '').toLowerCase().replace(/(^|[\s\-\/(])(\S)/g, (m, a, b) => a + b.toUpperCase());
     // one line per company (share classes merged) with my weight attached
     function pfAcwiCompanies() {
-        if (!_acwi) return null;
         const G = {};
-        pfAcwiMatch().forEach(r => {
+        const top = pfAcwiMatch().slice().sort((x, y) => y.w - x.w).slice(0, 100);   // top 100 is enough
+        top.forEach(r => {
             const key = String(r.name || r.t).toUpperCase().replace(/\s+(CLASS|CL)\s+[A-Z0-9]{1,2}$/, '').trim();
             const g = G[key] || (G[key] = { name: r.name, sector: r.sector, tk: r.t, tkw: 0, w: 0, ds: [], ub: [] });
             g.w += r.w;
@@ -8174,46 +8210,34 @@
             g.mine = [...mine]; g.hw = g.mine.reduce((s, r) => s + r.w, 0);
             g.mine.forEach(r => used.add(r));
         });
-        // holdings that are not in ACWI at all
-        const extra = pfRows.filter(r => !used.has(r)).map(r => ({ name: r.name, sector: r.sector, tk: pfShort(r.input), w: 0, hw: r.w, ds: [r._src], ub: [], mine: [r] }));
+        // holdings outside the top 100: assume ACWI weight 0.1%
+        const extra = pfRows.filter(r => !used.has(r)).map(r => ({ name: r.name, sector: r.sector, tk: pfShort(r.input), w: 0.1, hw: r.w, ds: [r._src], ub: [], mine: [r] }));
         return { list, extra };
     }
     function pfBenchTable(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
     function pfRenderBenchSimple() {
-        const n2 = v => v == null || isNaN(v) ? '—' : v.toFixed(2) + '%';
-        const pp = v => (v > 0 ? '+' : '') + v.toFixed(1);
+        const pp = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(1);
         const sectors = Object.keys(ACWI_SECTORS), totB = Object.values(ACWI_SECTORS).reduce((a, b) => a + b, 0) || 1;
         const invested = pfRows.reduce((s, r) => s + r.w, 0), cash = Math.max(0, 100 - invested);
         const lines = [];
-        // ── 3 · sectors ──
+        // ── sectors ──
         const wp = {}; sectors.forEach(k => wp[k] = 0);
         pfRows.forEach(r => { if (wp[r.sector] != null) wp[r.sector] += r.w; });
-        const sec = sectors.map(k => ({ k, p: wp[k], b: ACWI_SECTORS[k] / totB * 100 })).map(x => ({ ...x, a: x.p - x.b })).sort((a, b) => b.b - a.b);
-        const maxBar = Math.max(...sec.map(x => Math.max(x.p, x.b)), 1);
-        pfBenchTable('bxSector', sec.map(x => `<tr><td class="td-name">${x.k}</td><td class="td-pct">${x.p.toFixed(1)}%</td><td class="td-pct">${x.b.toFixed(1)}%</td>
-            <td class="td-pct" style="font-weight:700">${pp(x.a)}</td>
-            <td><div style="height:7px;background:var(--accent2);width:${x.p / maxBar * 100}%;margin-bottom:2px"></div><div style="height:7px;background:#cbd5e1;width:${x.b / maxBar * 100}%"></div></td></tr>`).join('')
-            + (cash > 0.05 ? `<tr><td class="td-name">Cash</td><td class="td-pct">${cash.toFixed(1)}%</td><td class="td-pct">0.0%</td><td class="td-pct" style="font-weight:700">${pp(cash)}</td><td></td></tr>` : ''));
-        const over = [...sec].sort((a, b) => b.a - a.a), ow = over.filter(x => x.a > 0.5).slice(0, 2), uw = over.filter(x => x.a < -0.5).slice(-2).reverse();
-        const secDev = sec.reduce((s, x) => s + Math.abs(x.a), 0) / 2;
-        lines.push(`<b>Sectors:</b> ${ow.length ? 'overweight ' + ow.map(x => `${x.k} ${pp(x.a)}`).join(', ') : 'no big overweight'}${uw.length ? ' · underweight ' + uw.map(x => `${x.k} ${pp(x.a)}`).join(', ') : ''} (pp vs ACWI)`);
-        // ── stock level ──
+        const sec = sectors.map(k => ({ k, p: wp[k], b: ACWI_SECTORS[k] / totB * 100 })).map(x => ({ ...x, a: x.p - x.b })).sort((a, b) => b.a - a.a);
+        pfBenchTable('bxSector', sec.map(x => `<tr><td>${x.k}</td><td style="text-align:right">${x.p.toFixed(1)}%</td><td style="text-align:right;color:var(--muted)">${x.b.toFixed(1)}%</td><td style="text-align:right;font-weight:700">${pp(x.a)}</td></tr>`).join('')
+            + (cash > 0.5 ? `<tr><td>Cash</td><td style="text-align:right">${cash.toFixed(1)}%</td><td style="text-align:right;color:var(--muted)">0%</td><td style="text-align:right;font-weight:700">${pp(cash)}</td></tr>` : ''));
+        const ow = sec.filter(x => x.a >= 1).slice(0, 2), uw = sec.filter(x => x.a <= -1).slice(-2).reverse();
         const C = pfAcwiCompanies();
         const src = document.getElementById('bxSrc');
-        if (!C) {
-            const msg = '<tr><td colspan="6" class="pf-hint">ACWI holdings not loaded yet — <a href="#" onclick="pfLoadAcwi(true);return false" style="color:var(--accent2)">load them</a>.</td></tr>';
-            ['bxMissW', 'bxOverW', 'bxWin1', 'bxWin3'].forEach(id => pfBenchTable(id, msg));
-            if (src) src.innerHTML = 'ACWI holdings not loaded — sector weights use the last snapshot.';
-        } else {
-            if (src) src.innerHTML = `ACWI = iShares MSCI ACWI holdings as of ${_acwi.date || '—'} (${_acwi.rows.length} stocks, share classes merged). Weights in % of portfolio vs % of ACWI. <a href="#" onclick="pfLoadAcwi(true);return false" style="color:var(--accent2)">Reload</a>`;
+        const empty = '<tr><td colspan="3" style="text-align:left;color:var(--muted)">—</td></tr>';
+        {
+            const live = !!_acwi;
+            if (src) src.innerHTML = `ACWI top 100 · ${(_acwi || ACWI_SNAP).date || '—'}${live ? '' : ' (built-in)'} · <a href="#" onclick="pfLoadAcwi(true);return false" style="color:var(--accent2)">Refresh</a>${_acwiErr && !live ? ' <span style="color:var(--muted)">(' + _acwiErr + ')</span>' : ''}`;
             const all = C.list.concat(C.extra);
-            // 1a · biggest ACWI names not held
             const miss = C.list.filter(g => g.hw === 0).sort((a, b) => b.w - a.w).slice(0, 10);
-            pfBenchTable('bxMissW', miss.map((g, i) => `<tr><td class="td-pct">${i + 1}</td><td class="td-ticker"><b>${g.tk}</b></td><td class="td-name">${pfTitle(g.name).slice(0, 26)}</td><td class="td-name">${g.sector || ''}</td><td class="td-pct" style="font-weight:700">${n2(g.w)}</td></tr>`).join(''));
-            // 1b · my biggest overweights
+            pfBenchTable('bxMissW', miss.map(g => `<tr><td><b>${g.tk}</b></td><td>${g.w.toFixed(2)}%</td></tr>`).join('') || empty);
             const ov = all.filter(g => g.hw > 0).map(g => ({ g, a: g.hw - g.w })).sort((a, b) => b.a - a.a).slice(0, 10);
-            pfBenchTable('bxOverW', ov.map((x, i) => `<tr><td class="td-pct">${i + 1}</td><td class="td-ticker"><b>${x.g.mine.length === 1 ? pfShort(x.g.mine[0].input) : x.g.tk}</b></td><td class="td-name">${pfTitle(x.g.name).slice(0, 26)}</td><td class="td-pct">${n2(x.g.hw)}</td><td class="td-pct">${n2(x.g.w)}</td><td class="td-pct" style="font-weight:700">${(x.a > 0 ? '+' : '') + x.a.toFixed(2)}</td></tr>`).join(''));
-            // 2 · ACWI winners I don't own
+            pfBenchTable('bxOverW', ov.map(x => `<tr><td><b>${x.g.mine.length === 1 ? pfShort(x.g.mine[0].input) : x.g.tk}</b></td><td>${x.g.hw.toFixed(1)}%</td><td style="color:var(--muted)">${x.g.w.toFixed(1)}%</td></tr>`).join('') || empty);
             const minWt = +document.getElementById('bxMinWt').value;
             const winners = nDays => {
                 let sw = 0, sr = 0;
@@ -8224,19 +8248,15 @@
                     return { g, x };
                 }).filter(o => o.x != null && o.x > Rb).sort((a, b) => b.x - a.x);
             };
-            const w1 = winners(21), w3 = winners(63);
-            const wRows = L => L.slice(0, 15).map((o, i) => `<tr><td class="td-pct">${i + 1}</td><td class="td-ticker"><b style="cursor:pointer" onclick="openNews('${o.g.ds[0].ticker}')">${o.g.tk}</b></td><td class="td-name">${pfTitle(o.g.name).slice(0, 26)}</td><td class="td-name">${o.g.sector || ''}</td></tr>`).join('') || '<tr><td colspan="4" class="pf-hint">None.</td></tr>';
-            pfBenchTable('bxWin1', wRows(w1)); pfBenchTable('bxWin3', wRows(w3));
-            // conclusion lines
-            const invN = invested || 1, bTot = C.list.reduce((s, g) => s + g.w, 0) || 1;
-            const activeShare = all.reduce((s, g) => s + Math.abs(g.hw / invN * 100 - g.w / bTot * 100), 0) / 2;
-            const ovTop = ov.reduce((s, x) => s + x.g.hw, 0), ovB = ov.reduce((s, x) => s + x.g.w, 0);
-            lines.unshift(`<b>Active share vs ACWI: ${activeShare.toFixed(0)}%</b> (sector gap ${secDev.toFixed(0)} pp)`);
-            lines.push(`<b>Top 10 overweights</b> = ${ovTop.toFixed(1)}% of my portfolio vs ${ovB.toFixed(1)}% in ACWI`);
-            lines.push(`<b>Biggest ACWI names missing:</b> ${miss.slice(0, 5).map(g => g.tk).join(', ') || 'none'} (top 10 = ${miss.reduce((s, g) => s + g.w, 0).toFixed(1)}% of ACWI)`);
+            const chips = L => L.slice(0, 10).map(o => `<span class="bx-chip" onclick="openNews('${o.g.ds[0].ticker}')">${o.g.tk}</span>`).join('') || '<span style="color:var(--muted)">—</span>';
+            pfBenchTable('bxWin1', chips(winners(21))); pfBenchTable('bxWin3', chips(winners(63)));
+            if (ov.length) lines.push(`<b>Biggest overweights:</b> ${ov.slice(0, 3).map(x => (x.g.mine.length === 1 ? pfShort(x.g.mine[0].input) : x.g.tk) + ' ' + pp(x.a)).join(', ')}`);
+            if (miss.length) lines.push(`<b>Big names missing:</b> ${miss.slice(0, 5).map(g => g.tk).join(', ')}`);
+            if (cash > 0.5) lines.push(`<b>Cash:</b> ${cash.toFixed(0)}%`);
         }
+        if (ow.length || uw.length) lines.splice(0, 0, (ow.length ? `<b>Overweight:</b> ${ow.map(x => `${x.k} ${pp(x.a)}`).join(', ')}` : '') + (ow.length && uw.length ? ' &nbsp;·&nbsp; ' : '') + (uw.length ? `<b>Underweight:</b> ${uw.map(x => `${x.k} ${pp(x.a)}`).join(', ')}` : ''));
         const el = document.getElementById('bxConc');
-        if (el) el.innerHTML = lines.join('<span class="sep">|</span>');
+        if (el) el.innerHTML = lines.join('<br>');
     }
 
     function pfRenderBench() {
