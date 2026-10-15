@@ -1720,9 +1720,6 @@
                 .bx-t.c5{width:476px}
                 .bx-t.c6{width:546px}
                 .bx-t.c7{width:616px}
-                #bxOverTbl{width:740px}
-                #bxOverTbl thead th:nth-child(2){width:170px}
-                #bxOverTbl thead th:nth-child(3){width:150px;text-align:left}
                 #bxGrpTbl{width:536px}
                 #bxGrpTbl thead th{width:72px}
                 #bxGrpTbl thead th:first-child{width:176px;text-align:left}
@@ -1748,11 +1745,13 @@
             </style>
 
             <div class="pf-h">WEIGHTS</div>
-            <div class="bx-two">
+            <div class="bx-two" style="grid-template-columns:336px auto auto">
                 <div><div class="pf-sub">Stocks I Don't Own</div>
                     <div class="table-wrap bx-w"><table class="bx-t"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th></tr></thead><tbody id="bxMissW"></tbody></table></div></div>
-                <div><div class="pf-sub">My Overweights</div>
-                    <div class="table-wrap bx-w"><table class="bx-t" id="bxOverTbl"><thead><tr><th>Ticker</th><th>Name</th><th>Group</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th><th class="num">ACWI group</th><th class="num">Group gap</th></tr></thead><tbody id="bxOverW"></tbody></table></div></div>
+                <div><div class="pf-sub">My Overweights · by Group Gap</div>
+                    <div class="table-wrap bx-w"><table class="bx-t c6"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th><th class="num">Group Gap</th></tr></thead><tbody id="bxOverW"></tbody></table></div></div>
+                <div><div class="pf-sub">Individual Stocks · by Gap</div>
+                    <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxOverS"></tbody></table></div></div>
             </div>
 
             <div class="pf-h">ACWI WINNERS I DON'T OWN</div>
@@ -8349,12 +8348,14 @@
             const missTot = `<tr class="tot"><td></td><td class="td-name">Total ${miss15.length}</td><td class="td-pct num">${miss15.reduce((a, g) => a + g.w, 0).toFixed(1)}%</td></tr>`;
             pfBenchTable('bxMissW', missRows ? missRows + missTot : emp4);
             const GT = pfGroupTotals(C);
-            const ov = all.filter(g => g.hw > 0).map(g => { const G = pfGroupOf(g), t = GT[G] || { p: g.hw, b: g.w }; return { g, a: g.hw - g.w, G, gb: t.b, gg: t.p - t.b }; })
-                .sort((a, b) => b.gg - a.gg).slice(0, 15);
-            const ovRows = ov.map(x => { const m = x.g.mine, m0 = m[0];
-                return `<tr><td class="td-ticker tk" onclick="openNews('${m0._src.ticker}')">${m.length === 1 ? pfShort(m0.input) : x.g.tk}</td><td class="td-name nm">${pfShortName(m.length === 1 && m0.name ? m0.name : x.g.name)}</td><td class="td-name nm dim">${x.G}</td><td class="td-pct num">${x.g.hw.toFixed(1)}%</td><td class="td-pct num dim">${x.g.w.toFixed(1)}%</td><td class="td-pct num">${pp(x.a)}</td><td class="td-pct num dim">${x.gb.toFixed(1)}%</td><td class="td-pct num">${pp(x.gg)}</td></tr>`; }).join('');
-            const ovTot = `<tr class="tot"><td></td><td class="td-name">Total ${ov.length}</td><td></td><td class="td-pct num">${ov.reduce((a, x) => a + x.g.hw, 0).toFixed(1)}%</td><td class="td-pct num">${ov.reduce((a, x) => a + x.g.w, 0).toFixed(1)}%</td><td class="td-pct num">${pp(ov.reduce((a, x) => a + x.a, 0))}</td><td></td><td></td></tr>`;
-            pfBenchTable('bxOverW', ovRows ? ovRows + ovTot : emp4);
+            const ovAll = all.filter(g => g.hw > 0).map(g => { const G = pfGroupOf(g), t = GT[G] || { p: g.hw, b: g.w }; return { g, a: g.hw - g.w, G, gg: t.p - t.b }; });
+            const ovG = ovAll.slice().sort((a, b) => b.gg - a.gg).slice(0, 15);
+            const ovS = ovAll.slice().sort((a, b) => b.a - a.a).slice(0, 15);
+            const ovRow = (x, withGG) => { const m = x.g.mine, m0 = m[0];
+                return `<tr><td class="td-ticker tk" onclick="openNews('${m0._src.ticker}')">${m.length === 1 ? pfShort(m0.input) : x.g.tk}</td><td class="td-name nm">${pfShortName(m.length === 1 && m0.name ? m0.name : x.g.name)}</td><td class="td-pct num">${x.g.hw.toFixed(1)}%</td><td class="td-pct num dim">${x.g.w.toFixed(1)}%</td><td class="td-pct num">${pp(x.a)}</td>${withGG ? `<td class="td-pct num">${pp(x.gg)}</td>` : ''}</tr>`; };
+            const ovTot = (L, withGG) => `<tr class="tot"><td></td><td class="td-name">Total ${L.length}</td><td class="td-pct num">${L.reduce((a, x) => a + x.g.hw, 0).toFixed(1)}%</td><td class="td-pct num">${L.reduce((a, x) => a + x.g.w, 0).toFixed(1)}%</td><td class="td-pct num">${pp(L.reduce((a, x) => a + x.a, 0))}</td>${withGG ? '<td></td>' : ''}</tr>`;
+            pfBenchTable('bxOverW', ovG.length ? ovG.map(x => ovRow(x, true)).join('') + ovTot(ovG, true) : emp4);
+            pfBenchTable('bxOverS', ovS.length ? ovS.map(x => ovRow(x, false)).join('') + ovTot(ovS, false) : emp4);
             const minWt = +document.getElementById('bxMinWt').value;
             const winners = nDays => {
                 let sw = 0, sr = 0;
