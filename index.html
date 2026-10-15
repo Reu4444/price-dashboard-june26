@@ -1727,25 +1727,26 @@
                 #bxOverW tr.ge,#bxOverW tr.ge td{border-bottom-color:var(--border)}
                 #bxGrpTbl,
                 
-                #bxGrpTbl2{width:486px}
+                #bxGrpTbl2{width:550px}
                 #bxGrpTbl thead th,
                 
                 #bxGrpTbl2 thead th{width:70px}
                 #bxGrpTbl thead th:first-child,
                 
-                #bxGrpTbl2 thead th:first-child{width:276px;text-align:left}
+                #bxGrpTbl2 thead th:first-child{width:340px;text-align:left}
                 #bxGrpTbl thead th:nth-child(2),
                 
                 #bxGrpTbl2 thead th:nth-child(2){width:70px;text-align:center}
                 #bxGroup td,
                 
-                #bxGroup2 td{padding-top:8px;padding-bottom:8px;vertical-align:middle}
+                #bxGroup2 td{padding-top:5px;padding-bottom:5px;vertical-align:middle}
                 #bxGroup .gn,
                 
-                #bxGroup2 .gn{font-weight:700;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis}
+                #bxGroup2 .gn{display:inline;font-weight:700;font-size:13px;color:var(--text)}
+                #bxGroup td.td-name,#bxGroup2 td.td-name,#bxGroupA td.td-name,#bxGroupA2 td.td-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:340px}
                 #bxGroup .gs,
                 
-                #bxGroup2 .gs{font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis}
+                #bxGroup2 .gs{display:inline;font-size:11px;color:var(--muted);margin-left:8px}
                 #bxPerfTbl{width:336px}
                 #bxPerfTbl thead th{width:80px}
                 #bxPerfTbl thead th:first-child{width:176px;text-align:left}
@@ -1773,6 +1774,7 @@
                 #bxRegMine td:nth-child(5),
                 #bxSecAcwi td:nth-child(5),
                 #bxRegAcwi td:nth-child(5),
+                #bxGrpMine tr.sub td,#bxGrpMine2 tr.sub td{font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--text-dim,#64748b);background:rgba(100,116,139,.10);padding:4px 8px}
                 #bxGrpMine td:nth-child(5),
                 #bxGrpAcwi td:nth-child(5),
                 #bxPerfUp td:nth-child(6),
@@ -1791,12 +1793,12 @@
                 #bxGroup2 tr.sel td{background:var(--bg3)}
                 #bxSector tr.sel td:first-child,#bxRegion tr.sel td:first-child,#bxGroup tr.sel td:first-child,
                 #bxGroup2 tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent2)}
-                #bxGrpTblA,#bxGrpTblA2{width:486px}
+                #bxGrpTblA,#bxGrpTblA2{width:550px}
                 #bxGrpTblA thead th,#bxGrpTblA2 thead th{width:70px}
-                #bxGrpTblA thead th:first-child,#bxGrpTblA2 thead th:first-child{width:276px;text-align:left}
-                #bxGroupA td,#bxGroupA2 td{padding-top:8px;padding-bottom:8px;vertical-align:middle}
-                #bxGroupA .gn,#bxGroupA2 .gn{font-weight:700;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis}
-                #bxGroupA .gs,#bxGroupA2 .gs{font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis}
+                #bxGrpTblA thead th:first-child,#bxGrpTblA2 thead th:first-child{width:340px;text-align:left}
+                #bxGroupA td,#bxGroupA2 td{padding-top:5px;padding-bottom:5px;vertical-align:middle}
+                #bxGroupA .gn,#bxGroupA2 .gn{display:inline;font-weight:700;font-size:13px;color:var(--text)}
+                #bxGroupA .gs,#bxGroupA2 .gs{display:inline;font-size:11px;color:var(--muted);margin-left:8px}
                 #bxGroupA td:nth-child(4),#bxGroupA2 td:nth-child(4){font-weight:700;background:rgba(3,105,161,.07)}
             </style>
 
@@ -1816,26 +1818,16 @@
                 <div><div class="pf-sub" id="bxSecAcwiT"></div>
                     <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th><th class="num">Me</th><th class="num">Gap</th></tr></thead><tbody id="bxSecAcwi"></tbody></table></div></div>
             </div>
-            <div class="pf-h">3a · GROUPS <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">my Sheet groups (+ built-in classification for ACWI stocks not in my Sheet) · click a group</span></div>
+            <div class="pf-h">3 · GROUPS <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">my Sheet groups · click a group</span></div>
             <div class="bx-sp">
                 <div><div class="pf-sub">Allocation vs ACWI</div><div class="table-wrap bx-w"><table class="bx-t" id="bxGrpTbl"><thead><tr><th>Group / main stocks</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxGroup"></tbody></table></div></div>
                 <div><div class="pf-sub" id="bxGrpMineT"></div>
-                    <div class="table-wrap bx-w"><table class="bx-t c7"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th><th class="num">1M vs peers</th><th class="num">3M vs peers</th></tr></thead><tbody id="bxGrpMine"></tbody></table></div></div>
+                    <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxGrpMine"></tbody></table></div></div>
                 <div><div class="pf-sub" id="bxGrpAcwiT"></div>
                     <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th><th class="num">Me</th><th class="num">Gap</th></tr></thead><tbody id="bxGrpAcwi"></tbody></table></div></div>
             </div>
 
             <div class="bx-sp"><div><div class="pf-sub">ACWI's 15 biggest groups</div><div class="table-wrap bx-w"><table class="bx-t" id="bxGrpTblA"><thead><tr><th>Group / main stocks</th><th class="num">ACWI</th><th class="num">Me</th><th class="num">Gap</th></tr></thead><tbody id="bxGroupA"></tbody></table></div></div></div>
-            <div class="pf-h">3b · GROUPS <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">built-in classification only (every ACWI stock, 30 groups) · click a group</span></div>
-            <div class="bx-sp">
-                <div><div class="pf-sub">Allocation vs ACWI</div><div class="table-wrap bx-w"><table class="bx-t" id="bxGrpTbl2"><thead><tr><th>Group / main stocks</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxGroup2"></tbody></table></div></div>
-                <div><div class="pf-sub" id="bxGrpMineT2"></div>
-                    <div class="table-wrap bx-w"><table class="bx-t c7"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th><th class="num">1M vs peers</th><th class="num">3M vs peers</th></tr></thead><tbody id="bxGrpMine2"></tbody></table></div></div>
-                <div><div class="pf-sub" id="bxGrpAcwiT2"></div>
-                    <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th><th class="num">Me</th><th class="num">Gap</th></tr></thead><tbody id="bxGrpAcwi2"></tbody></table></div></div>
-            </div>
-
-            <div class="bx-sp"><div><div class="pf-sub">ACWI's 15 biggest groups</div><div class="table-wrap bx-w"><table class="bx-t" id="bxGrpTblA2"><thead><tr><th>Group / main stocks</th><th class="num">ACWI</th><th class="num">Me</th><th class="num">Gap</th></tr></thead><tbody id="bxGroupA2"></tbody></table></div></div></div>
             <div class="pf-h">4 · STOCKS <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">individual names</span></div>
             <div class="bx-two" style="grid-template-columns:336px auto auto">
                 <div><div class="pf-sub">Stocks I Don't Own</div>
@@ -8508,7 +8500,7 @@
     // two versions side by side: (1) my Sheet groups + built-in for ACWI names missing from the Sheet, (2) built-in classification only
     function pfRenderBenchGroups() {
         const prev = bxGroupMode;
-        try { bxGroupMode = 'hybrid'; bxRenderGroupsFor(''); bxGroupMode = 'built'; bxRenderGroupsFor('2'); }
+        try { bxGroupMode = 'hybrid'; bxRenderGroupsFor(''); }
         finally { bxGroupMode = prev; }
     }
     function bxRenderGroupsFor(sfx) {
@@ -8551,8 +8543,17 @@
         if (t1) t1.textContent = `My ${sel.G} stocks · ${mine.length}`;
         if (t2) t2.textContent = `ACWI ${sel.G} stocks · ${acw.length} names counted`;
         const sumHw = mine.reduce((t, x) => t + x.g.hw, 0), sumBw = mine.reduce((t, x) => t + x.g.w, 0);
-        pfBenchTable('bxGrpMine' + sfx, mine.map(x => `<tr class="${bxRS(x.m._src)}"><td class="td-ticker tk" onclick="openNews('${x.m._src.ticker}')">${pfShort(x.m.input)}</td><td class="td-name nm">${pfShortName(x.m.name || x.m.input)}</td><td class="td-pct num">${x.g.hw.toFixed(1)}%</td><td class="td-pct num dim">${x.g.w.toFixed(2)}%</td><td class="td-pct num">${gp(x.g.hw - x.g.w)}</td><td class="td-pct num">${bxDp(x.v1)}</td><td class="td-pct num">${bxDp(x.v3)}</td></tr>`).join('')
-            + (mine.length ? `<tr class="tot"><td></td><td class="td-name">Total</td><td class="td-pct num">${sumHw.toFixed(1)}%</td><td class="td-pct num">${sumBw.toFixed(2)}%</td><td class="td-pct num">${gp(sumHw - sumBw)}</td><td></td><td></td></tr>` : '<tr><td colspan="7" class="dim">None</td></tr>'));
+        pfBenchTable('bxGrpMine' + sfx, mine.map(x => `<tr class="${bxRS(x.m._src)}"><td class="td-ticker tk" onclick="openNews('${x.m._src.ticker}')">${pfShort(x.m.input)}</td><td class="td-name nm">${pfShortName(x.m.name || x.m.input)}</td><td class="td-pct num">${x.g.hw.toFixed(1)}%</td><td class="td-pct num dim">${x.g.w.toFixed(2)}%</td><td class="td-pct num">${gp(x.g.hw - x.g.w)}</td></tr>`).join('')
+            + (mine.length ? `<tr class="tot"><td></td><td class="td-name">Total</td><td class="td-pct num">${sumHw.toFixed(1)}%</td><td class="td-pct num">${sumBw.toFixed(2)}%</td><td class="td-pct num">${gp(sumHw - sumBw)}</td></tr>` : '<tr><td colspan="5" class="dim">None</td></tr>')
+            + (() => {   // ACWI names of this group that I don't own, biggest first
+                const no = acw.filter(x => !(x.g.hw > 0)), nShow = no.slice(0, 10), nRest = no.slice(10);
+                if (!no.length) return '';
+                const vp = (x, n) => { const s = x.g.ds[0]; if (!s) return null; const r = pfPeriodRet(s.ticker, n), pr = PF(x.G, n, s); return r == null || pr == null ? null : r - pr; };
+                const nRestW = nRest.reduce((t, x) => t + x.g.w, 0), nAllW = no.reduce((t, x) => t + x.g.w, 0);
+                return `<tr class="sub"><td colspan="5">NOT OWNED · ${no.length} ACWI names · ${nAllW.toFixed(2)}%</td></tr>`
+                    + nShow.map(x => `<tr class="${bxRS(x.g.ds[0])}"><td class="td-ticker tk" onclick="${x.g.ds[0] ? `openNews('${x.g.ds[0].ticker}')` : ''}">${x.g.tk}</td><td class="td-name nm">${pfShortName(x.g.name)}</td><td class="td-pct num dim">—</td><td class="td-pct num dim">${x.g.w.toFixed(2)}%</td><td class="td-pct num">${gp(-x.g.w)}</td></tr>`).join('')
+                    + (nRest.length ? `<tr><td></td><td class="td-name dim">+ ${nRest.length} smaller names</td><td class="td-pct num dim">—</td><td class="td-pct num dim">${nRestW.toFixed(2)}%</td><td class="td-pct num dim">${gp(-nRestW)}</td></tr>` : '');
+            })());
         // ACWI side: every name counted in the group weight (top 12 + "others" so the total always adds up)
         const show = acw.slice(0, 12), rest = acw.slice(12);
         const restW = rest.reduce((t, x) => t + x.g.w, 0), restH = rest.reduce((t, x) => t + x.g.hw, 0);
