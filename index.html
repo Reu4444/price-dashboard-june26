@@ -1708,6 +1708,31 @@
         <div id="pfRecos" style="display:none"></div>
         </div>
         <div class="pf-subc" id="pfSub-bench">
+            <div id="bxConc" class="pf-topline"></div>
+            <div class="pf-hint" id="bxSrc" style="margin-bottom:8px"></div>
+
+            <div class="pf-h" style="margin-top:4px">1 · WEIGHTS vs ACWI</div>
+            <div class="pf-grid2" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
+                <div class="pf-card" style="max-height:none"><div class="pf-sub">Largest ACWI stocks I don't own <span style="font-family:Arial;font-size:11px;color:var(--muted)">top 10</span></div>
+                    <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr><th>#</th><th>TICKER</th><th>NAME</th><th>SECTOR</th><th class="th-pct">ACWI WT</th></tr></thead><tbody id="bxMissW"></tbody></table></div></div>
+                <div class="pf-card" style="max-height:none"><div class="pf-sub">My biggest overweights vs ACWI <span style="font-family:Arial;font-size:11px;color:var(--muted)">top 10</span></div>
+                    <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr><th>#</th><th>TICKER</th><th>NAME</th><th class="th-pct">MY WT</th><th class="th-pct">ACWI WT</th><th class="th-pct">ACTIVE</th></tr></thead><tbody id="bxOverW"></tbody></table></div></div>
+            </div>
+
+            <div class="pf-h">2 · ACWI STOCKS THAT BEAT ACWI AND I DON'T OWN</div>
+            <div class="pf-bar-top" style="justify-content:flex-start;gap:10px"><label>Only stocks with ACWI weight ≥ <select id="bxMinWt" onchange="pfRenderBench()"><option value="0">any</option><option value="0.05">0.05%</option><option value="0.1" selected>0.10%</option><option value="0.2">0.20%</option></select></label><span style="color:var(--muted)">ranked by performance, best first · top 15</span></div>
+            <div class="pf-grid2" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
+                <div class="pf-card" style="max-height:none"><div class="pf-sub">Best performers 1M</div>
+                    <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr><th>#</th><th>TICKER</th><th>NAME</th><th>SECTOR</th></tr></thead><tbody id="bxWin1"></tbody></table></div></div>
+                <div class="pf-card" style="max-height:none"><div class="pf-sub">Best performers 3M</div>
+                    <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr><th>#</th><th>TICKER</th><th>NAME</th><th>SECTOR</th></tr></thead><tbody id="bxWin3"></tbody></table></div></div>
+            </div>
+
+            <div class="pf-h">3 · MY SECTORS vs ACWI</div>
+            <div class="pf-card" style="max-height:none;margin-bottom:14px">
+                <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr><th>SECTOR</th><th class="th-pct">MY WT</th><th class="th-pct">ACWI WT</th><th class="th-pct">ACTIVE (pp)</th><th style="min-width:240px">MINE (dark) vs ACWI (light)</th></tr></thead><tbody id="bxSector"></tbody></table></div></div>
+
+            <details class="pf-det" data-k="bmAdv"><summary>Detailed attribution (advanced)</summary>
             <div class="pf-bar-top" style="justify-content:flex-start;gap:10px">
                 <span>Period</span>
                 <button class="pf-swf" data-bp="5" onclick="pfBenchPeriod(5)">1W</button>
@@ -1737,6 +1762,7 @@
                     <div class="table-wrap"><table class="pf-gt" style="width:100%"><thead><tr><th>TICKER</th><th>SECTOR</th><th class="th-pct">ACWI WT</th><th class="th-pct">RETURN</th><th class="th-pct">EFFECT</th></tr></thead><tbody id="bmMissPlus"></tbody></table></div></div>
             </div>
             <div class="pf-hint" style="margin-top:6px"><b>Method (Brinson-Fachler).</b> Allocation = (portfolio sector weight − ACWI sector weight) × (ACWI sector return − ACWI return): being overweight sectors that beat the index. Selection = ACWI sector weight × (portfolio sector return − ACWI sector return): picking stocks that beat their sector. Interaction = active weight × selection gap. Cash earns 0. Effects are in percentage points and add up to the active return. Index names not held: effect = −ACWI weight × (stock return − ACWI return). <b>Limits:</b> ACWI holdings and weights come from the iShares CSV (refreshed daily, via the Apps Script proxy); sector returns use only the constituents the dashboard has prices for (see coverage) — if the file cannot be loaded, a cap-weighted universe proxy is used; current weights are applied to the whole period (no trades); price returns in local currency, dividends and FX excluded. Use it to understand the drivers, not as official performance.</div>
+            </details>
         </div>
         <div class="pf-subc" id="pfSub-models">
             <div class="pf-bar-top" style="justify-content:flex-start;gap:0"><button class="pf-mtab" data-m="claude" onclick="pfModelTab('claude')">CLAUDE</button><button class="pf-mtab" data-m="acwi" onclick="pfModelTab('acwi')">ACWI NEUTRAL</button></div>
@@ -8126,11 +8152,99 @@
     let pfBenchN = (() => { try { return +localStorage.getItem('pfBenchN') || 21; } catch (e) { return 21; } })();
     function pfBenchPeriod(n) { pfBenchN = n; try { localStorage.setItem('pfBenchN', n); } catch (e) {} pfRenderBench(); }
     function pfPeriodRet(tk, n) { const p = pfPrices(tk); return p && p.length > n && p[n] > 0 ? (p[0] / p[n] - 1) * 100 : null; }
+    // ── VS ACWI: simple view (conclusion, weights, winners not owned, sectors) ──
+    const pfTitle = s => String(s || '').toLowerCase().replace(/(^|[\s\-\/(])(\S)/g, (m, a, b) => a + b.toUpperCase());
+    // one line per company (share classes merged) with my weight attached
+    function pfAcwiCompanies() {
+        if (!_acwi) return null;
+        const G = {};
+        pfAcwiMatch().forEach(r => {
+            const key = String(r.name || r.t).toUpperCase().replace(/\s+(CLASS|CL)\s+[A-Z0-9]{1,2}$/, '').trim();
+            const g = G[key] || (G[key] = { name: r.name, sector: r.sector, tk: r.t, tkw: 0, w: 0, ds: [], ub: [] });
+            g.w += r.w;
+            if (r.w > g.tkw) { g.tkw = r.w; g.tk = r.t; }
+            if (r.d) { if (!g.ds.includes(r.d)) g.ds.push(r.d); }
+            else g.ub.push(pfBaseSym(r.t));
+        });
+        const list = Object.values(G), used = new Set();
+        list.forEach(g => {
+            const mine = new Set();
+            pfRows.forEach(r => { if (g.ds.includes(r._src)) mine.add(r); });
+            if (g.ub.length) pfRows.forEach(r => { if (g.ub.includes(pfShort(r.input))) mine.add(r); });
+            g.mine = [...mine]; g.hw = g.mine.reduce((s, r) => s + r.w, 0);
+            g.mine.forEach(r => used.add(r));
+        });
+        // holdings that are not in ACWI at all
+        const extra = pfRows.filter(r => !used.has(r)).map(r => ({ name: r.name, sector: r.sector, tk: pfShort(r.input), w: 0, hw: r.w, ds: [r._src], ub: [], mine: [r] }));
+        return { list, extra };
+    }
+    function pfBenchTable(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+    function pfRenderBenchSimple() {
+        const n2 = v => v == null || isNaN(v) ? '—' : v.toFixed(2) + '%';
+        const pp = v => (v > 0 ? '+' : '') + v.toFixed(1);
+        const sectors = Object.keys(ACWI_SECTORS), totB = Object.values(ACWI_SECTORS).reduce((a, b) => a + b, 0) || 1;
+        const invested = pfRows.reduce((s, r) => s + r.w, 0), cash = Math.max(0, 100 - invested);
+        const lines = [];
+        // ── 3 · sectors ──
+        const wp = {}; sectors.forEach(k => wp[k] = 0);
+        pfRows.forEach(r => { if (wp[r.sector] != null) wp[r.sector] += r.w; });
+        const sec = sectors.map(k => ({ k, p: wp[k], b: ACWI_SECTORS[k] / totB * 100 })).map(x => ({ ...x, a: x.p - x.b })).sort((a, b) => b.b - a.b);
+        const maxBar = Math.max(...sec.map(x => Math.max(x.p, x.b)), 1);
+        pfBenchTable('bxSector', sec.map(x => `<tr><td class="td-name">${x.k}</td><td class="td-pct">${x.p.toFixed(1)}%</td><td class="td-pct">${x.b.toFixed(1)}%</td>
+            <td class="td-pct" style="font-weight:700">${pp(x.a)}</td>
+            <td><div style="height:7px;background:var(--accent2);width:${x.p / maxBar * 100}%;margin-bottom:2px"></div><div style="height:7px;background:#cbd5e1;width:${x.b / maxBar * 100}%"></div></td></tr>`).join('')
+            + (cash > 0.05 ? `<tr><td class="td-name">Cash</td><td class="td-pct">${cash.toFixed(1)}%</td><td class="td-pct">0.0%</td><td class="td-pct" style="font-weight:700">${pp(cash)}</td><td></td></tr>` : ''));
+        const over = [...sec].sort((a, b) => b.a - a.a), ow = over.filter(x => x.a > 0.5).slice(0, 2), uw = over.filter(x => x.a < -0.5).slice(-2).reverse();
+        const secDev = sec.reduce((s, x) => s + Math.abs(x.a), 0) / 2;
+        lines.push(`<b>Sectors:</b> ${ow.length ? 'overweight ' + ow.map(x => `${x.k} ${pp(x.a)}`).join(', ') : 'no big overweight'}${uw.length ? ' · underweight ' + uw.map(x => `${x.k} ${pp(x.a)}`).join(', ') : ''} (pp vs ACWI)`);
+        // ── stock level ──
+        const C = pfAcwiCompanies();
+        const src = document.getElementById('bxSrc');
+        if (!C) {
+            const msg = '<tr><td colspan="6" class="pf-hint">ACWI holdings not loaded yet — <a href="#" onclick="pfLoadAcwi(true);return false" style="color:var(--accent2)">load them</a>.</td></tr>';
+            ['bxMissW', 'bxOverW', 'bxWin1', 'bxWin3'].forEach(id => pfBenchTable(id, msg));
+            if (src) src.innerHTML = 'ACWI holdings not loaded — sector weights use the last snapshot.';
+        } else {
+            if (src) src.innerHTML = `ACWI = iShares MSCI ACWI holdings as of ${_acwi.date || '—'} (${_acwi.rows.length} stocks, share classes merged). Weights in % of portfolio vs % of ACWI. <a href="#" onclick="pfLoadAcwi(true);return false" style="color:var(--accent2)">Reload</a>`;
+            const all = C.list.concat(C.extra);
+            // 1a · biggest ACWI names not held
+            const miss = C.list.filter(g => g.hw === 0).sort((a, b) => b.w - a.w).slice(0, 10);
+            pfBenchTable('bxMissW', miss.map((g, i) => `<tr><td class="td-pct">${i + 1}</td><td class="td-ticker"><b>${g.tk}</b></td><td class="td-name">${pfTitle(g.name).slice(0, 26)}</td><td class="td-name">${g.sector || ''}</td><td class="td-pct" style="font-weight:700">${n2(g.w)}</td></tr>`).join(''));
+            // 1b · my biggest overweights
+            const ov = all.filter(g => g.hw > 0).map(g => ({ g, a: g.hw - g.w })).sort((a, b) => b.a - a.a).slice(0, 10);
+            pfBenchTable('bxOverW', ov.map((x, i) => `<tr><td class="td-pct">${i + 1}</td><td class="td-ticker"><b>${x.g.mine.length === 1 ? pfShort(x.g.mine[0].input) : x.g.tk}</b></td><td class="td-name">${pfTitle(x.g.name).slice(0, 26)}</td><td class="td-pct">${n2(x.g.hw)}</td><td class="td-pct">${n2(x.g.w)}</td><td class="td-pct" style="font-weight:700">${(x.a > 0 ? '+' : '') + x.a.toFixed(2)}</td></tr>`).join(''));
+            // 2 · ACWI winners I don't own
+            const minWt = +document.getElementById('bxMinWt').value;
+            const winners = nDays => {
+                let sw = 0, sr = 0;
+                pfAcwiMatch().forEach(r => { if (!r.d) return; const x = pfPeriodRet(r.d.ticker, nDays); if (x != null && isFinite(x)) { sw += r.w; sr += r.w * x; } });
+                const Rb = sw ? sr / sw : 0;
+                return C.list.filter(g => g.hw === 0 && g.w >= minWt && g.ds.length).map(g => {
+                    let x = null; for (const d of g.ds) { x = pfPeriodRet(d.ticker, nDays); if (x != null && isFinite(x)) break; }
+                    return { g, x };
+                }).filter(o => o.x != null && o.x > Rb).sort((a, b) => b.x - a.x);
+            };
+            const w1 = winners(21), w3 = winners(63);
+            const wRows = L => L.slice(0, 15).map((o, i) => `<tr><td class="td-pct">${i + 1}</td><td class="td-ticker"><b style="cursor:pointer" onclick="openNews('${o.g.ds[0].ticker}')">${o.g.tk}</b></td><td class="td-name">${pfTitle(o.g.name).slice(0, 26)}</td><td class="td-name">${o.g.sector || ''}</td></tr>`).join('') || '<tr><td colspan="4" class="pf-hint">None.</td></tr>';
+            pfBenchTable('bxWin1', wRows(w1)); pfBenchTable('bxWin3', wRows(w3));
+            // conclusion lines
+            const invN = invested || 1, bTot = C.list.reduce((s, g) => s + g.w, 0) || 1;
+            const activeShare = all.reduce((s, g) => s + Math.abs(g.hw / invN * 100 - g.w / bTot * 100), 0) / 2;
+            const ovTop = ov.reduce((s, x) => s + x.g.hw, 0), ovB = ov.reduce((s, x) => s + x.g.w, 0);
+            lines.unshift(`<b>Active share vs ACWI: ${activeShare.toFixed(0)}%</b> (sector gap ${secDev.toFixed(0)} pp)`);
+            lines.push(`<b>Top 10 overweights</b> = ${ovTop.toFixed(1)}% of my portfolio vs ${ovB.toFixed(1)}% in ACWI`);
+            lines.push(`<b>Biggest ACWI names missing:</b> ${miss.slice(0, 5).map(g => g.tk).join(', ') || 'none'} (top 10 = ${miss.reduce((s, g) => s + g.w, 0).toFixed(1)}% of ACWI)`);
+        }
+        const el = document.getElementById('bxConc');
+        if (el) el.innerHTML = lines.join('<span class="sep">|</span>');
+    }
+
     function pfRenderBench() {
         try { pfRenderBenchInner(); } catch (e) { console.error(e); const el = document.getElementById('bmNarr'); if (el) el.textContent = 'Error: ' + e.message; }
     }
     function pfRenderBenchInner() {
         if (!pfRows.length || !document.getElementById('bmSec')) return;
+        try { pfRenderBenchSimple(); } catch (e) { console.error('VS ACWI simple view', e); const c = document.getElementById('bxConc'); if (c) c.textContent = 'Error: ' + e.message; }
         const n = pfBenchN, minCap = +document.getElementById('bmCap').value;
         document.querySelectorAll('[data-bp]').forEach(b => b.classList.toggle('on', +b.dataset.bp === n));
         const label = n === 5 ? '1W' : n === 21 ? '1M' : '3M';
