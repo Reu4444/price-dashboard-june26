@@ -8561,15 +8561,7 @@
         if (t2) t2.textContent = `ACWI ${sel.G} stocks · ${acw.length} names counted`;
         const sumHw = mine.reduce((t, x) => t + x.g.hw, 0), sumBw = mine.reduce((t, x) => t + x.g.w, 0);
         pfBenchTable('bxGrpMine' + sfx, mine.map(x => `<tr class="${bxRS(x.m._src)}"><td class="td-ticker tk" onclick="openNews('${x.m._src.ticker}')">${pfShort(x.m.input)}</td><td class="td-name nm">${pfShortName(x.m.name || x.m.input)}</td><td class="td-pct num">${x.g.hw.toFixed(1)}%</td><td class="td-pct num dim">${x.g.w.toFixed(2)}%</td><td class="td-pct num">${gp(x.g.hw - x.g.w)}</td></tr>`).join('')
-            + (mine.length ? `<tr class="tot"><td></td><td class="td-name">Total</td><td class="td-pct num">${sumHw.toFixed(1)}%</td><td class="td-pct num">${sumBw.toFixed(2)}%</td><td class="td-pct num">${gp(sumHw - sumBw)}</td></tr>` : '<tr><td colspan="5" class="dim">None</td></tr>')
-            + (() => {   // ACWI names of this group that I don't own, biggest first
-                const no = acw.filter(x => !(x.g.hw > 0)), nShow = no.slice(0, 10), nRest = no.slice(10);
-                if (!no.length) return '';
-                const vp = (x, n) => { const s = x.g.ds[0]; if (!s) return null; const r = pfPeriodRet(s.ticker, n), pr = PF(x.G, n, s); return r == null || pr == null ? null : r - pr; };
-                const nRestW = nRest.reduce((t, x) => t + x.g.w, 0), nAllW = no.reduce((t, x) => t + x.g.w, 0);
-                return nShow.map(x => `<tr class="${bxRS(x.g.ds[0])}"><td class="td-ticker tk" onclick="${x.g.ds[0] ? `openNews('${x.g.ds[0].ticker}')` : ''}">${x.g.tk}</td><td class="td-name nm">${pfShortName(x.g.name)}</td><td class="td-pct num dim">—</td><td class="td-pct num dim">${x.g.w.toFixed(2)}%</td><td class="td-pct num">${gp(-x.g.w)}</td></tr>`).join('')
-                    + (nRest.length ? `<tr><td></td><td class="td-name dim">+ ${nRest.length} smaller names</td><td class="td-pct num dim">—</td><td class="td-pct num dim">${nRestW.toFixed(2)}%</td><td class="td-pct num dim">${gp(-nRestW)}</td></tr>` : '');
-            })());
+            + (mine.length ? `<tr class="tot"><td></td><td class="td-name">Total</td><td class="td-pct num">${sumHw.toFixed(1)}%</td><td class="td-pct num">${sumBw.toFixed(2)}%</td><td class="td-pct num">${gp(sumHw - sumBw)}</td></tr>` : '<tr><td colspan="5" class="dim">None</td></tr>'));
         // ACWI side: every name counted in the group weight (top 12 + "others" so the total always adds up)
         const show = acw.slice(0, 12), rest = acw.slice(12);
         const restW = rest.reduce((t, x) => t + x.g.w, 0), restH = rest.reduce((t, x) => t + x.g.hw, 0);
