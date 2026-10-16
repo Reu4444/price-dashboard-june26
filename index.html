@@ -1776,6 +1776,8 @@
                 #bxRegAcwi td:nth-child(5),
                 #bxGrpMine td:nth-child(5),
                 #bxGrpAcwi td:nth-child(5),
+                #bxGrpMineA td:nth-child(5),
+                #bxGrpAcwiA td:nth-child(5),
                 #bxPerfUp td:nth-child(6),
                 #bxPerfDn td:nth-child(6),
                 #bxPerf td:nth-child(3),
@@ -1787,11 +1789,11 @@
                 .bx-t tbody tr.tot td{background:var(--faint)!important;color:var(--text);font-weight:600!important;border-top:1px solid var(--border);border-bottom:none}
                 .bx-t tbody tr.tot:hover td{background:var(--faint)}
                 #bxSector td,#bxRegion td,#bxGroup td,
-                #bxGroup2 td{cursor:pointer}
+                #bxGroup2 td,#bxGroupA td{cursor:pointer}
                 #bxSector tr.sel td,#bxRegion tr.sel td,#bxGroup tr.sel td,
-                #bxGroup2 tr.sel td{background:var(--bg3)}
+                #bxGroup2 tr.sel td,#bxGroupA tr.sel td{background:var(--bg3)}
                 #bxSector tr.sel td:first-child,#bxRegion tr.sel td:first-child,#bxGroup tr.sel td:first-child,
-                #bxGroup2 tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent2)}
+                #bxGroup2 tr.sel td:first-child,#bxGroupA tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent2)}
                 #bxGrpTblA,#bxGrpTblA2{width:550px}
                 #bxGrpTblA thead th,#bxGrpTblA2 thead th{width:70px}
                 #bxGrpTblA thead th:first-child,#bxGrpTblA2 thead th:first-child{width:340px;text-align:left}
@@ -1828,7 +1830,13 @@
                     <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th><th class="num">Me</th><th class="num">Gap</th></tr></thead><tbody id="bxGrpAcwi"></tbody></table></div></div>
             </div>
 
-            <div class="bx-sp"><div><div class="pf-sub">ACWI's 15 biggest groups</div><div class="table-wrap bx-w"><table class="bx-t" id="bxGrpTblA"><thead><tr><th>Group / main stocks</th><th class="num">ACWI</th><th class="num">Me</th><th class="num">Gap</th></tr></thead><tbody id="bxGroupA"></tbody></table></div></div></div>
+            <div class="bx-sp">
+                <div><div class="pf-sub">ACWI's 15 biggest groups · click a group</div><div class="table-wrap bx-w"><table class="bx-t" id="bxGrpTblA"><thead><tr><th>Group / main stocks</th><th class="num">ACWI</th><th class="num">Me</th><th class="num">Gap</th></tr></thead><tbody id="bxGroupA"></tbody></table></div></div>
+                <div><div class="pf-sub" id="bxGrpMineTA"></div>
+                    <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Gap</th></tr></thead><tbody id="bxGrpMineA"></tbody></table></div></div>
+                <div><div class="pf-sub" id="bxGrpAcwiTA"></div>
+                    <div class="table-wrap bx-w"><table class="bx-t c5"><thead><tr><th>Ticker</th><th>Name</th><th class="num">ACWI</th><th class="num">Me</th><th class="num">Gap</th></tr></thead><tbody id="bxGrpAcwiA"></tbody></table></div></div>
+            </div>
             <div class="pf-h">4 · STOCKS <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">individual names</span></div>
             <div class="bx-two" style="grid-template-columns:336px auto auto">
                 <div><div class="pf-sub">Stocks I Don't Own</div>
@@ -8536,16 +8544,35 @@
             if (x.g.hw > 0 && x.v3 != null) { a.s3 += x.g.hw * x.v3; a.w3 += x.g.hw; } });
         const rows = Object.values(agg).map(a => ({ ...a, gap: a.p - a.b, v1: a.w1 ? a.s1 / a.w1 : null, v3: a.w3 ? a.s3 / a.w3 : null }))
             .filter(x => x.p > 0.001).sort((a, b) => b.p - a.p).slice(0, 15);   // my 15 biggest groups
+        const gp = v => (v > 0.004 ? '+' : v < -0.004 ? '−' : '') + Math.abs(v).toFixed(2);
+        const fillPanels = (sel, sx) => {
+        const t1 = document.getElementById('bxGrpMineT' + sx), t2 = document.getElementById('bxGrpAcwiT' + sx);
+        const mine = sel.it.filter(x => x.g.hw > 0).sort((a, b) => b.g.hw - a.g.hw);
+        const acw = sel.it.filter(x => x.g.w > 0).sort((a, b) => b.g.w - a.g.w);
+        if (t1) t1.textContent = `My ${sel.G} stocks · ${mine.length}`;
+        if (t2) t2.textContent = `ACWI ${sel.G} stocks · ${acw.length} names counted`;
+        const sumHw = mine.reduce((t, x) => t + x.g.hw, 0), sumBw = mine.reduce((t, x) => t + x.g.w, 0);
+        pfBenchTable('bxGrpMine' + sx, mine.map(x => `<tr class="${bxRS(x.m._src)}"><td class="td-ticker tk" onclick="openNews('${x.m._src.ticker}')">${pfShort(x.m.input)}</td><td class="td-name nm">${pfShortName(x.m.name || x.m.input)}</td><td class="td-pct num">${x.g.hw.toFixed(1)}%</td><td class="td-pct num dim">${x.g.w.toFixed(2)}%</td><td class="td-pct num">${gp(x.g.hw - x.g.w)}</td></tr>`).join('')
+            + (mine.length ? `<tr class="tot"><td></td><td class="td-name">Total</td><td class="td-pct num">${sumHw.toFixed(1)}%</td><td class="td-pct num">${sumBw.toFixed(2)}%</td><td class="td-pct num">${gp(sumHw - sumBw)}</td></tr>` : '<tr><td colspan="5" class="dim">None</td></tr>'));
+        // ACWI side: every name counted in the group weight (top 12 + "others" so the total always adds up)
+        const show = acw.slice(0, 12), rest = acw.slice(12);
+        const restW = rest.reduce((t, x) => t + x.g.w, 0), restH = rest.reduce((t, x) => t + x.g.hw, 0);
+        const aRow = x => `<tr class="${bxRS(x.g.ds[0])}"><td class="td-ticker tk" onclick="${x.g.ds[0] ? `openNews('${x.g.ds[0].ticker}')` : ''}">${x.g.tk}</td><td class="td-name nm">${pfShortName(x.g.name)}</td><td class="td-pct num">${x.g.w.toFixed(2)}%</td><td class="td-pct num dim">${x.g.hw > 0 ? x.g.hw.toFixed(1) + '%' : '—'}</td><td class="td-pct num">${gp(x.g.hw - x.g.w)}</td></tr>`;
+        pfBenchTable('bxGrpAcwi' + sx, show.map(aRow).join('')
+            + (rest.length ? `<tr><td></td><td class="td-name dim">+ ${rest.length} smaller names</td><td class="td-pct num dim">${restW.toFixed(2)}%</td><td class="td-pct num dim">${restH > 0 ? restH.toFixed(1) + '%' : '—'}</td><td class="td-pct num dim">${gp(restH - restW)}</td></tr>` : '')
+            + (acw.length ? `<tr class="tot"><td></td><td class="td-name">Total ${acw.length}</td><td class="td-pct num">${sel.b.toFixed(2)}%</td><td class="td-pct num">${sel.p.toFixed(1)}%</td><td class="td-pct num">${gp(sel.p - sel.b)}</td></tr>` : '<tr><td colspan="5" class="dim">—</td></tr>'));
+        };
         {   // ACWI's 15 biggest groups
             const top = Object.values(agg).sort((a, b) => b.b - a.b).slice(0, 15);
+            let selA = bxGSelMap['A']; if (!selA || !top.some(x => x.G === selA)) selA = bxGSelMap['A'] = top.length ? top[0].G : null;
             const mainA = x => x.it.slice().sort((p, q) => q.g.w - p.g.w).slice(0, 3).map(i => i.g.tk).join(' · ');
             const P = top.reduce((t, x) => t + x.p, 0), B = top.reduce((t, x) => t + x.b, 0);
-            pfBenchTable('bxGroupA' + sfx, top.map(x => `<tr><td class="td-name"><div class="gn">${x.G}</div><div class="gs">${mainA(x)}</div></td><td class="td-pct num">${x.b.toFixed(1)}%</td><td class="td-pct num dim">${x.p.toFixed(1)}%</td><td class="td-pct num">${bxDp(x.p - x.b)}</td></tr>`).join('')
+            pfBenchTable('bxGroupA' + sfx, top.map(x => `<tr class="${x.G === selA ? 'sel' : ''}" onclick="bxPickGroup('${x.G.replace(/'/g, "\\'")}','A')"><td class="td-name"><div class="gn">${x.G}</div><div class="gs">${mainA(x)}</div></td><td class="td-pct num">${x.b.toFixed(1)}%</td><td class="td-pct num dim">${x.p.toFixed(1)}%</td><td class="td-pct num">${bxDp(x.p - x.b)}</td></tr>`).join('')
                 + `<tr class="tot"><td class="td-name">Total ${top.length} groups</td><td class="td-pct num">${B.toFixed(1)}%</td><td class="td-pct num">${P.toFixed(1)}%</td><td class="td-pct num">${bxDp(P - B)}</td></tr>`);
+            if (selA) fillPanels(top.find(x => x.G === selA), 'A');
         }
         if (!rows.length) return;
         let bxGSel = bxGSelMap[sfx]; if (!bxGSel || !rows.some(x => x.G === bxGSel)) bxGSel = bxGSelMap[sfx] = rows[0].G;
-        const gp = v => (v > 0.004 ? '+' : v < -0.004 ? '−' : '') + Math.abs(v).toFixed(2);
         const mainOf = x => {   // up to 3 main stocks: mine by weight, else the biggest ACWI names of the group
             const mine = x.it.filter(i => i.g.hw > 0).sort((p, q) => q.g.hw - p.g.hw);
             if (mine.length) return mine.slice(0, 3).map(i => pfShort(i.m.input)).join(' · ');
@@ -8553,22 +8580,7 @@
         };
         pfBenchTable('bxGroup' + sfx, rows.map(x => `<tr class="${x.G === bxGSel ? 'sel' : ''}" onclick="bxPickGroup('${x.G.replace(/'/g, "\\'")}','${sfx}')"><td class="td-name"><div class="gn">${x.G}</div><div class="gs">${mainOf(x)}</div></td><td class="td-pct num">${x.p.toFixed(1)}%</td><td class="td-pct num dim">${x.b.toFixed(1)}%</td><td class="td-pct num">${bxDp(x.gap)}</td></tr>`).join('')
             + (() => { const P = rows.reduce((t, x) => t + x.p, 0), B = rows.reduce((t, x) => t + x.b, 0); return `<tr class="tot"><td class="td-name">Total ${rows.length} groups</td><td class="td-pct num">${P.toFixed(1)}%</td><td class="td-pct num">${B.toFixed(1)}%</td><td class="td-pct num">${bxDp(P - B)}</td></tr>`; })());
-                const sel = rows.find(x => x.G === bxGSel);
-        const t1 = document.getElementById('bxGrpMineT' + sfx), t2 = document.getElementById('bxGrpAcwiT' + sfx);
-        const mine = sel.it.filter(x => x.g.hw > 0).sort((a, b) => b.g.hw - a.g.hw);
-        const acw = sel.it.filter(x => x.g.w > 0).sort((a, b) => b.g.w - a.g.w);
-        if (t1) t1.textContent = `My ${sel.G} stocks · ${mine.length}`;
-        if (t2) t2.textContent = `ACWI ${sel.G} stocks · ${acw.length} names counted`;
-        const sumHw = mine.reduce((t, x) => t + x.g.hw, 0), sumBw = mine.reduce((t, x) => t + x.g.w, 0);
-        pfBenchTable('bxGrpMine' + sfx, mine.map(x => `<tr class="${bxRS(x.m._src)}"><td class="td-ticker tk" onclick="openNews('${x.m._src.ticker}')">${pfShort(x.m.input)}</td><td class="td-name nm">${pfShortName(x.m.name || x.m.input)}</td><td class="td-pct num">${x.g.hw.toFixed(1)}%</td><td class="td-pct num dim">${x.g.w.toFixed(2)}%</td><td class="td-pct num">${gp(x.g.hw - x.g.w)}</td></tr>`).join('')
-            + (mine.length ? `<tr class="tot"><td></td><td class="td-name">Total</td><td class="td-pct num">${sumHw.toFixed(1)}%</td><td class="td-pct num">${sumBw.toFixed(2)}%</td><td class="td-pct num">${gp(sumHw - sumBw)}</td></tr>` : '<tr><td colspan="5" class="dim">None</td></tr>'));
-        // ACWI side: every name counted in the group weight (top 12 + "others" so the total always adds up)
-        const show = acw.slice(0, 12), rest = acw.slice(12);
-        const restW = rest.reduce((t, x) => t + x.g.w, 0), restH = rest.reduce((t, x) => t + x.g.hw, 0);
-        const aRow = x => `<tr class="${bxRS(x.g.ds[0])}"><td class="td-ticker tk" onclick="${x.g.ds[0] ? `openNews('${x.g.ds[0].ticker}')` : ''}">${x.g.tk}</td><td class="td-name nm">${pfShortName(x.g.name)}</td><td class="td-pct num">${x.g.w.toFixed(2)}%</td><td class="td-pct num dim">${x.g.hw > 0 ? x.g.hw.toFixed(1) + '%' : '—'}</td><td class="td-pct num">${gp(x.g.hw - x.g.w)}</td></tr>`;
-        pfBenchTable('bxGrpAcwi' + sfx, show.map(aRow).join('')
-            + (rest.length ? `<tr><td></td><td class="td-name dim">+ ${rest.length} smaller names</td><td class="td-pct num dim">${restW.toFixed(2)}%</td><td class="td-pct num dim">${restH > 0 ? restH.toFixed(1) + '%' : '—'}</td><td class="td-pct num dim">${gp(restH - restW)}</td></tr>` : '')
-            + (acw.length ? `<tr class="tot"><td></td><td class="td-name">Total ${acw.length}</td><td class="td-pct num">${sel.b.toFixed(2)}%</td><td class="td-pct num">${sel.p.toFixed(1)}%</td><td class="td-pct num">${gp(sel.p - sel.b)}</td></tr>` : '<tr><td colspan="5" class="dim">—</td></tr>'));
+        fillPanels(rows.find(x => x.G === bxGSel), sfx);
     }
     // ── VS ACWI: why am I ahead / behind? (today's weights held constant over the period) ──
     function pfBenchCalc(n) {
