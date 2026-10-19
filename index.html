@@ -1720,6 +1720,22 @@
                 .bx-t.c5{width:476px}
                 .bx-t.c6{width:546px}
                 .bx-t.c7{width:616px}
+                .bx-t.g7{width:562px}
+                .bx-t.g7 thead th{width:56px}
+                .bx-t.g7 thead th:nth-child(1){width:62px}
+                .bx-t.g7 thead th:nth-child(2){width:140px;text-align:left}
+                .bx-t.g7 thead th:nth-child(3){width:130px;text-align:left}
+                .bx-t.g7 thead th:nth-child(7){width:62px}
+                .bx-t.g7 tbody td:nth-child(3){text-align:left;font-size:12px}
+                .bx-t.g7 tbody td:nth-child(7){font-weight:700;background:rgba(3,105,161,.07)}
+                #bxMonT{width:638px}
+                #bxMonT thead th{width:66px}
+                #bxMonT thead th:first-child{width:110px;text-align:left}
+                #bxMonT thead th:nth-child(2){width:66px;text-align:center}
+                #bxMon td{cursor:pointer}
+                #bxMon td:nth-child(4){font-weight:700;background:rgba(3,105,161,.07)}
+                #bxMon tr.sel td{background:var(--bg3)}
+                #bxMon tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent2)}
                 .bx-t.g6{width:548px}
                 .bx-t.g6 thead th{width:62px}
                 .bx-t.g6 thead th:nth-child(2),.bx-t.g6 thead th:nth-child(3){width:150px;text-align:left}
@@ -1862,6 +1878,19 @@
             <div class="pf-hint" id="bxSrc" style="margin-bottom:10px"></div>
             </div>
             <div id="bxPanePerf" style="display:none">
+            <div class="pf-h" style="margin-top:0">MONTH BY MONTH <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">click a month · pp = percentage points · today's weights held constant</span></div>
+            <div class="bx-sp">
+                <div><div class="pf-sub">Portfolio vs ACWI</div>
+                    <div class="table-wrap bx-w"><table class="bx-t" id="bxMonT"><thead><tr><th>Month</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Diff</th><th class="num">Cash</th><th class="num">Region</th><th class="num">Sector</th><th class="num">Group</th><th class="num">Stocks</th></tr></thead><tbody id="bxMon"></tbody></table></div></div>
+            </div>
+            <div id="bxMonVerdict" style="font-size:15px;margin:0 0 10px"></div>
+            <div class="bx-sp">
+                <div><div class="pf-sub" id="bxMonHelpT"></div>
+                    <div class="table-wrap bx-w"><table class="bx-t g7"><thead><tr><th>Ticker</th><th>Name</th><th>Group</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Perf</th><th class="num">Active</th></tr></thead><tbody id="bxMonHelp"></tbody></table></div></div>
+                <div><div class="pf-sub" id="bxMonHurtT"></div>
+                    <div class="table-wrap bx-w"><table class="bx-t g7"><thead><tr><th>Ticker</th><th>Name</th><th>Group</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Perf</th><th class="num">Active</th></tr></thead><tbody id="bxMonHurt"></tbody></table></div></div>
+            </div>
+            <div class="pf-h">LAST 1M / 3M / 6M</div>
             <div class="pf-bar-top" style="justify-content:flex-start;gap:0;margin:0 0 10px"><button class="pf-swf" data-pp="21" onclick="bxPerfPeriod(21)">1M</button><button class="pf-swf" data-pp="63" onclick="bxPerfPeriod(63)">3M</button><button class="pf-swf" data-pp="126" onclick="bxPerfPeriod(126)">6M</button><span style="font-size:11px;color:var(--muted);margin-left:12px">today's weights held constant over the period · pp = percentage points</span></div>
             <div id="bxVerdict" style="font-size:15px;margin:0 0 14px"></div>
             <div class="bx-sp">
@@ -8638,10 +8667,21 @@
     // ── PERFORMANCE: where does my over/under-performance vs the ACWI come from? ──
     let bxPerfN = (() => { try { return +localStorage.getItem('bxPerfN') || 63; } catch (e) { return 63; } })();
     function bxPerfPeriod(n) { bxPerfN = n; try { localStorage.setItem('bxPerfN', n); } catch (e) {} try { pfRenderBenchPerf(); } catch (e) { console.error(e); } }
-    function bxPerfCalc(n) {
+    // return (%) between two price offsets: e = end (0 = latest), s = start (older, bigger offset)
+    function pfRangeRet(tk, e, s) { const p = pfPrices(tk); return p && p.length > s && p[s] > 0 && p[e] > 0 ? (p[e] / p[s] - 1) * 100 : null; }
+    // calendar months from the price dates (index 0 = newest): month ends at its last trading day, starts at the previous month's last trading day
+    function bxMonths() {
+        const key = d => { const t = String(d || ''); let m = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); if (m) return m[3] + '-' + ('0' + m[1]).slice(-2); m = t.match(/^(\d{4})-(\d{2})/); return m ? m[1] + '-' + m[2] : null; };
+        const first = {}, order = [];
+        (priceDates || []).forEach((d, i) => { const k = key(d); if (!k) return; if (!(k in first)) { first[k] = i; order.push(k); } });
+        const MN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const out = [];
+        for (let i = 0; i < order.length - 1; i++) { const k = order[i], pk = order[i + 1]; out.push({ key: k, e: first[k], s: first[pk], label: MN[+k.slice(5) - 1] + ' ' + k.slice(0, 4) + (i === 0 ? ' · MTD' : '') }); }
+        return out;
+    }
+    function bxPerfBase() {
         const C = pfAcwiCompanies(1e6);
         const regOfRow = r => bxRegOf(allData.includes(r._src) ? (PF_DOMICILE[r.ticker] || 'United States') : r.country);
-        const retOf = ds => { for (const d of ds) { const x = pfPeriodRet(d.ticker, n); if (x != null && isFinite(x)) return x; } return null; };
         const items = [], prev = bxGroupMode;
         try {
             bxGroupMode = 'hybrid';
@@ -8649,11 +8689,15 @@
                 const m = g.mine[0], srcs = g.mine.map(r => r._src).concat(g.ds), G = pfGroupOf(g);
                 items.push({ extra, tk: g.mine.length === 1 ? pfShort(g.mine[0].input) : g.tk, name: g.mine.length === 1 && g.mine[0].name ? g.mine[0].name : g.name,
                     open: srcs[0] ? srcs[0].ticker : '', reg: m ? regOfRow(m) : bxRegOf(g.loc), sec: g.sector || 'Other',
-                    G: G && G !== '(n/a)' ? G : 'Other', wb: extra ? 0 : g.w, wp: g.hw, r: retOf(srcs), rsSrc: srcs[0] || null,
+                    G: G && G !== '(n/a)' ? G : 'Other', wb: extra ? 0 : g.w, wp: g.hw, srcs, rsSrc: srcs[0] || null,
                     rs: srcs[0] && srcs[0].pct_6m != null && isFinite(srcs[0].pct_6m) ? srcs[0].pct_6m : null });
             };
             C.list.forEach(g => push(g, false)); C.extra.forEach(g => push(g, true));
         } finally { bxGroupMode = prev; }
+        return items;
+    }
+    function bxPerfCalc(base, s, e) {
+        const items = base.map(x => { let r = null; for (const d of x.srcs) { const v = pfRangeRet(d.ticker, e, s); if (v != null && isFinite(v)) { r = v; break; } } return { ...x, r }; });
         const K = items.filter(x => x.r != null);
         const cov = K.reduce((t, x) => t + x.wb, 0), wbT = cov || 1;
         K.forEach(x => x.bn = x.wb / wbT * 100);                       // ACWI weights re-based on the names that have prices
@@ -8678,7 +8722,7 @@
     function pfRenderBenchPerf() {
         const n = bxPerfN, lab = n === 21 ? '1M' : n === 63 ? '3M' : '6M';
         document.querySelectorAll('[data-pp]').forEach(b => b.classList.toggle('on', +b.dataset.pp === n));
-        const X = bxPerfCalc(n);
+        const base = bxPerfBase(), X = bxPerfCalc(base, n, 0);
         const pc = v => v == null ? '—' : (v > 0.04 ? '+' : v < -0.04 ? '−' : '') + Math.abs(v).toFixed(1) + '%';
         const gp = v => v == null || !isFinite(v) ? '—' : (v > 0.004 ? '+' : v < -0.004 ? '−' : '') + Math.abs(v).toFixed(2);
         const w2 = v => v == null ? '—' : v.toFixed(2) + '%', w1 = v => v == null ? '—' : v.toFixed(1) + '%';
@@ -8721,7 +8765,26 @@
         const gl = x => `<tr><td class="td-name">${x.G}</td><td class="td-pct num">${x.wp.toFixed(1)}%</td><td class="td-pct num dim">${x.wb.toFixed(1)}%</td><td class="td-pct num">${pc(x.Rg)}</td><td class="td-pct num">${gp(x.eff)}</td></tr>`;
         ttl('bxPfGrpLossT', `Groups that cost me · ${lab}`); T('bxPfGrpLoss', X.groups.filter(x => x.eff < 0).sort((a, b) => a.eff - b.eff).slice(0, 10).map(gl).join(''), 5);
         ttl('bxPfGrpGainT', `Groups that helped me · ${lab}`); T('bxPfGrpGain', X.groups.filter(x => x.eff > 0).sort((a, b) => b.eff - a.eff).slice(0, 10).map(gl).join(''), 5);
+        // ── month by month (click a month) ──
+        const M = bxMonths();
+        if (M.length) {
+            if (!bxMonSel || !M.some(m => m.key === bxMonSel)) bxMonSel = M[0].key;
+            const R = M.map(m => ({ m, x: bxPerfCalc(base, m.s, m.e) }));
+            pfBenchTable('bxMon', R.map(o => { const g = o.x.Rp - o.x.Rb, f = o.x.eff;
+                return `<tr class="${o.m.key === bxMonSel ? 'sel' : ''}" onclick="bxPickMonth('${o.m.key}')"><td class="td-name">${o.m.label}</td><td class="td-pct num">${pc(o.x.Rp)}</td><td class="td-pct num dim">${pc(o.x.Rb)}</td><td class="td-pct num">${gp(g)}</td><td class="td-pct num dim">${gp(f.cash)}</td><td class="td-pct num dim">${gp(f.region)}</td><td class="td-pct num dim">${gp(f.sector)}</td><td class="td-pct num dim">${gp(f.group)}</td><td class="td-pct num dim">${gp(f.sel)}</td></tr>`; }).join(''));
+            const sel = R.find(o => o.m.key === bxMonSel), SX = sel.x, SG = SX.Rp - SX.Rb;
+            const act = x => `<tr class="${bxRS(x.rsSrc)}">${tk(x)}<td class="td-name nm">${pfShortName(x.name)}</td><td class="td-name dim">${x.G}</td><td class="td-pct num dim">${x.wp > 0 ? w1(x.wp) : '—'}</td><td class="td-pct num dim">${w2(x.wb)}</td><td class="td-pct num">${pc(x.r)}</td><td class="td-pct num">${gp(x.e)}</td></tr>`;
+            const helped = SX.K.filter(x => x.e > 0).sort((a, b) => b.e - a.e).slice(0, 10), hurt = SX.K.filter(x => x.e < 0).sort((a, b) => a.e - b.e).slice(0, 10);
+            const hs = helped.reduce((t, x) => t + x.e, 0), us = hurt.reduce((t, x) => t + x.e, 0);
+            const tot = (L, e) => L.length ? `<tr class="tot"><td></td><td class="td-name">Total ${L.length}</td><td></td><td></td><td></td><td></td><td class="td-pct num">${gp(e)}</td></tr>` : '';
+            ttl('bxMonHelpT', `${sel.m.label} · what helped me vs ACWI`); T('bxMonHelp', helped.map(act).join('') + tot(helped, hs), 7);
+            ttl('bxMonHurtT', `${sel.m.label} · what hurt me vs ACWI`); T('bxMonHurt', hurt.map(act).join('') + tot(hurt, us), 7);
+            const mv = document.getElementById('bxMonVerdict');
+            if (mv) mv.innerHTML = `<b style="color:var(${SG >= 0 ? '--up' : '--down'})">${sel.m.label}: ${gp(SG)} pp vs ACWI</b> &nbsp;<span style="color:var(--muted)">me ${pc(SX.Rp)} · ACWI ${pc(SX.Rb)} · active = (my weight − ACWI weight) × (stock perf − ACWI perf)</span>`;
+        }
     }
+    let bxMonSel = null;
+    function bxPickMonth(k) { bxMonSel = k; try { pfRenderBenchPerf(); } catch (e) { console.error(e); } }
 
     function pfRenderBench() {
         try { pfRenderBenchInner(); } catch (e) { console.error(e); const el = document.getElementById('bmNarr'); if (el) el.textContent = 'Error: ' + e.message; }
