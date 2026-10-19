@@ -1890,6 +1890,12 @@
                 <div><div class="pf-sub" id="bxMonHurtT"></div>
                     <div class="table-wrap bx-w"><table class="bx-t g7"><thead><tr><th>Ticker</th><th>Name</th><th>Group</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Perf</th><th class="num">Active</th></tr></thead><tbody id="bxMonHurt"></tbody></table></div></div>
             </div>
+            <div class="bx-sp">
+                <div><div class="pf-sub" id="bxMonUpT"></div>
+                    <div class="table-wrap bx-w"><table class="bx-t g7"><thead><tr><th>Ticker</th><th>Name</th><th>Group</th><th class="num">ACWI</th><th class="num">Perf</th><th class="num">Contrib</th><th class="num">Active</th></tr></thead><tbody id="bxMonUp"></tbody></table></div></div>
+                <div><div class="pf-sub" id="bxMonDnT"></div>
+                    <div class="table-wrap bx-w"><table class="bx-t g7"><thead><tr><th>Ticker</th><th>Name</th><th>Group</th><th class="num">ACWI</th><th class="num">Perf</th><th class="num">Contrib</th><th class="num">Active</th></tr></thead><tbody id="bxMonDn"></tbody></table></div></div>
+            </div>
             <div class="pf-h">LAST 1M / 3M / 6M</div>
             <div class="pf-bar-top" style="justify-content:flex-start;gap:0;margin:0 0 10px"><button class="pf-swf" data-pp="21" onclick="bxPerfPeriod(21)">1M</button><button class="pf-swf" data-pp="63" onclick="bxPerfPeriod(63)">3M</button><button class="pf-swf" data-pp="126" onclick="bxPerfPeriod(126)">6M</button><span style="font-size:11px;color:var(--muted);margin-left:12px">today's weights held constant over the period · pp = percentage points</span></div>
             <div id="bxVerdict" style="font-size:15px;margin:0 0 14px"></div>
@@ -8779,6 +8785,13 @@
             const tot = (L, e) => L.length ? `<tr class="tot"><td></td><td class="td-name">Total ${L.length}</td><td></td><td></td><td></td><td></td><td class="td-pct num">${gp(e)}</td></tr>` : '';
             ttl('bxMonHelpT', `${sel.m.label} · what helped me vs ACWI`); T('bxMonHelp', helped.map(act).join('') + tot(helped, hs), 7);
             ttl('bxMonHurtT', `${sel.m.label} · what hurt me vs ACWI`); T('bxMonHurt', hurt.map(act).join('') + tot(hurt, us), 7);
+            // ACWI names I don't own: biggest contributors to the ACWI return (ACWI weight x perf)
+            const nown = SX.K.filter(x => !x.extra && !(x.wp > 0) && x.wb > 0), ctb = x => x.wb * x.r / 100;
+            const nrow = x => `<tr class="${bxRS(x.rsSrc)}">${tk(x)}<td class="td-name nm">${pfShortName(x.name)}</td><td class="td-name dim">${x.G}</td><td class="td-pct num dim">${w2(x.wb)}</td><td class="td-pct num">${pc(x.r)}</td><td class="td-pct num">${gp(ctb(x))}</td><td class="td-pct num">${gp(x.e)}</td></tr>`;
+            const ntot = L => L.length ? `<tr class="tot"><td></td><td class="td-name">Total ${L.length}</td><td></td><td class="td-pct num">${w2(L.reduce((t, x) => t + x.wb, 0))}</td><td></td><td class="td-pct num">${gp(L.reduce((t, x) => t + ctb(x), 0))}</td><td class="td-pct num">${gp(L.reduce((t, x) => t + x.e, 0))}</td></tr>` : '';
+            const nUp = nown.filter(x => ctb(x) > 0).sort((a, b) => ctb(b) - ctb(a)).slice(0, 10), nDn = nown.filter(x => ctb(x) < 0).sort((a, b) => ctb(a) - ctb(b)).slice(0, 10);
+            ttl('bxMonUpT', `${sel.m.label} · ACWI stocks I don't own · biggest contributors`); T('bxMonUp', nUp.map(nrow).join('') + ntot(nUp), 7);
+            ttl('bxMonDnT', `${sel.m.label} · ACWI stocks I don't own · biggest detractors`); T('bxMonDn', nDn.map(nrow).join('') + ntot(nDn), 7);
             const mv = document.getElementById('bxMonVerdict');
             if (mv) mv.innerHTML = `<b style="color:var(${SG >= 0 ? '--up' : '--down'})">${sel.m.label}: ${gp(SG)} pp vs ACWI</b> &nbsp;<span style="color:var(--muted)">me ${pc(SX.Rp)} · ACWI ${pc(SX.Rb)} · active = (my weight − ACWI weight) × (stock perf − ACWI perf)</span>`;
         }
