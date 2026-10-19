@@ -1723,15 +1723,16 @@
                 .bx-t.g7{width:562px}
                 .bx-t.g7 thead th{width:56px}
                 .bx-t.g7 thead th:nth-child(1){width:62px}
-                .bx-t.g7 thead th:nth-child(2){width:140px;text-align:left}
-                .bx-t.g7 thead th:nth-child(3){width:130px;text-align:left}
-                .bx-t.g7 thead th:nth-child(7){width:62px}
+                .bx-t.g7 thead th:nth-child(2){width:134px;text-align:left}
+                .bx-t.g7 thead th:nth-child(3){width:114px;text-align:left}
+                .bx-t.g7 thead th:nth-child(6){width:72px}
+                .bx-t.g7 thead th:nth-child(7){width:68px}
                 .bx-t.g7 tbody td:nth-child(3){text-align:left;font-size:12px}
                 .bx-t.g7 tbody td:nth-child(7){font-weight:700;background:rgba(3,105,161,.07)}
-                #bxMonT{width:638px}
-                #bxMonT thead th{width:66px}
-                #bxMonT thead th:first-child{width:110px;text-align:left}
-                #bxMonT thead th:nth-child(2){width:66px;text-align:center}
+                #bxMonT{width:562px}
+                #bxMonT thead th{width:57px}
+                #bxMonT thead th:first-child{width:106px;text-align:left}
+                #bxMonT thead th:nth-child(2){width:57px;text-align:center}
                 #bxMon td{cursor:pointer}
                 #bxMon td:nth-child(4){font-weight:700;background:rgba(3,105,161,.07)}
                 #bxMon tr.sel td{background:var(--bg3)}
@@ -1744,9 +1745,10 @@
                 #bxPfWhyT{width:266px}
                 #bxPfWhyT thead th:first-child{width:196px;text-align:left}
                 #bxPfWhyT thead th:nth-child(2){width:70px;text-align:center}
-                #bxPfConcT,#bxPfGrpT1,#bxPfGrpT2,#bxRsT1,#bxRsT2{width:476px}
-                #bxPfConcT thead th:first-child,#bxPfGrpT1 thead th:first-child,#bxPfGrpT2 thead th:first-child,#bxRsT1 thead th:first-child,#bxRsT2 thead th:first-child{width:196px;text-align:left}
-                #bxPfConcT thead th:nth-child(2),#bxPfGrpT1 thead th:nth-child(2),#bxPfGrpT2 thead th:nth-child(2),#bxRsT1 thead th:nth-child(2),#bxRsT2 thead th:nth-child(2){width:70px;text-align:center}
+                #bxPfConcT,#bxPfGrpT1,#bxPfGrpT2,#bxRsT1,#bxRsT2{width:562px}
+                #bxPfGrpT1 thead th,#bxPfGrpT2 thead th,#bxRsT1 thead th,#bxRsT2 thead th{width:80px}
+                #bxPfConcT thead th:first-child,#bxPfGrpT1 thead th:first-child,#bxPfGrpT2 thead th:first-child,#bxRsT1 thead th:first-child,#bxRsT2 thead th:first-child{width:242px;text-align:left}
+                #bxPfConcT thead th:nth-child(2),#bxPfGrpT1 thead th:nth-child(2),#bxPfGrpT2 thead th:nth-child(2),#bxRsT1 thead th:nth-child(2),#bxRsT2 thead th:nth-child(2){width:80px;text-align:center}
                 #bxRsPush td:nth-child(4),#bxRsTrim td:nth-child(4){font-weight:700;background:rgba(3,105,161,.07)}
                 #bxPfWhy td:nth-child(2),#bxPfConc td:nth-child(4),#bxPfGrpLoss td:nth-child(5),#bxPfGrpGain td:nth-child(5){font-weight:700;background:rgba(3,105,161,.07)}
                 #bxOverTbl{width:572px}
@@ -1790,6 +1792,8 @@
                 .bx-t td.td-name{text-align:left;max-width:none}
                 .bx-t td.td-pct{min-width:0}
                 .bx-t td.dim{color:var(--muted)}
+                .bx-t td.up{color:var(--up)}
+                .bx-t td.dn{color:var(--down)}
                 /* key column of each table: the number to read first */
                 #bxMissW td:nth-child(3),
                 #bxOverW td:nth-child(6),
@@ -1884,7 +1888,6 @@
                 <div><div class="pf-sub">Portfolio vs ACWI</div>
                     <div class="table-wrap bx-w"><table class="bx-t" id="bxMonT"><thead><tr><th>Month</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Diff</th><th class="num">Cash</th><th class="num">Region</th><th class="num">Sector</th><th class="num">Group</th><th class="num">Stocks</th></tr></thead><tbody id="bxMon"></tbody></table></div></div>
             </div>
-            <div id="bxMonVerdict" style="font-size:15px;margin:0 0 10px"></div>
             <div class="bx-sp">
                 <div><div class="pf-sub" id="bxMonHelpT"></div>
                     <div class="table-wrap bx-w"><table class="bx-t g7"><thead><tr><th>Ticker</th><th>Name</th><th>Group</th><th class="num">Me</th><th class="num">ACWI</th><th class="num">Perf</th><th class="num">Active</th></tr></thead><tbody id="bxMonHelp"></tbody></table></div></div>
@@ -1898,7 +1901,6 @@
                     <div class="table-wrap bx-w"><table class="bx-t g7"><thead><tr><th>Ticker</th><th>Name</th><th>Group</th><th class="num">ACWI</th><th class="num">Perf</th><th class="num">Contrib</th><th class="num">Active</th></tr></thead><tbody id="bxMonDn"></tbody></table></div></div>
             </div>
             <div class="pf-h">LAST 3 MONTHS · WHAT I DID WELL / POORLY <span style="font-family:Arial;font-size:11px;letter-spacing:0;color:var(--muted)">active = (my weight − ACWI weight) × (perf − ACWI perf) · sums to the gap vs ACWI</span></div>
-            <div id="bxVerdict" style="font-size:15px;margin:0 0 10px"></div>
             <div class="bx-sp">
                 <div><div class="pf-sub">Where the gap comes from</div>
                     <div class="table-wrap bx-w"><table class="bx-t" id="bxPfWhyT"><thead><tr><th>&nbsp;</th><th class="num">Value</th></tr></thead><tbody id="bxPfWhy"></tbody></table></div></div>
@@ -8723,6 +8725,7 @@
         const gp = v => v == null || !isFinite(v) ? '—' : (v > 0.004 ? '+' : v < -0.004 ? '−' : '') + Math.abs(v).toFixed(2);
         const w2 = v => v == null ? '—' : v.toFixed(2) + '%', w1 = v => v == null ? '—' : v.toFixed(1) + '%';
         const T = (id, html, cols) => pfBenchTable(id, html || `<tr><td colspan="${cols}" class="dim">—</td></tr>`);
+        const cs = v => v > 0.004 ? ' up' : v < -0.004 ? ' dn' : '';   // green / red numbers
         const gap = X.Rp - X.Rb;
         // ── verdict ──
         const parts = [['Cash', X.eff.cash], ['Region', X.eff.region], ['Sector', X.eff.sector], ['Group', X.eff.group], ['Stock selection', X.eff.sel]];
@@ -8735,28 +8738,28 @@
         // ── 3-month review: what I did well / poorly (active = (my weight - ACWI weight) x (perf - ACWI perf)) ──
         const tk = x => `<td class="td-ticker tk" onclick="${x.open ? `openNews('${x.open}')` : ''}">${x.tk}</td>`;
         const ttl = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
-        const arow = x => `<tr class="${bxRS(x.rsSrc)}">${tk(x)}<td class="td-name nm">${pfShortName(x.name)}</td><td class="td-name dim">${x.G}</td><td class="td-pct num dim">${x.wp > 0 ? w1(x.wp) : '—'}</td><td class="td-pct num dim">${w2(x.wb)}</td><td class="td-pct num">${pc(x.r)}</td><td class="td-pct num">${gp(x.e)}</td></tr>`;
+        const arow = x => `<tr class="${bxRS(x.rsSrc)}">${tk(x)}<td class="td-name nm">${pfShortName(x.name)}</td><td class="td-name dim">${x.G}</td><td class="td-pct num dim">${x.wp > 0 ? w1(x.wp) : '—'}</td><td class="td-pct num dim">${w2(x.wb)}</td><td class="td-pct num">${pc(x.r)}</td><td class="td-pct num${cs(x.e)}">${gp(x.e)}</td></tr>`;
         const atot = L => L.length ? `<tr class="tot"><td></td><td class="td-name">Total ${L.length}</td><td></td><td></td><td></td><td></td><td class="td-pct num">${gp(L.reduce((t, x) => t + x.e, 0))}</td></tr>` : '';
         const good = X.K.filter(x => x.e > 0).sort((a, b) => b.e - a.e).slice(0, 10), bad = X.K.filter(x => x.e < 0).sort((a, b) => a.e - b.e).slice(0, 10);
         ttl('bxR3GoodT', `What I did well · stocks · ${lab}`); T('bxR3Good', good.map(arow).join('') + atot(good), 7);
         ttl('bxR3BadT', `What I did poorly · stocks · ${lab}`); T('bxR3Bad', bad.map(arow).join('') + atot(bad), 7);
-        const gl = x => `<tr><td class="td-name">${x.G}</td><td class="td-pct num">${x.wp.toFixed(1)}%</td><td class="td-pct num dim">${x.wb.toFixed(1)}%</td><td class="td-pct num">${pc(x.Rg)}</td><td class="td-pct num">${gp(x.eff)}</td></tr>`;
-        ttl('bxPfGrpGainT', `What I did well · groups · ${lab}`); T('bxPfGrpGain', X.groups.filter(x => x.eff > 0).sort((a, b) => b.eff - a.eff).slice(0, 10).map(gl).join(''), 5);
-        ttl('bxPfGrpLossT', `What I did poorly · groups · ${lab}`); T('bxPfGrpLoss', X.groups.filter(x => x.eff < 0).sort((a, b) => a.eff - b.eff).slice(0, 10).map(gl).join(''), 5);
+        const gl = x => `<tr><td class="td-name">${x.G}</td><td class="td-pct num">${x.wp.toFixed(1)}%</td><td class="td-pct num dim">${x.wb.toFixed(1)}%</td><td class="td-pct num">${pc(x.Rg)}</td><td class="td-pct num${cs(x.eff)}">${gp(x.eff)}</td></tr>`;
+        ttl('bxPfGrpGainT', `What I did well · groups · ${lab}`); T('bxPfGrpGain', X.groups.filter(x => x.eff > 0).sort((a, b) => b.eff - a.eff).slice(0, 5).map(gl).join(''), 5);
+        ttl('bxPfGrpLossT', `What I did poorly · groups · ${lab}`); T('bxPfGrpLoss', X.groups.filter(x => x.eff < 0).sort((a, b) => a.eff - b.eff).slice(0, 5).map(gl).join(''), 5);
         // ── groups to push / trim by relative strength (ACWI-weighted 6M percentile of the group) ──
         const rl = x => `<tr><td class="td-name">${x.G}</td><td class="td-pct num">${x.wp.toFixed(1)}%</td><td class="td-pct num dim">${x.wb.toFixed(1)}%</td><td class="td-pct num">${Math.round(x.RS)}</td><td class="td-pct num">${pc(x.Rg)}</td></tr>`;
         const RG = X.groups.filter(g => g.RS != null && g.cov >= 0.5 && g.wb >= 0.5);
-        ttl('bxRsPushT', 'Strong groups I should push more · RS ≥ 60, under-weight'); T('bxRsPush', RG.filter(g => g.RS >= 60 && g.wp < g.wb).sort((a, b) => b.RS - a.RS).slice(0, 10).map(rl).join(''), 5);
-        ttl('bxRsTrimT', 'Weak groups I hold too much of · RS < 50, over-weight'); T('bxRsTrim', RG.filter(g => g.RS < 50 && g.wp > g.wb).sort((a, b) => a.RS - b.RS).slice(0, 10).map(rl).join(''), 5);
+        ttl('bxRsPushT', 'Strong groups I should push more · RS ≥ 60, under-weight'); T('bxRsPush', RG.filter(g => g.RS >= 60 && g.wp < g.wb).sort((a, b) => b.RS - a.RS).slice(0, 5).map(rl).join(''), 5);
+        ttl('bxRsTrimT', 'Weak groups I hold too much of · RS < 50, over-weight'); T('bxRsTrim', RG.filter(g => g.RS < 50 && g.wp > g.wb).sort((a, b) => a.RS - b.RS).slice(0, 5).map(rl).join(''), 5);
         // ── month by month (click a month) ──
         const M = bxMonths();
         if (M.length) {
             if (!bxMonSel || !M.some(m => m.key === bxMonSel)) bxMonSel = M[0].key;
             const R = M.map(m => ({ m, x: bxPerfCalc(base, m.s, m.e) }));
             pfBenchTable('bxMon', R.map(o => { const g = o.x.Rp - o.x.Rb, f = o.x.eff;
-                return `<tr class="${o.m.key === bxMonSel ? 'sel' : ''}" onclick="bxPickMonth('${o.m.key}')"><td class="td-name">${o.m.label}</td><td class="td-pct num">${pc(o.x.Rp)}</td><td class="td-pct num dim">${pc(o.x.Rb)}</td><td class="td-pct num">${gp(g)}</td><td class="td-pct num dim">${gp(f.cash)}</td><td class="td-pct num dim">${gp(f.region)}</td><td class="td-pct num dim">${gp(f.sector)}</td><td class="td-pct num dim">${gp(f.group)}</td><td class="td-pct num dim">${gp(f.sel)}</td></tr>`; }).join(''));
+                return `<tr class="${o.m.key === bxMonSel ? 'sel' : ''}" onclick="bxPickMonth('${o.m.key}')"><td class="td-name">${o.m.label}</td><td class="td-pct num">${pc(o.x.Rp)}</td><td class="td-pct num dim">${pc(o.x.Rb)}</td><td class="td-pct num${cs(g)}">${gp(g)}</td><td class="td-pct num dim">${gp(f.cash)}</td><td class="td-pct num dim">${gp(f.region)}</td><td class="td-pct num dim">${gp(f.sector)}</td><td class="td-pct num dim">${gp(f.group)}</td><td class="td-pct num dim">${gp(f.sel)}</td></tr>`; }).join(''));
             const sel = R.find(o => o.m.key === bxMonSel), SX = sel.x, SG = SX.Rp - SX.Rb;
-            const act = x => `<tr class="${bxRS(x.rsSrc)}">${tk(x)}<td class="td-name nm">${pfShortName(x.name)}</td><td class="td-name dim">${x.G}</td><td class="td-pct num dim">${x.wp > 0 ? w1(x.wp) : '—'}</td><td class="td-pct num dim">${w2(x.wb)}</td><td class="td-pct num">${pc(x.r)}</td><td class="td-pct num">${gp(x.e)}</td></tr>`;
+            const act = x => `<tr class="${bxRS(x.rsSrc)}">${tk(x)}<td class="td-name nm">${pfShortName(x.name)}</td><td class="td-name dim">${x.G}</td><td class="td-pct num dim">${x.wp > 0 ? w1(x.wp) : '—'}</td><td class="td-pct num dim">${w2(x.wb)}</td><td class="td-pct num">${pc(x.r)}</td><td class="td-pct num${cs(x.e)}">${gp(x.e)}</td></tr>`;
             const helped = SX.K.filter(x => x.e > 0).sort((a, b) => b.e - a.e).slice(0, 10), hurt = SX.K.filter(x => x.e < 0).sort((a, b) => a.e - b.e).slice(0, 10);
             const hs = helped.reduce((t, x) => t + x.e, 0), us = hurt.reduce((t, x) => t + x.e, 0);
             const tot = (L, e) => L.length ? `<tr class="tot"><td></td><td class="td-name">Total ${L.length}</td><td></td><td></td><td></td><td></td><td class="td-pct num">${gp(e)}</td></tr>` : '';
@@ -8764,7 +8767,7 @@
             ttl('bxMonHurtT', `${sel.m.label} · what hurt me vs ACWI`); T('bxMonHurt', hurt.map(act).join('') + tot(hurt, us), 7);
             // ACWI names I don't own: biggest contributors to the ACWI return (ACWI weight x perf)
             const nown = SX.K.filter(x => !x.extra && !(x.wp > 0) && x.wb > 0), ctb = x => x.wb * x.r / 100;
-            const nrow = x => `<tr class="${bxRS(x.rsSrc)}">${tk(x)}<td class="td-name nm">${pfShortName(x.name)}</td><td class="td-name dim">${x.G}</td><td class="td-pct num dim">${w2(x.wb)}</td><td class="td-pct num">${pc(x.r)}</td><td class="td-pct num">${gp(ctb(x))}</td><td class="td-pct num">${gp(x.e)}</td></tr>`;
+            const nrow = x => `<tr class="${bxRS(x.rsSrc)}">${tk(x)}<td class="td-name nm">${pfShortName(x.name)}</td><td class="td-name dim">${x.G}</td><td class="td-pct num dim">${w2(x.wb)}</td><td class="td-pct num">${pc(x.r)}</td><td class="td-pct num${cs(ctb(x))}">${gp(ctb(x))}</td><td class="td-pct num${cs(x.e)}">${gp(x.e)}</td></tr>`;
             const ntot = L => L.length ? `<tr class="tot"><td></td><td class="td-name">Total ${L.length}</td><td></td><td class="td-pct num">${w2(L.reduce((t, x) => t + x.wb, 0))}</td><td></td><td class="td-pct num">${gp(L.reduce((t, x) => t + ctb(x), 0))}</td><td class="td-pct num">${gp(L.reduce((t, x) => t + x.e, 0))}</td></tr>` : '';
             const nUp = nown.filter(x => ctb(x) > 0).sort((a, b) => ctb(b) - ctb(a)).slice(0, 10), nDn = nown.filter(x => ctb(x) < 0).sort((a, b) => ctb(a) - ctb(b)).slice(0, 10);
             ttl('bxMonUpT', `${sel.m.label} · ACWI stocks I don't own · biggest contributors`); T('bxMonUp', nUp.map(nrow).join('') + ntot(nUp), 7);
