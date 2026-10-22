@@ -865,6 +865,8 @@
             <input class="filter-input" id="epsFilter" placeholder="ex: 10" oninput="renderActiveDebounced()" style="display:none;width:55px;" title="pct_eps_cq ≥ seuil">
             <span style="font-size:10px;color:#f59e0b;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--muted);">Sales ≥</span>
             <input class="filter-input" id="salesFilter" placeholder="ex: 10" oninput="renderActiveDebounced()" style="display:none;width:55px;" title="pct_sales_cq ≥ seuil">
+            <label id="above200Wrap" style="display:none;font-size:10px;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--muted);cursor:pointer;white-space:nowrap;" title="Cours > moyenne mobile 200 jours"><input type="checkbox" id="above200Chk" onchange="renderActiveDebounced()" style="vertical-align:middle;margin-right:4px;">Above 200MA</label>
+            <label id="notExtWrap" style="display:none;font-size:10px;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--muted);cursor:pointer;white-space:nowrap;" title="Distance cours - MA50 &lt; 4 ATR (ATR14 sur clôtures)"><input type="checkbox" id="notExtChk" onchange="renderActiveDebounced()" style="vertical-align:middle;margin-right:4px;">Not extended</label>
             <span class="last-update" id="lastUpdate"></span>
             <span class="results-count" id="resultsCount"></span>
         </div>
@@ -2968,7 +2970,7 @@
             document.getElementById('progressPct').textContent = '100%';
 
             // Show controls
-            ['searchInput', 'groupFilter', 'sortDir', 'csvBtn', 'mktcapFilter', 'rsFilter', 'pct1wFilter', 'pct4wFilter', 'pct6mFilter', 'pct12mFilter', 'rsIbdFilter', 'epsFilter', 'salesFilter', 'ma20Filter', 'high52Filter'].forEach(id => {
+            ['searchInput', 'groupFilter', 'sortDir', 'csvBtn', 'mktcapFilter', 'rsFilter', 'pct1wFilter', 'pct4wFilter', 'pct6mFilter', 'pct12mFilter', 'rsIbdFilter', 'epsFilter', 'salesFilter', 'above200Wrap','notExtWrap', 'ma20Filter', 'high52Filter'].forEach(id => {
                 document.getElementById(id).style.display = '';
             });
             document.getElementById('sectorExcludeWrap').style.display = '';
@@ -4311,6 +4313,27 @@
         const pct12mMin = parseFloat(document.getElementById('pct12mFilter')?.value);
         const rsIbdMin  = parseFloat(document.getElementById('rsIbdFilter')?.value);
 
+        const above200 = !!document.getElementById('above200Chk')?.checked;
+        const notExt = !!document.getElementById('notExtChk')?.checked;
+        const _extAtr = d => {
+            const p = rawPrices[d.ticker];
+            if (!p || p.length < 51 || !(p[0] > 0)) return null;
+            let sm = 0, n = 0;
+            for (let i = 0; i < 50; i++) if (p[i] > 0) { sm += p[i]; n++; }
+            if (n < 45) return null;
+            let a = 0, k = 0;
+            for (let i = 0; i < 14; i++) if (p[i] > 0 && p[i + 1] > 0) { a += Math.abs(p[i] - p[i + 1]); k++; }
+            if (k < 10 || a <= 0) return null;
+            return (p[0] - sm / n) / (a / k);
+        };
+        const _ma200Of = d => {
+            if (d.ma200_dist != null) return d.ma200_dist;
+            const p = rawPrices[d.ticker];
+            if (!p || p.length < 180 || !(p[0] > 0)) return null;
+            let sm = 0, n = 0;
+            for (let i = 0; i < Math.min(200, p.length); i++) if (p[i] > 0) { sm += p[i]; n++; }
+            return n >= 180 ? (p[0] / (sm / n) - 1) * 100 : null;
+        };
         let rows = allData.filter(d => {
             if (search && !d.ticker.toLowerCase().includes(search) && !(d.name || '').toLowerCase().includes(search))
                 return false;
@@ -4355,6 +4378,12 @@
             // MA20 filter
             const _ma20v=document.getElementById('ma20Filter')?.value?.trim();
             if (_ma20v && !isNaN(parseFloat(_ma20v)) && (d.ma20_dist ?? 999) > parseFloat(_ma20v))
+                return false;
+            // Not extended : (cours - SMA50) / ATR14 < 4
+            if (notExt && !((_extAtr(d) ?? 999) < 4))
+                return false;
+            // Above 200MA (cours > SMA200 ; exclut si historique < 180 jours)
+            if (above200 && !((_ma200Of(d) ?? -999) > 0))
                 return false;
             // 52W High filter
             const high52Min = parseFloat(document.getElementById('high52Filter')?.value) || -Infinity;
@@ -5553,7 +5582,7 @@
                             sEl.innerHTML = '<option value="all">All Sectors</option>';
                             sectors.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sEl.appendChild(o); });
                         }
-                        ['searchInput','groupFilter','sortDir','csvBtn','mktcapFilter','rsFilter','pct1wFilter','pct4wFilter','pct6mFilter','pct12mFilter','rsIbdFilter','epsFilter','salesFilter','ma20Filter','high52Filter'].forEach(id => {
+                        ['searchInput','groupFilter','sortDir','csvBtn','mktcapFilter','rsFilter','pct1wFilter','pct4wFilter','pct6mFilter','pct12mFilter','rsIbdFilter','epsFilter','salesFilter','above200Wrap','notExtWrap','ma20Filter','high52Filter'].forEach(id => {
                             const el = document.getElementById(id); if (el) el.style.display = '';
                         });
                         const sew = document.getElementById('sectorExcludeWrap'); if (sew) sew.style.display = '';
