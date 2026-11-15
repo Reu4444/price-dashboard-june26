@@ -130,9 +130,9 @@ async function pool(items, n, fn) { let i = 0; const run = async () => { while (
   const t0 = Date.now();
   const [us, row] = await Promise.all([sheet('info'), sheet('info_row')]);
   if (!us && !row) { console.log('No stock list from the Apps Script: stop (dna.json kept as it was).'); process.exit(1); }
-  const list = [];
-  for (const r of (us || []).slice(1)) { const tk = String(r[0] || '').trim().toUpperCase(); if (tk) list.push({ tk, uni: 'us', sector: String(r[3] || ''), y: yahooOf(tk, '', true) }); }
-  for (const r of (row || []).slice(1)) { const tk = String(r[0] || '').trim().toUpperCase(); if (tk) list.push({ tk, uni: 'row', country: String(r[2] || ''), sector: String(r[6] || ''), y: yahooOf(tk, r[2], false) }); }
+  const list = [], num = v => { const x = parseFloat(String(v ?? '').replace(/,/g, '')); return isFinite(x) && x > 0 ? x : null; };   // market cap: $ billions (US), € billions (ROW)
+  for (const r of (us || []).slice(1)) { const tk = String(r[0] || '').trim().toUpperCase(); if (tk) list.push({ tk, uni: 'us', sector: String(r[3] || ''), cap: num(r[2]), y: yahooOf(tk, '', true) }); }
+  for (const r of (row || []).slice(1)) { const tk = String(r[0] || '').trim().toUpperCase(); if (tk) list.push({ tk, uni: 'row', country: String(r[2] || ''), sector: String(r[6] || ''), cap: num(r[5]) != null ? num(r[5]) / 1e9 : null, y: yahooOf(tk, r[2], false) }); }
   const todo = LIMIT ? [...list.filter(x => x.uni === 'us').slice(0, LIMIT), ...list.filter(x => x.uni === 'row').slice(0, LIMIT)] : list;
   console.log(`${list.length} stocks in the sheets (US ${list.filter(x => x.uni === 'us').length}, ROW ${list.filter(x => x.uni === 'row').length}); measuring ${todo.length}`);
 
@@ -142,8 +142,8 @@ async function pool(items, n, fn) { let i = 0; const run = async () => { while (
   const series = rows => rows.map(x => [Math.floor(x.t / 864e5), x.a]);
   const idxS = Object.fromEntries(Object.entries(idx).map(([k, v]) => [k, series(v)]));
 
-  const COLS = ['bench', 'years', 'sharpe', 'cagr', 'vol', 'sharpeB', 'beta', 'upCap', 'dnCap', 'corrMkt', 'sec', 'corrSec', 'corrTech', 'trUp', 'trDn', 'cons', 'pN', 'p20', 'p50', 'p100', 'p200', 'p325', 'dd3', 'dd3B', 'from'];
-  const out = {}, miss = []; let ok = 0, noSym = 0, noData = 0;
+  const COLS = ['bench', 'years', 'sharpe', 'cagr', 'vol', 'sharpeB', 'beta', 'upCap', 'dnCap', 'corrMkt', 'sec', 'corrSec', 'corrTech', 'trUp', 'trDn', 'cons', 'pN', 'p20', 'p50', 'p100', 'p200', 'p325', 'dd3', 'dd3B', 'from', 'cap'];
+  const out = {}, miss = [], objs = []; let ok = 0, noSym = 0, noData = 0;
   await pool(todo, 6, async (x, k) => {
     if (!x.y) { noSym++; miss.push(x.tk + ' (no Yahoo symbol)'); return; }
     const rows = await daily(x.y); await sleep(process.env.DNA_FAST ? 0 : 150);
@@ -154,8 +154,8 @@ async function pool(items, n, fn) { let i = 0; const run = async () => { while (
     const rkB = brows ? risk(brows.filter(b => b.t >= rows[0].t)) : null;
     const sec = x.uni === 'us' ? SECTOR_ETF[x.sector.toLowerCase().trim()] || null : null;
     const m = more(series(rows), idxS[bsym], sec ? idxS[sec] : null, idxS.XLK) || {}, pl = pullbacks(rows) || { n: 0, at: {} };
-    const o = { bench: bk, ...rk, sharpeB: rkB ? rkB.sharpe : null, ...m, sec, pN: pl.n, p20: pl.at[20], p50: pl.at[50], p100: pl.at[100], p200: pl.at[200], p325: pl.at[325], from: new Date(rows[0].t).toISOString().slice(0, 10) };
-    out[x.tk] = COLS.map(c => o[c] ?? null); ok++;
+    const o = { bench: bk, ...rk, sharpeB: rkB ? rkB.sharpe : null, ...m, sec, pN: pl.n, p20: pl.at[20], p50: pl.at[50], p100: pl.at[100], p200: pl.at[200], p325: pl.at[325], from: new Date(rows[0].t).toISOString().slice(0, 10), cap: x.cap != null ? Math.round(x.cap * 10) / 10 : null };
+    out[x.tk] = COLS.map(c => o[c] ?? null); objs.push({ ...o, uni: x.uni }); ok++;
     if ((k + 1) % 200 === 0) console.log(`  ${k + 1} / ${todo.length}`);
   });
   console.log(`measured ${ok}, no Yahoo symbol ${noSym}, no data or under 2 years ${noData}, ${Math.round((Date.now() - t0) / 1000)} s`);
@@ -163,5 +163,20 @@ async function pool(items, n, fn) { let i = 0; const run = async () => { while (
   if (ok < todo.length * 0.5) { console.log('Less than half measured (Yahoo blocked?): stop (dna.json kept as it was).'); process.exit(1); }
   const benches = Object.fromEntries(Object.entries(BENCH).map(([k, [s, name]]) => [k, { sym: s, name }]));
   writeFileSync(OUT, JSON.stringify({ at: new Date().toISOString(), cols: COLS, benches, n: { listed: list.length, measured: ok }, rows: out }));
+  // the average stock (for the Market Wire stock page and its Method): [p10, p25, median, p75, p90] of each measure, for all stocks, $10B+ and $50B+, and US / Europe
+  const q5 = a => { const v = a.filter(x => x != null && isFinite(x)).sort((x, y) => x - y); if (v.length < 20) return null; const q = p => v[Math.floor(p * (v.length - 1))]; return [0.1, 0.25, 0.5, 0.75, 0.9].map(p => Math.round(q(p) * 100) / 100); };
+  const stats = L => { const has = o => o.trUp != null, sh = L.filter(o => o.sharpe != null && o.sharpeB != null), prof = L.filter(o => o.beta != null && o.upCap != null);
+    const pf = k => prof.length ? Math.round(prof.filter(o => k === 'off' ? o.beta >= 1.15 && o.upCap >= 110 : k === 'def' ? o.beta <= 0.85 && o.dnCap <= 85 : !(o.beta >= 1.15 && o.upCap >= 110) && !(o.beta <= 0.85 && o.dnCap <= 85)).length / prof.length * 100) : null;
+    return { n: L.length, sharpe: q5(L.map(o => o.sharpe)), beatIdx: sh.length ? Math.round(sh.filter(o => o.sharpe > o.sharpeB).length / sh.length * 100) : null, cagr: q5(L.map(o => o.cagr)), vol: q5(L.map(o => o.vol)),
+      beta: q5(L.map(o => o.beta)), upCap: q5(L.map(o => o.upCap)), dnCap: q5(L.map(o => o.dnCap)), off: pf('off'), neu: pf('neu'), def: pf('def'),
+      corrMkt: q5(L.map(o => o.corrMkt)), corrSec: q5(L.map(o => o.corrSec)), corrTech: q5(L.map(o => o.corrTech)),
+      trend: q5(L.filter(has).map(o => o.trUp + o.trDn)), trUp: q5(L.filter(has).map(o => o.trUp)), trDn: q5(L.filter(has).map(o => o.trDn)), dd3: (q5(L.map(o => o.dd3)) || null)?.reverse() ?? null,
+      full10: L.filter(o => o.years >= 9.5).length }; };
+  const idx10 = k => { const o = objs.find(x => x.bench === k && x.years >= 9.5); return o ? { sharpe: o.sharpeB, dd3: o.dd3B } : null; };
+  const AVG = { at: new Date().toISOString().slice(0, 10), note: 'US market cap in $ billions, ROW in € billions (from the sheets)',
+    all: stats(objs), cap10: stats(objs.filter(o => o.cap >= 10)), cap50: stats(objs.filter(o => o.cap >= 50)), us: stats(objs.filter(o => o.uni === 'us')), eu: stats(objs.filter(o => o.bench === 'eu')),
+    index: { us: idx10('us'), eu: idx10('eu') } };
+  writeFileSync(OUT.replace(/dna\.json$/, 'dna_avg.json'), JSON.stringify(AVG));
+  console.log(`average stock: all ${AVG.all.n}, $10B+ ${AVG.cap10.n}, $50B+ ${AVG.cap50.n}`);
   console.log(`wrote ${OUT}`);
 })();
