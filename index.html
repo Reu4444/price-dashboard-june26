@@ -928,6 +928,7 @@
             <div style="display:flex;gap:0;border-bottom:1px solid var(--border2);margin-bottom:12px;">
                 <button id="priceTabTickers" onclick="switchPriceTab('tickers')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--accent2);border-bottom:1px solid var(--accent2);background:transparent;border-top:none;border-left:none;border-right:none;">UNADJUSTED</button>
                 <button id="priceTabVolAdj" onclick="switchPriceTab('voladj')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border-bottom:1px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;">VOL-ADJ RS</button>
+                <button id="priceTabTrending" onclick="switchPriceTab('trending')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border-bottom:1px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;">TRENDING</button>
                 <button id="priceTabGroups" onclick="switchPriceTab('groups')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border-bottom:1px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;">GROUPS</button>
                 <button id="priceTabSectors" onclick="switchPriceTab('sectors')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border-bottom:1px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;">SECTORS</button>
                 <button id="priceTab52w" onclick="switchPriceTab('52w')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 22px;cursor:pointer;color:var(--muted);border-bottom:1px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;">52W H/L</button>
@@ -956,18 +957,11 @@
                 <input class="filter-input" id="pct12mFilter" placeholder="ex: 80" oninput="renderActiveDebounced()" style="width:52px;">
                 <span style="font-size:10px;color:#6d28d9;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">RS IBD ≥</span>
                 <input class="filter-input" id="rsIbdFilter" placeholder="ex: 80" oninput="renderActiveDebounced()" style="width:52px;">
-                <span style="width:1px;height:16px;background:var(--border2);"></span>
-                <span style="font-size:10px;color:#0f766e;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">SHARPE ≥</span>
-                <input class="filter-input" id="dnaShFilter" placeholder="ex: 1" oninput="renderActiveDebounced()" style="width:52px;" title="Sharpe over the stock's history (up to 10 years): return per year with dividends ÷ volatility per year">
-                <span style="font-size:10px;color:#0f766e;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">TREND % ≥</span>
-                <input class="filter-input" id="dnaTrFilter" placeholder="ex: 40" oninput="renderActiveDebounced()" style="width:52px;" title="Share of the time the stock was trending (up or down) rather than consolidating">
-                <label style="font-size:10px;color:#0f766e;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;cursor:pointer;white-space:nowrap;" title="Its pullbacks stopped at the same moving average (20, 50, 100, 200 or 325-day) at least 40% of the time"><input type="checkbox" id="dnaMaChk" onchange="renderActiveDebounced()" style="vertical-align:middle;margin:0 4px 0 0;">HOLDS AN MA</label>
                 <button onclick="clearScreeningFilters()" style="font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;padding:4px 10px;background:transparent;color:var(--muted);border:1px solid var(--border);cursor:pointer;letter-spacing:.06em;">CLEAR</button>
             </div>
 
             <!-- TICKERS panel -->
             <div id="priceTickersPanel">
-                <div id="dnaCardUS"></div>
                 <div class="table-wrap">
                     <div class="empty" id="emptyPrice" style="display:none">
                         <div class="empty-icon">◈</div>
@@ -988,9 +982,6 @@
                                 <th style="cursor:pointer" class="th-pct" data-sort-col="pct_6m" data-sort-tab="price" onclick="setSortCol('pct_6m','price')">PCT 6M</th>
                                 <th style="cursor:pointer" class="th-pct" data-sort-col="pct_12m" data-sort-tab="price" onclick="setSortCol('pct_12m','price')">PCT 12M</th>
                                 <th style="cursor:pointer" class="th-pct" data-sort-col="rs_ibd" data-sort-tab="price" onclick="setSortCol('rs_ibd','price')" style="border-left:1px solid var(--border2);">RS IBD</th>
-                                <th class="th-pct" data-sort-col="dna_sharpe" data-sort-tab="price" onclick="setSortCol('dna_sharpe','price')" style="cursor:pointer;border-left:1px solid var(--border2);color:#0f766e" title="Sharpe over the stock's history (up to 10 years): return per year with dividends ÷ volatility per year. Hover a figure for the full DNA.">SHARPE</th>
-        <th class="th-pct" data-sort-col="dna_trend" data-sort-tab="price" onclick="setSortCol('dna_trend','price')" style="cursor:pointer;color:#0f766e" title="Share of the time trending (up or down) rather than consolidating, over its history (up to 10 years)">TREND</th>
-        <th class="th-pct" data-sort-col="dna_ma" data-sort-tab="price" onclick="setSortCol('dna_ma','price')" style="cursor:pointer;color:#0f766e" title="The moving average its pullbacks usually stopped at (40% of them or more), over its history (up to 10 years)">HOLDS AT</th>
                             </tr>
                         </thead>
                         <tbody id="priceBody"></tbody>
@@ -1020,6 +1011,37 @@
             </div>
 
             <!-- VOL-ADJ RS panel -->
+            <div id="priceTrendPanel" style="display:none">
+                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-left:2px solid #0f766e;margin-bottom:10px;">
+                    <div style="display:flex;gap:0;border:1px solid var(--border2);overflow:hidden;"><button id="trendUni_us" onclick="setTrendUni('us')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 18px;background:transparent;color:var(--muted);border:none;cursor:pointer;letter-spacing:.06em;">US</button><button id="trendUni_row" onclick="setTrendUni('row')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:5px 18px;background:transparent;color:var(--muted);border:none;cursor:pointer;letter-spacing:.06em;">ROW</button></div>
+                    <span style="width:1px;height:16px;background:var(--border2);"></span>
+                    <span style="font-size:10px;color:#0f766e;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">RS ≥</span> <input class="filter-input" id="trendRsF" placeholder="ex: 80" oninput="debounce(renderTrending,120)()" style="width:56px;" title="RS IBD, 1-99">
+                    <span style="font-size:10px;color:#0f766e;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">SHARPE ≥</span> <input class="filter-input" id="trendShF" placeholder="ex: 1" oninput="debounce(renderTrending,120)()" style="width:56px;" title="Sharpe over the stock's history (up to 10 years): return per year with dividends ÷ volatility per year. Green: 0.2+ above its index over the same years; red: 0.3+ below. Hover a figure for the full DNA.">
+                    <span style="font-size:10px;color:#0f766e;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">TREND % ≥</span> <input class="filter-input" id="trendTrF" placeholder="ex: 25" oninput="debounce(renderTrending,120)()" style="width:56px;" title="Share of the days the stock was trending (up or down) rather than consolidating, over its history (up to 10 years). A random walk scores about 16%.">
+                    <span style="font-size:10px;color:#0f766e;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;">52W HIGH WITHIN %</span> <input class="filter-input" id="trendHiF" placeholder="ex: 10" oninput="debounce(renderTrending,120)()" style="width:56px;" title="Price within this % of its 52-week high (10 = at most 10% below)">
+                    <button onclick="['trendRsF','trendShF','trendTrF','trendHiF'].forEach(i => document.getElementById(i).value = ''); renderTrending();" style="font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;padding:4px 10px;background:transparent;color:var(--muted);border:1px solid var(--border);cursor:pointer;letter-spacing:.06em;">CLEAR</button>
+                    <span id="trendCount" style="font-size:10px;color:var(--muted);margin-left:auto;font-family:'IBM Plex Mono',monospace;"></span>
+                </div>
+                <div id="trendCard"></div>
+                <div class="table-wrap">
+                    <table id="trendTable">
+                        <thead><tr>
+                            <th class="sticky-0" style="width:22px;padding:4px 3px">★</th>
+                            <th class="sticky-1" style="width:22px;padding:4px 3px">TV</th>
+                            <th class="sticky-2" data-tc="ticker" onclick="trendSortBy('ticker')" style="cursor:pointer">TICKER</th>
+                            <th class="sticky-3" data-tc="name" onclick="trendSortBy('name')" style="cursor:pointer">NAME</th>
+                            <th data-tc="sector" onclick="trendSortBy('sector')" style="cursor:pointer">SECTOR</th>
+                            <th data-tc="group" onclick="trendSortBy('group')" style="cursor:pointer">GROUP</th>
+                            <th class="th-pct">MKT CAP</th>
+                            <th class="th-pct" data-tc="rs_ibd" onclick="trendSortBy('rs_ibd')" style="cursor:pointer;border-left:1px solid var(--border2);color:#6d28d9" title="RS IBD, 1-99">RS IBD</th>
+                            <th class="th-pct" data-tc="high52_dist" onclick="trendSortBy('high52_dist')" style="cursor:pointer;color:#f59e0b" title="Distance from the 52-week high">vs 52W H</th>
+                            <th class="th-pct" data-tc="dna_sharpe" onclick="trendSortBy('dna_sharpe')" style="cursor:pointer;border-left:1px solid var(--border2);color:#0f766e" title="Sharpe over the stock's history (up to 10 years): return per year with dividends ÷ volatility per year. Green: 0.2+ above its index over the same years; red: 0.3+ below. Hover a figure for the full DNA.">SHARPE</th>
+                            <th class="th-pct" data-tc="dna_trend" onclick="trendSortBy('dna_trend')" style="cursor:pointer;color:#0f766e" title="Share of the days the stock was trending (up or down) rather than consolidating, over its history (up to 10 years). A random walk scores about 16%.">TREND</th>
+                        </tr></thead>
+                        <tbody id="trendBody"></tbody>
+                    </table>
+                </div>
+            </div>
             <div id="priceVolAdjPanel" style="display:none">
                 <div id="vaLoadingMsg" style="display:none;text-align:center;padding:40px;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:13px;">Computing vol-adjusted scores...</div>
 
@@ -1139,7 +1161,6 @@
                     </select>
                     <span id="rowCount" style="font-size:10px;color:var(--muted);margin-left:auto;font-family:'IBM Plex Mono',monospace;"></span>
                 </div>
-                <div id="dnaCardRoW"></div>
                 <div class="table-wrap">
                     <div class="empty" id="emptyRoW" style="display:none">
                         <div class="empty-icon">🌍</div>
@@ -1164,9 +1185,6 @@
                                 <th style="cursor:pointer;text-align:center;border-left:1px solid var(--border2);;width:68px;color:#6d28d9" class="th-pct" onclick="rowSort('rs_ibd')">RS IBD</th>
                                 <th style="cursor:pointer;text-align:center;width:68px;color:#10b981" class="th-pct" onclick="rowSort('ma20_dist')">vs MA20</th>
                                 <th style="cursor:pointer;text-align:center;;width:68px;color:#f59e0b" class="th-pct" onclick="rowSort('high52_dist')">vs 52W H</th>
-                                <th style="cursor:pointer;text-align:center;border-left:1px solid var(--border2);width:62px;color:#0f766e" class="th-pct" onclick="rowSort('dna_sharpe')" title="Sharpe over the stock's history (up to 10 years): return per year with dividends ÷ volatility per year. Hover a figure for the full DNA.">SHARPE</th>
-                                <th style="cursor:pointer;text-align:center;width:58px;color:#0f766e" class="th-pct" onclick="rowSort('dna_trend')" title="Share of the time trending (up or down) rather than consolidating, over its history (up to 10 years)">TREND</th>
-                                <th style="cursor:pointer;text-align:center;width:70px;color:#0f766e" class="th-pct" onclick="rowSort('dna_ma')" title="The moving average its pullbacks usually stopped at (40% of them or more), over its history (up to 10 years)">HOLDS AT</th>
                             </tr>
                         </thead>
                         <tbody id="rowBody"></tbody>
@@ -2071,19 +2089,17 @@
             <div style="font-size:13px;color:var(--muted);margin-bottom:22px;">How each score and indicator is calculated in this dashboard</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
             <div style="margin-bottom:18px;background:var(--bg2);border:1px solid var(--border);border-top:1px solid #0f766e;padding:14px 18px;">
-                <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.12em;color:#0f766e;margin-bottom:10px;">STOCK DNA (SHARPE · TREND · HOLDS AT)</div>
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.12em;color:#0f766e;margin-bottom:10px;">TRENDING (SHARPE · TREND)</div>
                 <div style="font-size:13px;line-height:1.8;color:var(--text);">
-                    <div>How each stock behaves over its whole price history (up to 10 years of daily prices, Yahoo, with dividends). Measured every Saturday by a GitHub Action (dna/build.mjs) and saved in dna.json. The same measures as the Market Wire stock page.</div>
+                    <div>How each stock behaves over its whole price history (up to 10 years of daily prices, Yahoo, with dividends; stocks with under 2 years are left out). Measured every Saturday by a GitHub Action (dna/build.mjs) and saved in dna.json. The same measures as the Market Wire stock page.</div>
                     <div style="height:5px;"></div>
-                    <div>SHARPE = return per year (with dividends) ÷ volatility per year (daily returns × √252). No risk-free rate. Its index is measured the same way over the same years (S&amp;P 500 for US stocks; Stoxx 600, Topix, Hang Seng… for the others). Green: 0.2 or more above its index; red: 0.3 or more below.</div>
+                    <div>SHARPE = return per year (with dividends) ÷ volatility per year (daily returns × √252). No risk-free rate. Its index is measured the same way over the same years (S&amp;P 500 for US stocks; Stoxx 600, Topix, Hang Seng… for the others, in local currency). Green: 0.2 or more above its index; red: 0.3 or more below. Nov 2026: median stock 0.33, S&amp;P 500 0.83 over 10 years.</div>
                     <div style="height:5px;"></div>
-                    <div>TREND = share of the days where the move of the last 50 sessions was at least 0.25 of the path walked (|net move| ÷ sum of the daily moves). Less = consolidating.</div>
-                    <div style="height:5px;"></div>
-                    <div>HOLDS AT = the moving average (20, 50, 100, 200 or 325-day) where its pullbacks stopped, if 40% of them or more (and 3 or more) stopped there. A pullback = a low of the 10 sessions before and after, at least 3 ATR under the high of the 30 sessions before; it stopped at an average when the low was within 1 ATR of it.</div>
+                    <div>TREND = share of the days where the move of the last 50 sessions was at least 0.25 of the path walked (|net move| ÷ sum of the daily moves). Less = consolidating. A random walk scores about 16% (12 to 21%); the median stock 19%, the top 10% 25% or more.</div>
                     <div style="height:5px;"></div>
                     <div>Hover a Sharpe figure, or search a ticker, for the full DNA: profile (offensive = beta 1.15+ and 110%+ of the index's rises; defensive = beta 0.85 or less and 85% or less of its falls), correlations of monthly returns with the index, its sector ETF (US) and US tech (XLK), and the usual worst dip inside 3 months.</div>
                     <div style="height:5px;"></div>
-                    <div style="color:var(--muted);">Facts about the past. Whether a high Sharpe, a trending habit or a respected average helps the next months is not tested.</div>
+                    <div style="color:var(--muted);">Facts about the past. Whether a high Sharpe or a trending habit helps the next months is not tested. The average its pullbacks stop at was dropped: almost no stock has one (the most common average catches 16% of pullbacks for the median stock).</div>
                 </div>
             </div>
 
@@ -3232,6 +3248,7 @@
         show('priceTickersPanel', tab === 'tickers' && stocksUni === 'us');
         show('priceRoWPanel',     tab === 'tickers' && stocksUni === 'row');
         show('priceVolAdjPanel',  tab === 'voladj');
+        show('priceTrendPanel',   tab === 'trending');
         show('priceGroupsPanel',  tab === 'groups');
         show('priceSectorsPanel', tab === 'sectors');
         show('pricePanel52w',     tab === '52w');
@@ -3239,7 +3256,7 @@
         if (toggleBar) toggleBar.style.display = tab === 'tickers' ? 'flex' : 'none';
 
         const btnMap = {
-            priceTabTickers: 'tickers', priceTabVolAdj: 'voladj', priceTabGroups: 'groups',
+            priceTabTickers: 'tickers', priceTabVolAdj: 'voladj', priceTabTrending: 'trending', priceTabGroups: 'groups',
             priceTabSectors: 'sectors', priceTab52w: '52w'
         };
         Object.entries(btnMap).forEach(([id, key]) => {
@@ -3252,6 +3269,7 @@
 
         if (tab === 'tickers') stocksUni === 'us' ? renderPrice() : renderRoW();
         else if (tab === 'voladj')  renderVolAdj();
+        else if (tab === 'trending') renderTrending();
         else if (tab === 'groups')  renderGroups();
         else if (tab === 'sectors') renderSectors();
         else if (tab === '52w')     render52w();
@@ -3283,11 +3301,10 @@
     }
 
     function clearScreeningFilters() {
-        ['pct1wFilter', 'pct4wFilter', 'pct6mFilter', 'pct12mFilter', 'rsIbdFilter', 'dnaShFilter', 'dnaTrFilter'].forEach(id => {
+        ['pct1wFilter', 'pct4wFilter', 'pct6mFilter', 'pct12mFilter', 'rsIbdFilter'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.value = '';
         });
-        const _dm = document.getElementById('dnaMaChk'); if (_dm) _dm.checked = false;
         renderActive();
     }
 
@@ -3309,6 +3326,8 @@
             }
             else if (priceSubTab === 'groups')
                 renderGroups();
+            else if (priceSubTab === 'trending')
+                renderTrending();
             else if (priceSubTab === 'voladj')
                 renderVolAdj();
             else if (priceSubTab === 'sectors')
@@ -4344,7 +4363,6 @@
         const pct6mMin  = parseFloat(document.getElementById('pct6mFilter')?.value);
         const pct12mMin = parseFloat(document.getElementById('pct12mFilter')?.value);
         const rsIbdMin  = parseFloat(document.getElementById('rsIbdFilter')?.value);
-        const dnaF = dnaFilters(); dnaAttach(allData);
 
         const above200 = !!document.getElementById('above200Chk')?.checked;
         const notExt = !!document.getElementById('notExtChk')?.checked;
@@ -4397,8 +4415,6 @@
             if (!isNaN(pct12mMin) && (d.pct_12m ?? -1) < pct12mMin)
                 return false;
             if (!isNaN(rsIbdMin)  && (d.rs_ibd  ?? -1) < rsIbdMin)
-                return false;
-            if (!dnaPass(d, dnaF))
                 return false;
             // EPS filter
             if (epsMin > 0 && (d.eps_cq ?? -999) < epsMin)
@@ -4468,9 +4484,7 @@
         const countryFilter = document.getElementById('rowCountryFilter') ? document.getElementById('rowCountryFilter').value : 'all';
         const currencyFilter = document.getElementById('rowCurrencyFilter') ? document.getElementById('rowCurrencyFilter').value : 'all';
 
-        dnaAttach(allDataRoW);
-        const dnaF = dnaFilters();
-        let rows = allDataRoW.filter(d => dnaPass(d, dnaF));
+        let rows = allDataRoW.slice();
 
         if (search) rows = rows.filter(d => d.ticker.toLowerCase().includes(search) || (d.name || '').toLowerCase().includes(search));
         if (countryFilter !== 'all') rows = rows.filter(d => d.country === countryFilter);
@@ -4487,7 +4501,6 @@
         const tbody = document.getElementById('rowBody');
         if (!tbody) return;
         tbody.innerHTML = '';
-        dnaCard('dnaCardRoW', search ? rows.find(d => d.ticker.toLowerCase() === search || d.ticker.toLowerCase().split(':').pop() === search) : null);
 
         const fmcEur = v => {
             const n = parseFloat(v);
@@ -4517,7 +4530,7 @@
                 <td class="td-pct">${pctCell(d.pct_12m)}</td>
                 <td class="td-pct" style="border-left:1px solid var(--border2);color:#6d28d9">${pctCell(d.rs_ibd)}</td>
                 <td class="td-pct" style="color:#10b981">${distCell(d.ma20_dist)}</td>
-                <td class="td-pct" style="color:#f59e0b">${distCell52w(d.high52_dist)}</td>` + dnaCells(d);
+                <td class="td-pct" style="color:#f59e0b">${distCell52w(d.high52_dist)}</td>`;
             tbody.appendChild(tr);
         });
 
@@ -4528,9 +4541,9 @@
     }
 
     // ── RENDER PRICE ─────────────────────────────────────────────
-    // ── STOCK DNA ────────────────────────────────────────────────
+    // ── TRENDING (stock DNA) ─────────────────────────────────────
     // dna.json is written each Saturday by the GitHub Action "Stock DNA" (dna/build.mjs): up to 10 years of daily prices per stock (Yahoo, with dividends).
-    // Facts about the past (Sharpe, trending, the average its pullbacks stopped at, correlations, usual dip), the same measures as the Market Wire stock page.
+    // Facts about the past, the same measures as the Market Wire stock page.
     let DNA = null;
     const DNA_URLS = ['dna.json', 'https://raw.githubusercontent.com/Reu4444/price-dashboard-june26/main/dna.json'];   // the second one when the page runs elsewhere (Firebase)
     async function loadDna() {
@@ -4539,7 +4552,7 @@
                 const r = await fetch(u + '?t=' + Math.floor(Date.now() / 36e5), { cache: 'no-cache' });
                 if (!r.ok) continue;
                 const j = await r.json();
-                if (j && j.rows && j.cols) { DNA = j; try { renderActive(); } catch (e) {} return; }
+                if (j && j.rows && j.cols) { DNA = j; if (priceSubTab === 'trending') renderTrending(); return; }
             } catch (e) {}
         }
     }
@@ -4548,63 +4561,79 @@
         const a = DNA.rows[String(tk).toUpperCase()]; if (!a) return null;
         const o = {}; DNA.cols.forEach((c, i) => { o[c] = a[i]; }); return o;
     }
-    // the average its pullbacks stopped at: 40% of them or more (and 3 or more); 0 = none; null = too few pullbacks
-    function dnaMaOf(o) {
-        if (!o || !(o.pN >= 5)) return null;
-        const top = [20, 50, 100, 200, 325].map(n => [n, o['p' + n] || 0]).sort((a, b) => b[1] - a[1])[0];
-        return top[1] >= Math.max(3, o.pN * 0.4) ? top[0] : 0;
-    }
     function dnaAttach(arr) {
         if (!DNA || !arr || arr._dna === DNA) return;
-        for (const d of arr) { const o = dnaOf(d.ticker);
-            d.dna_sharpe = o ? o.sharpe : null; d.dna_trend = o && o.trUp != null ? o.trUp + o.trDn : null; d.dna_ma = o ? dnaMaOf(o) : null; }
+        for (const d of arr) { const o = dnaOf(d.ticker); d.dna_sharpe = o ? o.sharpe : null; d.dna_trend = o && o.trUp != null ? o.trUp + o.trDn : null; }
         arr._dna = DNA;
-    }
-    function dnaFilters() {
-        return { sh: parseFloat(document.getElementById('dnaShFilter')?.value), tr: parseFloat(document.getElementById('dnaTrFilter')?.value), ma: !!document.getElementById('dnaMaChk')?.checked };
-    }
-    function dnaPass(d, f) {
-        if (!isNaN(f.sh) && !((d.dna_sharpe ?? -99) >= f.sh)) return false;
-        if (!isNaN(f.tr) && !((d.dna_trend ?? -1) >= f.tr)) return false;
-        if (f.ma && !(d.dna_ma > 0)) return false;
-        return true;
     }
     const dnaBenchName = o => (DNA && DNA.benches && DNA.benches[o.bench] && DNA.benches[o.bench].name) || 'index';
     const dnaSince = o => o.years >= 9.5 ? '10 years' : 'since ' + String(o.from || '').slice(0, 4);
     const dnaProfile = o => o.beta != null && o.upCap != null ? (o.beta >= 1.15 && o.upCap >= 110 ? 'Offensive' : o.beta <= 0.85 && o.dnCap <= 85 ? 'Defensive' : 'Neutral') : null;
     const dnaCw = c => c == null ? '—' : `${c.toFixed(2)} (${c >= 0.7 ? 'high' : c >= 0.4 ? 'moderate' : 'low'})`;
-    // the DNA in plain lines: [label, value]
     function dnaLines(o) {
-        const B = dnaBenchName(o), ma = dnaMaOf(o), pr = dnaProfile(o), L = [];
+        const B = dnaBenchName(o), pr = dnaProfile(o), L = [];
         L.push(['Sharpe, ' + dnaSince(o), `${o.sharpe != null ? o.sharpe.toFixed(2) : '—'}${o.sharpeB != null ? ` · ${B} ${o.sharpeB.toFixed(2)} same years` : ''} · ${o.cagr >= 0 ? '+' : ''}${Math.round(o.cagr)}% a year, volatility ${Math.round(o.vol)}%`]);
         if (pr) L.push(['Profile', `${pr} · beta ${o.beta.toFixed(1)} · catches ${o.upCap}% of ${B} rises, ${o.dnCap}% of its falls`]);
         if (o.trUp != null) L.push(['Trending / consolidating', `trending ${o.trUp + o.trDn}% of the time (up ${o.trUp}%, down ${o.trDn}%) · consolidating ${o.cons}%`]);
-        if (ma != null) { const hits = ma > 0 ? o['p' + ma] : null; L.push(['Respects its averages', ma > 0 ? `yes, the ${ma}-day: ${hits} of ${o.pN} pullbacks stopped there` : `no clear average (${o.pN} pullbacks)`]); }
         if (o.corrMkt != null) L.push([`With the ${B}`, dnaCw(o.corrMkt)]);
         if (o.corrSec != null && o.sec && o.sec !== 'XLK') L.push([`With its sector (${o.sec})`, dnaCw(o.corrSec)]);
         if (o.corrTech != null) L.push(['With US tech (XLK)', dnaCw(o.corrTech)]);
         if (o.dd3 != null) L.push(['Usual dip in 3 months', `${Math.round(o.dd3)}%${o.dd3B != null ? ` · ${B} ${Math.round(o.dd3B)}%` : ''}`]);
         return L;
     }
-    function dnaCells(d) {
-        const o = dnaOf(d.ticker), dash = '<span style="color:var(--muted)">—</span>', bl = 'border-left:1px solid var(--border2)';
-        if (!o) return `<td class="td-pct" style="${bl}">${dash}</td><td class="td-pct">${dash}</td><td class="td-pct">${dash}</td>`;
-        const tip = ('DNA · ' + dnaSince(o) + '\n' + dnaLines(o).map(([a, b]) => `${a}: ${b}`).join('\n')).replace(/"/g, '&quot;');
-        const col = o.sharpe == null || o.sharpeB == null ? 'var(--text)' : o.sharpe >= o.sharpeB + 0.2 ? 'var(--up)' : o.sharpe < o.sharpeB - 0.3 ? 'var(--down)' : 'var(--text)';
-        const ma = dnaMaOf(o);
-        return `<td class="td-pct" style="${bl};color:${col};cursor:help" title="${tip}">${o.sharpe != null ? o.sharpe.toFixed(2) : dash}</td>`
-            + `<td class="td-pct" title="up ${o.trUp ?? '—'}%, down ${o.trDn ?? '—'}%, consolidating ${o.cons ?? '—'}%">${o.trUp != null ? (o.trUp + o.trDn) + '%' : dash}</td>`
-            + `<td class="td-pct" style="color:var(--muted)" title="${ma != null ? `${o.pN} pullbacks` : 'too few pullbacks'}">${ma > 0 ? ma + '-day' : ma === 0 ? 'none' : dash}</td>`;
-    }
     // the DNA of one stock, above the table, when a ticker is searched
-    function dnaCard(id, d) {
-        const box = document.getElementById(id); if (!box) return;
+    function dnaCard(box, d) {
         const o = d && dnaOf(d.ticker);
         if (!o) { box.innerHTML = ''; return; }
         box.innerHTML = `<div style="background:var(--bg2);border:1px solid var(--border);border-left:2px solid #0f766e;padding:10px 14px;margin-bottom:10px;max-width:900px;">
             <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.12em;color:#0f766e;margin-bottom:6px;">DNA · ${d.ticker} · ${dnaSince(o)}</div>
             <table style="width:100%;border-collapse:collapse;font-size:12px;">${dnaLines(o).map(([a, b]) => `<tr><td style="padding:3px 14px 3px 0;color:var(--muted);white-space:nowrap;width:190px;">${a}</td><td style="padding:3px 0;color:var(--text);">${b}</td></tr>`).join('')}</table>
             <div style="font-size:10px;color:var(--muted);margin-top:6px;">Facts about the past, not tested as signals. Updated ${String(DNA.at || '').slice(0, 10)}.</div></div>`;
+    }
+    let trendUni = 'us', trendSort = 'rs_ibd', trendDir = 'desc';
+    function setTrendUni(u) { trendUni = u; renderTrending(); }
+    function trendSortBy(c) { if (trendSort === c) trendDir = trendDir === 'desc' ? 'asc' : 'desc'; else { trendSort = c; trendDir = 'desc'; } renderTrending(); }
+    function renderTrending() {
+        const box = document.getElementById('priceTrendPanel'); if (!box) return;
+        ['us', 'row'].forEach(u => { const b = document.getElementById('trendUni_' + u); if (b) { b.style.background = trendUni === u ? 'var(--accent2)' : 'transparent'; b.style.color = trendUni === u ? '#fff' : 'var(--muted)'; } });
+        const src = trendUni === 'us' ? allData : allDataRoW;
+        const tbody = document.getElementById('trendBody'), card = document.getElementById('trendCard'), cnt = document.getElementById('trendCount');
+        if (!DNA) { tbody.innerHTML = `<tr><td colspan="10" style="padding:14px;color:var(--muted);">Loading the DNA (dna.json)… If it stays empty, run the GitHub Action "Stock DNA" once.</td></tr>`; card.innerHTML = ''; return; }
+        dnaAttach(src);
+        const num = id => parseFloat(document.getElementById(id)?.value);
+        const rsMin = num('trendRsF'), shMin = num('trendShF'), trMin = num('trendTrF'), hiMin = num('trendHiF');
+        const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+        let rows = (src || []).filter(d => {
+            if (search && !d.ticker.toLowerCase().includes(search) && !(d.name || '').toLowerCase().includes(search)) return false;
+            if (!isNaN(rsMin) && !((d.rs_ibd ?? -1) >= rsMin)) return false;
+            if (!isNaN(shMin) && !((d.dna_sharpe ?? -99) >= shMin)) return false;
+            if (!isNaN(trMin) && !((d.dna_trend ?? -1) >= trMin)) return false;
+            if (!isNaN(hiMin) && !((d.high52_dist ?? -999) >= -Math.abs(hiMin))) return false;
+            return true;
+        });
+        rows.sort((a, b) => { let av = a[trendSort], bv = b[trendSort]; if (av == null) return 1; if (bv == null) return -1;
+            if (typeof av === 'string') return trendDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av); return trendDir === 'desc' ? bv - av : av - bv; });
+        cnt.textContent = `${rows.length}/${(src || []).length} · DNA measured ${String(DNA.at || '').slice(0, 10)}`;
+        dnaCard(card, search ? rows.find(d => d.ticker.toLowerCase() === search || d.ticker.toLowerCase().split(':').pop() === search) : null);
+        document.querySelectorAll('#trendTable th[data-tc]').forEach(th => { const b = th.dataset.lab || th.textContent.replace(/[↑↓]/g, '').trim(); th.dataset.lab = b; th.textContent = b + (th.dataset.tc === trendSort ? (trendDir === 'desc' ? ' ↓' : ' ↑') : ''); });
+        const dash = '<span style="color:var(--muted)">—</span>', bl = 'border-left:1px solid var(--border2)';
+        tbody.innerHTML = rows.slice(0, 300).map(d => {
+            const o = dnaOf(d.ticker), inW = watchlist.includes(d.ticker);
+            const tip = o ? ('DNA · ' + dnaSince(o) + '\n' + dnaLines(o).map(([a, b]) => `${a}: ${b}`).join('\n')).replace(/"/g, '&quot;') : '';
+            const col = !o || o.sharpe == null || o.sharpeB == null ? 'var(--text)' : o.sharpe >= o.sharpeB + 0.2 ? 'var(--up)' : o.sharpe < o.sharpeB - 0.3 ? 'var(--down)' : 'var(--text)';
+            return `<tr>
+                <td class="sticky-0 watch-toggle" style="text-align:center;cursor:pointer;font-size:11px;width:22px;padding:4px 3px;color:${inW ? '#06b6d4' : '#475569'}" data-ticker="${d.ticker}">${inW ? '★' : '☆'}</td>
+                <td class="sticky-1" style="text-align:center;width:22px;padding:4px 3px;"><a href="https://www.tradingview.com/chart/?symbol=${d.ticker}" target="_blank" style="color:#475569;font-size:8px;text-decoration:none;font-weight:600;">TV</a></td>
+                <td class="td-ticker sticky-2" style="cursor:pointer;color:var(--accent2);min-width:44px;" onclick="openNews('${d.ticker}','${(d.name || '').replace(/'/g, "\\'")}')">${d.ticker}</td>
+                <td class="td-name sticky-3" style="min-width:100px;">${d.name || ''}</td>
+                <td class="td-name">${d.sector || ''}</td>
+                <td class="td-name">${d.group || ''}</td>
+                <td class="td-pct">${trendUni === 'us' ? fmktcap(d.mktcap) : (parseFloat(d.mktcap_eur) >= 1e9 ? (parseFloat(d.mktcap_eur) / 1e9).toFixed(1) + 'B' : '—')}</td>
+                <td class="td-pct" style="${bl}">${pctCell(d.rs_ibd)}</td>
+                <td class="td-pct">${distCell52w(d.high52_dist)}</td>
+                <td class="td-pct" style="${bl};color:${col};cursor:help" title="${tip}">${o && o.sharpe != null ? o.sharpe.toFixed(2) : dash}</td>
+                <td class="td-pct" title="${o ? `up ${o.trUp ?? '—'}%, down ${o.trDn ?? '—'}%, consolidating ${o.cons ?? '—'}%` : ''}">${o && o.trUp != null ? (o.trUp + o.trDn) + '%' : dash}</td>
+            </tr>`; }).join('') + (rows.length > 300 ? `<tr><td colspan="11" style="text-align:center;padding:8px;font-size:11px;color:var(--muted);">Showing 300 of ${rows.length} — use filters to narrow</td></tr>` : '');
     }
 
 
@@ -4618,7 +4647,7 @@
     <td class="td-pct">${pctCell(d.pct_6m)}</td>
     <td class="td-pct">${pctCell(d.pct_12m)}</td>
     <td class="td-pct" style="border-left:1px solid var(--border2);">${pctCell(d.rs_ibd)}</td>
-` + dnaCells(d);
+`;
         return tr;
     }
 
@@ -4684,7 +4713,6 @@
         <th class="th-pct" style="width:60px;color:var(--accent2)">EPS NQ</th>
       </tr>`;
             const d = rows.find(r => r.ticker.toLowerCase() === search) || rows[0];
-            dnaCard('dnaCardUS', d);
             tbody.appendChild(fullRow(d, true));
             if (d.group) {
                 const peers = allData.filter(p => p.group === d.group && p.ticker !== d.ticker);
@@ -4705,7 +4733,6 @@
                 }
             }
         } else {
-            dnaCard('dnaCardUS', null);
             const pt2 = document.getElementById('priceTable');
             pt2.style.tableLayout = '';
             pt2.querySelector('thead').innerHTML = `
@@ -4722,9 +4749,6 @@
         <th style="cursor:pointer" class="th-pct" data-sort-col="pct_6m" data-sort-tab="price" onclick="setSortCol('pct_6m','price')">PCT 6M</th>
         <th style="cursor:pointer" class="th-pct" data-sort-col="pct_12m" data-sort-tab="price" onclick="setSortCol('pct_12m','price')">PCT 12M</th>
         <th class="th-pct" data-sort-col="rs_ibd" data-sort-tab="price" onclick="setSortCol('rs_ibd','price')" style="cursor:pointer;border-left:1px solid var(--border2);;color:#6d28d9">RS IBD</th>
-        <th class="th-pct" data-sort-col="dna_sharpe" data-sort-tab="price" onclick="setSortCol('dna_sharpe','price')" style="cursor:pointer;border-left:1px solid var(--border2);color:#0f766e" title="Sharpe over the stock's history (up to 10 years): return per year with dividends ÷ volatility per year. Hover a figure for the full DNA.">SHARPE</th>
-        <th class="th-pct" data-sort-col="dna_trend" data-sort-tab="price" onclick="setSortCol('dna_trend','price')" style="cursor:pointer;color:#0f766e" title="Share of the time trending (up or down) rather than consolidating, over its history (up to 10 years)">TREND</th>
-        <th class="th-pct" data-sort-col="dna_ma" data-sort-tab="price" onclick="setSortCol('dna_ma','price')" style="cursor:pointer;color:#0f766e" title="The moving average its pullbacks usually stopped at (40% of them or more), over its history (up to 10 years)">HOLDS AT</th>
       </tr>`
 
 
