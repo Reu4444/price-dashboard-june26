@@ -1022,7 +1022,6 @@
                     <button onclick="['trendRsF','trendShF','trendTrF','trendHiF'].forEach(i => document.getElementById(i).value = ''); renderTrending();" style="font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;padding:4px 10px;background:transparent;color:var(--muted);border:1px solid var(--border);cursor:pointer;letter-spacing:.06em;">CLEAR</button>
                     <span id="trendCount" style="font-size:10px;color:var(--muted);margin-left:auto;font-family:'IBM Plex Mono',monospace;"></span>
                 </div>
-                <div id="trendAvg" style="font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--text);margin:0 0 10px 2px;"></div>
                 <div id="trendCard"></div>
                 <div class="table-wrap">
                     <table id="trendTable">
@@ -4617,15 +4616,29 @@
         rows.sort((a, b) => { let av = a[trendSort], bv = b[trendSort]; if (av == null) return 1; if (bv == null) return -1;
             if (typeof av === 'string') return trendDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av); return trendDir === 'desc' ? bv - av : av - bv; });
         cnt.textContent = `${rows.length}/${(src || []).length} · DNA measured ${String(DNA.at || '').slice(0, 10)}`;
-        // the average of the stocks shown (recalculated with the filters): median Sharpe, share of days trending (up, down) and sideways
-        { const ds = rows.map(d => dnaOf(d.ticker)).filter(o => o && o.trUp != null), med = a => { const v = a.filter(x => x != null).sort((x, y) => x - y); return v.length ? v[Math.floor((v.length - 1) / 2)] : null; },
-            avg = k => ds.reduce((t, o) => t + o[k], 0) / ds.length, shM = med(ds.map(o => o.sharpe)), shB = med(ds.map(o => o.sharpeB));
-          const all = (src || []).map(d => dnaOf(d.ticker)).filter(o => o && o.trUp != null), allT = all.length ? Math.round(all.reduce((t, o) => t + o.trUp + o.trDn, 0) / all.length) : '—', allSm = med(all.map(o => o.sharpe)), allS = allSm != null ? allSm.toFixed(2) : '—';
-          document.getElementById('trendAvg').innerHTML = ds.length < 5 ? '' : `<b style="color:#0f766e">These ${ds.length} stocks on average</b> · in a clear trend ${Math.round(avg('trUp') + avg('trDn'))}% of the days (up ${Math.round(avg('trUp'))}%, down ${Math.round(avg('trDn'))}%) · sideways ${Math.round(avg('cons'))}% · median Sharpe ${shM.toFixed(2)}${shB != null ? ` (their index, same years: ${shB.toFixed(2)})` : ''} · <span style="color:var(--muted)">all ${trendUni === 'us' ? 'US' : 'ROW'} stocks: trend ${allT}%, Sharpe ${allS}</span>`; }
+        // two summary rows above the stocks: the average of the stocks shown (recalculated with the filters) and of all stocks of the universe
+        const sumRow = (label, list, bg) => { const ds = list.map(d => [d, dnaOf(d.ticker)]), oks = ds.filter(([, o]) => o && o.trUp != null);
+            const mean = a => { const v = a.filter(x => x != null && isFinite(x)); return v.length ? v.reduce((t, x) => t + x, 0) / v.length : null; };
+            const med = a => { const v = a.filter(x => x != null && isFinite(x)).sort((x, y) => x - y); return v.length ? v[Math.floor((v.length - 1) / 2)] : null; };
+            const rs = mean(list.map(d => d.rs_ibd)), hi = mean(list.map(d => d.high52_dist)), sh = med(oks.map(([, o]) => o.sharpe)), shB = med(oks.map(([, o]) => o.sharpeB)),
+                up = mean(oks.map(([, o]) => o.trUp)), dn = mean(oks.map(([, o]) => o.trDn)), cap = med(list.map(d => trendUni === 'us' ? parseFloat(d.mktcap) : parseFloat(d.mktcap_eur) / 1e9));
+            const td = (v, tip) => `<td class="td-pct" style="font-weight:700;${tip ? 'cursor:help' : ''}" title="${tip || ''}">${v}</td>`;
+            return `<tr style="background:${bg};">
+                <td class="sticky-0"></td><td class="sticky-1"></td>
+                <td class="td-ticker sticky-2" colspan="2" style="font-weight:700;color:#0f766e;white-space:nowrap;">${label} (${list.length})</td>
+                <td class="td-name"></td><td class="td-name"></td>
+                ${td(cap != null ? Math.round(cap) : '—', 'median market cap, billions')}
+                <td class="td-pct" style="border-left:1px solid var(--border2);font-weight:700;" title="average RS IBD">${rs != null ? Math.round(rs) : '—'}</td>
+                ${td(hi != null ? Math.round(hi) + '%' : '—', 'average distance from the 52-week high')}
+                <td class="td-pct" style="border-left:1px solid var(--border2);font-weight:700;cursor:help" title="median Sharpe (a few young stocks have extreme values)${shB != null ? `; their index over the same years: ${shB.toFixed(2)}` : ''}">${sh != null ? sh.toFixed(2) : '—'}</td>
+                ${td(up != null ? Math.round(up + dn) + '%' : '—', up != null ? `average: up ${Math.round(up)}%, down ${Math.round(dn)}%, sideways ${Math.round(100 - up - dn)}% of the days` : '')}
+            </tr>`; };
+        const filtered = rows.length !== (src || []).length;
+        const head = (filtered && rows.length ? sumRow('AVERAGE', rows, 'rgba(15,118,110,.08)') : '') + sumRow(trendUni === 'us' ? 'ALL US' : 'ALL ROW', src || [], 'rgba(15,118,110,.04)');
         dnaCard(card, search ? rows.find(d => d.ticker.toLowerCase() === search || d.ticker.toLowerCase().split(':').pop() === search) : null);
         document.querySelectorAll('#trendTable th[data-tc]').forEach(th => { const b = th.dataset.lab || th.textContent.replace(/[↑↓]/g, '').trim(); th.dataset.lab = b; th.textContent = b + (th.dataset.tc === trendSort ? (trendDir === 'desc' ? ' ↓' : ' ↑') : ''); });
         const dash = '<span style="color:var(--muted)">—</span>', bl = 'border-left:1px solid var(--border2)';
-        tbody.innerHTML = rows.slice(0, 300).map(d => {
+        tbody.innerHTML = head + rows.slice(0, 300).map(d => {
             const o = dnaOf(d.ticker), inW = watchlist.includes(d.ticker);
             const tip = o ? ('DNA · ' + dnaSince(o) + '\n' + dnaLines(o).map(([a, b]) => `${a}: ${b}`).join('\n')).replace(/"/g, '&quot;') : '';
             const col = !o || o.sharpe == null || o.sharpeB == null ? 'var(--text)' : o.sharpe >= o.sharpeB + 0.2 ? 'var(--up)' : o.sharpe < o.sharpeB - 0.3 ? 'var(--down)' : 'var(--text)';
