@@ -142,7 +142,10 @@ async function pool(items, n, fn) { let i = 0; const run = async () => { while (
   const idx = {}; const FAC = ['BZ=F', 'TLT', 'UUP', 'HYG'], want = new Set([...Object.values(BENCH).map(b => b[0]), ...Object.values(SECTOR_ETF), ...FAC]);
   await pool([...want], 4, async s => { const rows = await daily(s); if (rows && rows.length > 300) idx[s] = rows; else console.log(`  index ${s}: no data`); });
   const series = rows => rows.map(x => [Math.floor(x.t / 864e5), x.a]);
-  const idxS = Object.fromEntries(Object.entries(idx).map(([k, v]) => [k, series(v)]));
+  // sector ETFs, US tech and the macro series as WEEKLY bars dated on their Monday, exactly like the Worker of the stock page (Yahoo interval=1wk), so both give the same correlations; the indexes stay daily
+  const weekly = arr => { const m = new Map(); for (const [d, v] of arr) { const mon = d - ((new Date(d * 864e5).getUTCDay() + 6) % 7); m.set(mon, v); } return [...m.entries()]; };
+  const WK = new Set([...Object.values(SECTOR_ETF), ...FAC]);
+  const idxS = Object.fromEntries(Object.entries(idx).map(([k, v]) => [k, WK.has(k) ? weekly(series(v)) : series(v)]));
 
   const COLS = ['bench', 'years', 'sharpe', 'cagr', 'vol', 'sharpeB', 'beta', 'upCap', 'dnCap', 'corrMkt', 'sec', 'corrSec', 'corrTech', 'trUp', 'trDn', 'cons', 'pN', 'p20', 'p50', 'p100', 'p200', 'p325', 'dd3', 'dd3B', 'from', 'cap', 'corrOil', 'corrRates', 'corrUsd', 'corrHy', 'r2q'];
   const out = {}, miss = [], objs = []; let ok = 0, noSym = 0, noData = 0;
