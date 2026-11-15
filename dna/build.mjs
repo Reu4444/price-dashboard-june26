@@ -81,7 +81,7 @@ function pullbacks(rows) {
   return { n: np, at };
 }
 // with the index, its sector and US tech (monthly returns); usual 3-month dip; trending or consolidating (efficiency over 50 sessions, 0.25+ = trending)
-function more(sd, bd, secd, techd) {
+function more(sd, bd, secd, techd, facs) {
   if (!sd || sd.length < 500) return null;
   const monthly = arr => { const m = new Map(); for (const [d, v] of arr || []) m.set(new Date(d * 864e5).toISOString().slice(0, 7), v); return m; };
   const S = monthly(sd), keys = [...S.keys()].slice(0, -1);
@@ -91,6 +91,8 @@ function more(sd, bd, secd, techd) {
     for (let i = 0; i < n; i++) { sxy += (x[i] - mx) * (y[i] - my); sxx += (x[i] - mx) ** 2; syy += (y[i] - my) ** 2; } return sxx > 0 && syy > 0 ? r2(sxy / Math.sqrt(sxx * syy)) : null; };
   const out = {}, pb = pair(monthly(bd));
   out.corrMkt = corr(pb); out.corrSec = secd ? corr(pair(monthly(secd))) : null; out.corrTech = techd ? corr(pair(monthly(techd))) : null;
+  // macro: oil (USO), rates (TLT: bond prices, sign turned to speak of rates), the dollar (UUP), high yield credit (HYG)
+  if (facs) { const c = k => facs[k] ? corr(pair(monthly(facs[k]))) : null; out.corrOil = c('USO'); const t = c('TLT'); out.corrRates = t == null ? null : -t; out.corrUsd = c('UUP'); out.corrHy = c('HYG'); }
   if (pb) { const [x, y] = pb, n = x.length, my = y.reduce((t, v) => t + v, 0) / n, mx = x.reduce((t, v) => t + v, 0) / n; let cov = 0, vm = 0; for (let i = 0; i < n; i++) { cov += (x[i] - mx) * (y[i] - my); vm += (y[i] - my) ** 2; }
     const up = [], dn = []; for (let i = 0; i < n; i++) (y[i] >= 0 ? up : dn).push(i); const av = (idx, a) => idx.reduce((t, i) => t + a[i], 0) / idx.length;
     out.beta = vm > 0 ? r2(cov / vm) : null;
@@ -137,12 +139,12 @@ async function pool(items, n, fn) { let i = 0; const run = async () => { while (
   console.log(`${list.length} stocks in the sheets (US ${list.filter(x => x.uni === 'us').length}, ROW ${list.filter(x => x.uni === 'row').length}); measuring ${todo.length}`);
 
   // indexes, sector ETFs and US tech: daily, 10 years
-  const idx = {}; const want = new Set([...Object.values(BENCH).map(b => b[0]), ...Object.values(SECTOR_ETF)]);
+  const idx = {}; const FAC = ['USO', 'TLT', 'UUP', 'HYG'], want = new Set([...Object.values(BENCH).map(b => b[0]), ...Object.values(SECTOR_ETF), ...FAC]);
   await pool([...want], 4, async s => { const rows = await daily(s); if (rows && rows.length > 300) idx[s] = rows; else console.log(`  index ${s}: no data`); });
   const series = rows => rows.map(x => [Math.floor(x.t / 864e5), x.a]);
   const idxS = Object.fromEntries(Object.entries(idx).map(([k, v]) => [k, series(v)]));
 
-  const COLS = ['bench', 'years', 'sharpe', 'cagr', 'vol', 'sharpeB', 'beta', 'upCap', 'dnCap', 'corrMkt', 'sec', 'corrSec', 'corrTech', 'trUp', 'trDn', 'cons', 'pN', 'p20', 'p50', 'p100', 'p200', 'p325', 'dd3', 'dd3B', 'from', 'cap'];
+  const COLS = ['bench', 'years', 'sharpe', 'cagr', 'vol', 'sharpeB', 'beta', 'upCap', 'dnCap', 'corrMkt', 'sec', 'corrSec', 'corrTech', 'trUp', 'trDn', 'cons', 'pN', 'p20', 'p50', 'p100', 'p200', 'p325', 'dd3', 'dd3B', 'from', 'cap', 'corrOil', 'corrRates', 'corrUsd', 'corrHy'];
   const out = {}, miss = [], objs = []; let ok = 0, noSym = 0, noData = 0;
   await pool(todo, 6, async (x, k) => {
     if (!x.y) { noSym++; miss.push(x.tk + ' (no Yahoo symbol)'); return; }
@@ -153,7 +155,7 @@ async function pool(items, n, fn) { let i = 0; const run = async () => { while (
     // the index over the same years as the stock (like for like)
     const rkB = brows ? risk(brows.filter(b => b.t >= rows[0].t)) : null;
     const sec = x.uni === 'us' ? SECTOR_ETF[x.sector.toLowerCase().trim()] || null : null;
-    const m = more(series(rows), idxS[bsym], sec ? idxS[sec] : null, idxS.XLK) || {}, pl = pullbacks(rows) || { n: 0, at: {} };
+    const m = more(series(rows), idxS[bsym], sec ? idxS[sec] : null, idxS.XLK, Object.fromEntries(FAC.map(f => [f, idxS[f]]))) || {}, pl = pullbacks(rows) || { n: 0, at: {} };
     const o = { bench: bk, ...rk, sharpeB: rkB ? rkB.sharpe : null, ...m, sec, pN: pl.n, p20: pl.at[20], p50: pl.at[50], p100: pl.at[100], p200: pl.at[200], p325: pl.at[325], from: new Date(rows[0].t).toISOString().slice(0, 10), cap: x.cap != null ? Math.round(x.cap * 10) / 10 : null };
     out[x.tk] = COLS.map(c => o[c] ?? null); objs.push({ ...o, uni: x.uni }); ok++;
     if ((k + 1) % 200 === 0) console.log(`  ${k + 1} / ${todo.length}`);
@@ -169,7 +171,7 @@ async function pool(items, n, fn) { let i = 0; const run = async () => { while (
     const pf = k => prof.length ? Math.round(prof.filter(o => k === 'off' ? o.beta >= 1.15 && o.upCap >= 110 : k === 'def' ? o.beta <= 0.85 && o.dnCap <= 85 : !(o.beta >= 1.15 && o.upCap >= 110) && !(o.beta <= 0.85 && o.dnCap <= 85)).length / prof.length * 100) : null;
     return { n: L.length, sharpe: q5(L.map(o => o.sharpe)), beatIdx: sh.length ? Math.round(sh.filter(o => o.sharpe > o.sharpeB).length / sh.length * 100) : null, cagr: q5(L.map(o => o.cagr)), vol: q5(L.map(o => o.vol)),
       beta: q5(L.map(o => o.beta)), upCap: q5(L.map(o => o.upCap)), dnCap: q5(L.map(o => o.dnCap)), off: pf('off'), neu: pf('neu'), def: pf('def'),
-      corrMkt: q5(L.map(o => o.corrMkt)), corrSec: q5(L.map(o => o.corrSec)), corrTech: q5(L.map(o => o.corrTech)),
+      corrMkt: q5(L.map(o => o.corrMkt)), corrSec: q5(L.map(o => o.corrSec)), corrTech: q5(L.map(o => o.corrTech)), corrOil: q5(L.map(o => o.corrOil)), corrRates: q5(L.map(o => o.corrRates)), corrUsd: q5(L.map(o => o.corrUsd)), corrHy: q5(L.map(o => o.corrHy)),
       trend: q5(L.filter(has).map(o => o.trUp + o.trDn)), trUp: q5(L.filter(has).map(o => o.trUp)), trDn: q5(L.filter(has).map(o => o.trDn)), dd3: (q5(L.map(o => o.dd3)) || null)?.reverse() ?? null,
       full10: L.filter(o => o.years >= 9.5).length }; };
   const idx10 = k => { const o = objs.find(x => x.bench === k && x.years >= 9.5); return o ? { sharpe: o.sharpeB, dd3: o.dd3B } : null; };
