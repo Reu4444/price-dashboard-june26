@@ -1036,6 +1036,7 @@
                             <th class="th-pct" data-tc="rs_ibd" onclick="trendSortBy('rs_ibd')" style="cursor:pointer;border-left:1px solid var(--border2);color:#6d28d9" title="RS IBD, 1-99">RS IBD</th>
                             <th class="th-pct" data-tc="high52_dist" onclick="trendSortBy('high52_dist')" style="cursor:pointer;color:#f59e0b" title="Distance from the 52-week high">vs 52W H</th>
                             <th class="th-pct" data-tc="dna_sharpe" onclick="trendSortBy('dna_sharpe')" style="cursor:pointer;border-left:1px solid var(--border2);color:#0f766e" title="Sharpe over the stock's history (up to 10 years): return per year with dividends ÷ volatility per year. Green: 0.2+ above its index over the same years; red: 0.3+ below. Hover a figure for the full DNA.">SHARPE</th>
+                            <th class="th-pct" data-tc="dna_tq" onclick="trendSortBy('dna_tq')" style="cursor:pointer;color:#0f766e" title="Trend quality: R² of the log price over the last 6 months (0 to 1). 1 = a straight line, near 0 = no direction. It has no sign: a clean fall scores high too. Hover a figure for its top percentile among all stocks. Measured each Saturday.">TREND Q</th>
                             <th class="th-pct" data-tc="dna_trend" onclick="trendSortBy('dna_trend')" style="cursor:pointer;color:#0f766e" title="Share of the days the stock was trending (up or down) rather than consolidating, over its history (up to 10 years). A random walk scores about 16%.">TREND</th>
                         </tr></thead>
                         <tbody id="trendBody"></tbody>
@@ -4563,9 +4564,13 @@
     }
     function dnaAttach(arr) {
         if (!DNA || !arr || arr._dna === DNA) return;
-        for (const d of arr) { const o = dnaOf(d.ticker); d.dna_sharpe = o ? o.sharpe : null; d.dna_trend = o && o.trUp != null ? o.trUp + o.trDn : null; }
+        for (const d of arr) { const o = dnaOf(d.ticker); d.dna_sharpe = o ? o.sharpe : null; d.dna_trend = o && o.trUp != null ? o.trUp + o.trDn : null; d.dna_tq = o && o.r2q != null ? o.r2q : null; }
         arr._dna = DNA;
     }
+    // trend quality: R² of the log price over the last 6 months; its top percentile among all the stocks of dna.json
+    let DNA_TQ = null;
+    function dnaTqTop(v) { if (v == null || !DNA) return null; if (!DNA_TQ || DNA_TQ.src !== DNA) { const i = DNA.cols.indexOf('r2q'); DNA_TQ = { src: DNA, v: i < 0 ? [] : Object.values(DNA.rows).map(a => a[i]).filter(x => x != null).sort((a, b) => a - b) }; }
+        const a = DNA_TQ.v; if (!a.length) return null; let lo = 0, hi = a.length; while (lo < hi) { const m = (lo + hi) >> 1; if (a[m] < v) lo = m + 1; else hi = m; } return Math.max(1, Math.round((1 - lo / a.length) * 100)); }
     const dnaBenchName = o => (DNA && DNA.benches && DNA.benches[o.bench] && DNA.benches[o.bench].name) || 'index';
     const dnaSince = o => o.years >= 9.5 ? '10 years' : 'since ' + String(o.from || '').slice(0, 4);
     const dnaProfile = o => o.beta != null && o.upCap != null ? (o.beta >= 1.15 && o.upCap >= 110 ? 'Offensive' : o.beta <= 0.85 && o.dnCap <= 85 ? 'Defensive' : 'Neutral') : null;
@@ -4631,6 +4636,7 @@
                 <td class="td-pct" style="border-left:1px solid var(--border2);font-weight:700;" title="average RS IBD">${rs != null ? Math.round(rs) : '—'}</td>
                 ${td(hi != null ? Math.round(hi) + '%' : '—', 'average distance from the 52-week high')}
                 <td class="td-pct" style="border-left:1px solid var(--border2);font-weight:700;cursor:help" title="median Sharpe (a few young stocks have extreme values)${shB != null ? `; their index over the same years: ${shB.toFixed(2)}` : ''}">${sh != null ? sh.toFixed(2) : '—'}</td>
+                ${(m => td(m != null ? m.toFixed(2) : '—', 'median trend quality'))(med(oks.map(([, o]) => o.r2q)))}
                 ${td(up != null ? Math.round(up + dn) + '%' : '—', up != null ? `average: up ${Math.round(up)}%, down ${Math.round(dn)}%, sideways ${Math.round(100 - up - dn)}% of the days` : '')}
             </tr>`; };
         const filtered = rows.length !== (src || []).length;
@@ -4653,8 +4659,9 @@
                 <td class="td-pct" style="${bl}">${pctCell(d.rs_ibd)}</td>
                 <td class="td-pct">${distCell52w(d.high52_dist)}</td>
                 <td class="td-pct" style="${bl};color:${col};cursor:help" title="${tip}">${o && o.sharpe != null ? o.sharpe.toFixed(2) : dash}</td>
+                <td class="td-pct" title="${o && o.r2q != null ? `top ${dnaTqTop(o.r2q)}% of all stocks` : ''}">${o && o.r2q != null ? o.r2q.toFixed(2) : dash}</td>
                 <td class="td-pct" title="${o ? `up ${o.trUp ?? '—'}%, down ${o.trDn ?? '—'}%, consolidating ${o.cons ?? '—'}%` : ''}">${o && o.trUp != null ? (o.trUp + o.trDn) + '%' : dash}</td>
-            </tr>`; }).join('') + (rows.length > 300 ? `<tr><td colspan="11" style="text-align:center;padding:8px;font-size:11px;color:var(--muted);">Showing 300 of ${rows.length} — use filters to narrow</td></tr>` : '');
+            </tr>`; }).join('') + (rows.length > 300 ? `<tr><td colspan="12" style="text-align:center;padding:8px;font-size:11px;color:var(--muted);">Showing 300 of ${rows.length} — use filters to narrow</td></tr>` : '');
     }
 
 
