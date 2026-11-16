@@ -190,8 +190,9 @@ async function pool(items, n, fn) { let i = 0; const run = async () => { while (
   console.log(`average stock: all ${AVG.all.n}, $10B+ ${AVG.cap10.n}, $50B+ ${AVG.cap50.n}`);
   // stocks that resist the market: the 10-year test and today's list (US stocks vs the S&P 500), in dna_resist.json
   try { if (idx.SPY && usRows.size > 100) { const R = resist(idx.SPY, usRows); writeFileSync(OUT.replace(/dna\.json$/, 'dna_resist.json'), JSON.stringify(R));
-      const T = R.test, f = g => `${g}: mean ${T.all[g].mean}% median ${T.all[g].median}% beat ${T.all[g].beat}% (n ${T.all[g].n}) | correction: mean ${T.correction[g].mean}% median ${T.correction[g].median}% beat ${T.correction[g].beat}% (n ${T.correction[g].n})`;
-      console.log(`resist test, ${T.dates} dates (${T.corrDates} in a correction), 3 months vs the average stock:`); for (const g of Object.keys(T.all)) console.log('  ' + f(g));
+      const T = R.test, c = x => `${x.mean}% / med ${x.median}% / beat ${x.beat}% (n ${x.n})`;
+      console.log(`resist test, dates: ${JSON.stringify(T.nDates)}; vs the average stock, 3 months | 6 months:`);
+      for (const reg of Object.keys(T.nDates)) { console.log(' ' + reg); for (const g of Object.keys(T.all)) console.log(`   ${g}: ${c(T[reg][g])} | ${c(T.m6[reg][g])}`); }
       console.log(`  today: ${Object.values(R.today.rows).filter(x => x[3]).length} stocks resist${R.today.calm ? ' (calm market: nothing to measure)' : ''}`); } }
   catch (e) { console.log('resist test failed: ' + e.message); }
   console.log(`wrote ${OUT}`);
