@@ -72,7 +72,7 @@ export function resist(spy, stocks) {
 //   at the low: how much it moved from the S&P's high to the S&P's low, then its next 3 and 6 months vs the average stock;
 //   5 weeks (25 sessions) after the low: how much it rose since the low, then its next 3 and 6 months vs the average stock.
 // The low is only known afterwards: this checks what the stocks did, it is not a signal you could take on the day.
-const EP_MIN = 0.07, AFTER = 25, WATCH = ['AMD', 'DELL', 'MU', 'SNDK', 'NVDA', 'AVGO'];
+const EP_MIN = 0.07, AFTER = 25, REB = 0.05, WATCH = ['AMD', 'DELL', 'MU', 'SNDK', 'NVDA', 'AVGO'];
 export function episodes(spy, stocks) {
   const day = t => Math.floor(t / 864e5), D = spy.map(x => day(x.t)), pos = new Map(D.map((d, i) => [d, i])), n = D.length, M = spy.map(x => x.a);
   const iso = i => new Date(D[i] * 864e5).toISOString().slice(0, 10);
@@ -118,12 +118,30 @@ export function episodes(spy, stocks) {
       watch[tk] = { fall: +(fall[j] * 100).toFixed(1), rank: Math.round(pF[j] * 100), rise5w: rise[j] == null ? null : +(rise[j] * 100).toFixed(1), m3: mv(P[j], tr, tr + 63) == null ? null : +(mv(P[j], tr, tr + 63) * 100).toFixed(1), m6: mv(P[j], tr, tr + 126) == null ? null : +(mv(P[j], tr, tr + 126) * 100).toFixed(1) }; }
     const top = fall.map((v, j) => [tks[j], v, mv(P[j], tr, tr + 126)]).filter(x => x[1] != null).sort((a, b) => b[1] - a[1]).slice(0, 10)
       .map(([tk, v, f]) => [tk, +(v * 100).toFixed(1), f == null ? null : +(f * 100).toFixed(1)]);
-    return { high: iso(pk), low: iso(tr), back: e.end < n ? iso(e.end) : null, fall: +(e.depth * 100).toFixed(1), sessions: tr - pk, stocks: fall.filter(v => v != null).length, atLow, after, watch, heldBest: top };
+    // the day the S&P is clearly back up: first close 5% or more above its low (known on the day, unlike the low)
+    let rb = tr + 1; while (rb < n && M[rb] < M[tr] * (1 + REB)) rb++;
+    let rebound = null;
+    if (rb < n) {
+      const med = (js, f) => { const v = js.map(j => mv(P[j], rb, rb + f)).filter(x => x != null); return v.length ? +(median(v) * 100).toFixed(1) : null; };
+      const q = (lo, hi) => idx(j => pF[j] != null && pF[j] >= lo && (hi >= 1 ? pF[j] <= hi : pF[j] < hi));
+      const rb0 = pctRank(P.map(a => rsAt(a, pk))), r0 = j => rb0[j] == null ? null : rb0[j] * 100;   // RS on the day of the S&P's high, before the fall
+      const B = { fellMost: q(0, 0.2), q2: q(0.2, 0.4), q3: q(0.4, 0.6), q4: q(0.6, 0.8), heldBest: q(0.8, 1), rs90: idx(j => rs[j] != null && rs[j] >= 0.9),
+        rsBefore90: idx(j => r0(j) != null && r0(j) >= 90), rsBefore70: idx(j => r0(j) != null && r0(j) >= 70 && r0(j) < 90), rsBefore30: idx(j => r0(j) != null && r0(j) >= 30 && r0(j) < 70), rsBeforeLow: idx(j => r0(j) != null && r0(j) < 30),
+        rsBefore90_held: idx(j => r0(j) != null && r0(j) >= 90 && pF[j] != null && pF[j] >= 0.5), rsBefore90_fell: idx(j => r0(j) != null && r0(j) >= 90 && pF[j] != null && pF[j] < 0.5),
+        rsBefore80_held20: idx(j => r0(j) != null && r0(j) >= 80 && pF[j] != null && pF[j] >= 0.8),   // strong before AND among the 20% that held best
+        all: idx(j => pF[j] != null) };
+      rebound = { date: iso(rb), sessionsAfterLow: rb - tr, spy: Object.fromEntries([['m1', 21], ['m3', 63], ['m6', 126]].map(([k, f]) => [k, rb + f < n ? +((M[rb + f] / M[rb] - 1) * 100).toFixed(1) : null])),
+        groups: Object.fromEntries(Object.entries(B).map(([k, js]) => [k, { n: js.length, m1: med(js, 21), m3: med(js, 63), m6: med(js, 126) }])) };
+    }
+    return { rebound, high: iso(pk), low: iso(tr), back: e.end < n ? iso(e.end) : null, fall: +(e.depth * 100).toFixed(1), sessions: tr - pk, stocks: fall.filter(v => v != null).length, atLow, after, watch, heldBest: top };
   });
   // all falls together: each fall counts once
   const summ = (part, g) => { const v = list.map(e => e[part] && e[part][g]).filter(x => x && x.m3 != null);
     const s = k => { const w = v.map(x => x[k]).filter(x => x != null); return w.length ? { mean: +mean(w).toFixed(1), beat: w.filter(x => x > 0).length, of: w.length } : null; };
     return { m3: s('m3'), m6: s('m6') }; };
   const summary = { atLow: Object.fromEntries(['held20', 'flat', 'worst20', 'rs90'].map(g => [g, summ('atLow', g)])), after: Object.fromEntries(['rise20', 'held20', 'flat', 'worst20'].map(g => [g, summ('after', g)])) };
+  const rbG = ['fellMost', 'q2', 'q3', 'q4', 'heldBest', 'rs90', 'rsBefore90', 'rsBefore70', 'rsBefore30', 'rsBeforeLow', 'rsBefore90_held', 'rsBefore90_fell', 'rsBefore80_held20', 'all'];
+  summary.rebound = Object.fromEntries(rbG.map(g => [g, Object.fromEntries(['m1', 'm3', 'm6'].map(k => { const v = list.filter(e => e.rebound && e.rebound.groups[g][k] != null && e.rebound.groups.all[k] != null);
+    return [k, v.length ? { med: +mean(v.map(e => e.rebound.groups[g][k])).toFixed(1), beatAll: v.filter(e => e.rebound.groups[g][k] > e.rebound.groups.all[k]).length, of: v.length } : null]; }))]));
   return { rule: `S&P 500 falls of ${EP_MIN * 100}% or more, high to low (closes). Groups measured on the same dates for every stock; next 3 and 6 months vs the average stock of the list. Today's list of US stocks: survivorship bias.`, list, summary };
 }

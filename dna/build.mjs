@@ -200,6 +200,8 @@ async function pool(items, n, fn) { let i = 0; const run = async () => { while (
           if (e.after) console.log(`   5 weeks after: ${Object.entries(e.after).map(([k, x]) => `${k} ${g(x)}`).join(' | ')}`);
           console.log(`   watch: ${Object.entries(e.watch).map(([k, w]) => `${k} fall ${w.fall}% (rank ${w.rank}), +5w ${w.rise5w}%, 3m ${w.m3}%, 6m ${w.m6}%`).join(' | ')}`);
           console.log(`   held best: ${e.heldBest.map(([k, v, f]) => `${k} ${v}% then ${f}%`).join(', ')}`); }
+        for (const e of E.list) if (e.rebound) { const R = e.rebound; console.log(` rebound ${R.date} (low ${e.low}, S&P 1m/3m/6m ${R.spy.m1}/${R.spy.m3}/${R.spy.m6}%): ${Object.entries(R.groups).map(([k, x]) => `${k} ${x.m1}/${x.m3}/${x.m6}`).join(' | ')}`); }
+        for (const [k, x] of Object.entries(E.summary.rebound)) console.log(`  from the rebound, ${k}: ${['m1', 'm3', 'm6'].map(m => x[m] ? `${m} ${x[m].med}% (beat all ${x[m].beatAll}/${x[m].of})` : '-').join(' | ')}`);
         const s = x => x ? `${x.mean}% (beat ${x.beat}/${x.of})` : '-';
         for (const part of ['atLow', 'after']) for (const [k, x] of Object.entries(E.summary[part])) console.log(`  all falls, ${part} ${k}: 3m ${s(x.m3)} | 6m ${s(x.m6)}`); }
       console.log(`  today: ${Object.values(R.today.rows).filter(x => x[3]).length} stocks resist${R.today.calm ? ' (calm market: nothing to measure)' : ''}`); } }
