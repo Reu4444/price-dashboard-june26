@@ -3,6 +3,7 @@
 //   node dna/build.mjs            -> all stocks
 //   node dna/build.mjs --limit 20 -> a quick test on 20 stocks per universe
 import { writeFileSync } from 'node:fs';
+import { resist } from './resist.mjs';
 
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxqVzEtKgrjf8GXQS1jePSsagDeIMHPOH-DsQycdtCL7Go1eZiCQ8GsCweo9xw-sss/exec';
 const OUT = process.env.DNA_OUT || 'dna.json';
@@ -148,7 +149,7 @@ async function pool(items, n, fn) { let i = 0; const run = async () => { while (
   const idxS = Object.fromEntries(Object.entries(idx).map(([k, v]) => [k, WK.has(k) ? weekly(series(v)) : series(v)]));
 
   const COLS = ['bench', 'years', 'sharpe', 'cagr', 'vol', 'sharpeB', 'beta', 'upCap', 'dnCap', 'corrMkt', 'sec', 'corrSec', 'corrTech', 'trUp', 'trDn', 'cons', 'pN', 'p20', 'p50', 'p100', 'p200', 'p325', 'dd3', 'dd3B', 'from', 'cap', 'corrOil', 'corrRates', 'corrUsd', 'corrHy', 'r2q'];
-  const out = {}, miss = [], objs = []; let ok = 0, noSym = 0, noData = 0;
+  const out = {}, miss = [], objs = [], usRows = new Map(); let ok = 0, noSym = 0, noData = 0;
   await pool(todo, 6, async (x, k) => {
     if (!x.y) { noSym++; miss.push(x.tk + ' (no Yahoo symbol)'); return; }
     const rows = await daily(x.y); await sleep(process.env.DNA_FAST ? 0 : 150);
@@ -164,6 +165,7 @@ async function pool(items, n, fn) { let i = 0; const run = async () => { while (
       ys.forEach((y, i) => { sxy += (i - xm) * (y - ym); sxx += (i - xm) ** 2; syy += (y - ym) ** 2; }); return syy > 0 ? r2(sxy * sxy / (sxx * syy)) : null; })();
     const o = { bench: bk, r2q, ...rk, sharpeB: rkB ? rkB.sharpe : null, ...m, sec, pN: pl.n, p20: pl.at[20], p50: pl.at[50], p100: pl.at[100], p200: pl.at[200], p325: pl.at[325], from: new Date(rows[0].t).toISOString().slice(0, 10), cap: x.cap != null ? Math.round(x.cap * 10) / 10 : null };
     out[x.tk] = COLS.map(c => o[c] ?? null); objs.push({ ...o, uni: x.uni }); ok++;
+    if (x.uni === 'us') usRows.set(x.tk, rows.map(r => ({ t: r.t, a: r.a })));   // for the 'resists the market' test
     if ((k + 1) % 200 === 0) console.log(`  ${k + 1} / ${todo.length}`);
   });
   console.log(`measured ${ok}, no Yahoo symbol ${noSym}, no data or under 2 years ${noData}, ${Math.round((Date.now() - t0) / 1000)} s`);
@@ -186,5 +188,11 @@ async function pool(items, n, fn) { let i = 0; const run = async () => { while (
     index: { us: idx10('us'), eu: idx10('eu') } };
   writeFileSync(OUT.replace(/dna\.json$/, 'dna_avg.json'), JSON.stringify(AVG));
   console.log(`average stock: all ${AVG.all.n}, $10B+ ${AVG.cap10.n}, $50B+ ${AVG.cap50.n}`);
+  // stocks that resist the market: the 10-year test and today's list (US stocks vs the S&P 500), in dna_resist.json
+  try { if (idx.SPY && usRows.size > 100) { const R = resist(idx.SPY, usRows); writeFileSync(OUT.replace(/dna\.json$/, 'dna_resist.json'), JSON.stringify(R));
+      const T = R.test, f = g => `${g}: mean ${T.all[g].mean}% median ${T.all[g].median}% beat ${T.all[g].beat}% (n ${T.all[g].n}) | correction: mean ${T.correction[g].mean}% median ${T.correction[g].median}% beat ${T.correction[g].beat}% (n ${T.correction[g].n})`;
+      console.log(`resist test, ${T.dates} dates (${T.corrDates} in a correction), 3 months vs the average stock:`); for (const g of Object.keys(T.all)) console.log('  ' + f(g));
+      console.log(`  today: ${Object.values(R.today.rows).filter(x => x[3]).length} stocks resist${R.today.calm ? ' (calm market: nothing to measure)' : ''}`); } }
+  catch (e) { console.log('resist test failed: ' + e.message); }
   console.log(`wrote ${OUT}`);
 })();
