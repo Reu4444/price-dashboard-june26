@@ -3,7 +3,7 @@
 //   node dna/build.mjs            -> all stocks
 //   node dna/build.mjs --limit 20 -> a quick test on 20 stocks per universe
 import { writeFileSync } from 'node:fs';
-import { resist } from './resist.mjs';
+import { resist, episodes } from './resist.mjs';
 
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxqVzEtKgrjf8GXQS1jePSsagDeIMHPOH-DsQycdtCL7Go1eZiCQ8GsCweo9xw-sss/exec';
 const OUT = process.env.DNA_OUT || 'dna.json';
@@ -189,10 +189,19 @@ async function pool(items, n, fn) { let i = 0; const run = async () => { while (
   writeFileSync(OUT.replace(/dna\.json$/, 'dna_avg.json'), JSON.stringify(AVG));
   console.log(`average stock: all ${AVG.all.n}, $10B+ ${AVG.cap10.n}, $50B+ ${AVG.cap50.n}`);
   // stocks that resist the market: the 10-year test and today's list (US stocks vs the S&P 500), in dna_resist.json
-  try { if (idx.SPY && usRows.size > 100) { const R = resist(idx.SPY, usRows); writeFileSync(OUT.replace(/dna\.json$/, 'dna_resist.json'), JSON.stringify(R));
+  try { if (idx.SPY && usRows.size > 100) { const R = resist(idx.SPY, usRows); try { R.episodes = episodes(idx.SPY, usRows); } catch (e) { console.log('falls test failed: ' + e.message); } writeFileSync(OUT.replace(/dna\.json$/, 'dna_resist.json'), JSON.stringify(R));
       const T = R.test, c = x => `${x.mean}% / med ${x.median}% / beat ${x.beat}% (n ${x.n})`;
       console.log(`resist test, dates: ${JSON.stringify(T.nDates)}; vs the average stock, 3 months | 6 months:`);
       for (const reg of Object.keys(T.nDates)) { console.log(' ' + reg); for (const g of Object.keys(T.all)) console.log(`   ${g}: ${c(T[reg][g])} | ${c(T.m6[reg][g])}`); }
+      if (R.episodes) { const E = R.episodes, g = x => x ? `${x.m3}% / ${x.m6}% (n ${x.n})` : '-';
+        console.log(`S&P 500 falls of 7%+: ${E.list.length}. Each group vs the average stock, next 3 months / 6 months:`);
+        for (const e of E.list) { console.log(` ${e.high} -> ${e.low}: S&P -${e.fall}% in ${e.sessions} sessions, back at the high ${e.back || 'not yet'}, ${e.stocks} stocks`);
+          console.log(`   from the low: ${Object.entries(e.atLow).map(([k, x]) => `${k} ${g(x)}`).join(' | ')}`);
+          if (e.after) console.log(`   5 weeks after: ${Object.entries(e.after).map(([k, x]) => `${k} ${g(x)}`).join(' | ')}`);
+          console.log(`   watch: ${Object.entries(e.watch).map(([k, w]) => `${k} fall ${w.fall}% (rank ${w.rank}), +5w ${w.rise5w}%, 3m ${w.m3}%, 6m ${w.m6}%`).join(' | ')}`);
+          console.log(`   held best: ${e.heldBest.map(([k, v, f]) => `${k} ${v}% then ${f}%`).join(', ')}`); }
+        const s = x => x ? `${x.mean}% (beat ${x.beat}/${x.of})` : '-';
+        for (const part of ['atLow', 'after']) for (const [k, x] of Object.entries(E.summary[part])) console.log(`  all falls, ${part} ${k}: 3m ${s(x.m3)} | 6m ${s(x.m6)}`); }
       console.log(`  today: ${Object.values(R.today.rows).filter(x => x[3]).length} stocks resist${R.today.calm ? ' (calm market: nothing to measure)' : ''}`); } }
   catch (e) { console.log('resist test failed: ' + e.message); }
   console.log(`wrote ${OUT}`);
