@@ -14,12 +14,20 @@ const MIN_FUND = 1e9;      // active funds with a 13F portfolio of $1 billion or
 const MIN_POS = 1e6;       // positions of $1 million or more
 const MIN_MAP = 50e6;      // CUSIPs held for $50 million or more by active funds are mapped to a ticker
 // not active managers: index funds, banks and brokers holding client accounts, market makers, quant funds, central banks
-const NOT_ACTIVE = /\b(vanguard|blackrock|state street|geode|northern trust|schwab|dimensional|invesco|norges|legal & general|ubs|morgan stanley|jpmorgan|j\.?p\.? morgan|bank of america|bofa|merrill|wells fargo|goldman sachs|royal bank of canada|rbc|bank of new york|bny|mellon|deutsche bank|dws|barclays|citigroup|citadel|susquehanna|jane street|hudson river|virtu|optiver|imc|flow traders|ameriprise|lpl financial|raymond james|edward jones|stifel|envestnet|commonwealth equity|swiss national bank|toronto[- ]dominion|bnp|hsbc|natixis|amundi|nomura|mizuho|mitsubishi ufj|sumitomo|ssga|qube|two sigma|renaissance|d\.? ?e\.? shaw|millennium|balyasny|squarepoint|cubist|point72|marshall wace|arrowstreet|aqr|nuveen|tiaa|principal financial|sixth street|belvedere|wolverine|group one trading|peak6|charitable|donor advised|wealth|advis[oe]r|advisory|retirement|trust co|family office|private client|financial group|financial services|financial planning|insurance|mutual|pension|endowment|foundation|securities|brokerage)\b/i;
+const NOT_ACTIVE = /\b(vanguard|blackrock|state street|geode|northern trust|schwab|dimensional|invesco|norges|legal & general|ubs|morgan stanley|jpmorgan|j\.?p\.? morgan|bank of america|bofa|merrill|wells fargo|goldman sachs|royal bank of canada|rbc|bank of new york|bny|mellon|deutsche bank|dws|barclays|citigroup|citadel|susquehanna|jane street|hudson river|virtu|optiver|imc|flow traders|ameriprise|lpl financial|raymond james|edward jones|stifel|envestnet|commonwealth equity|swiss national bank|toronto[- ]dominion|bnp|hsbc|natixis|amundi|nomura|mizuho|mitsubishi ufj|sumitomo|ssga|qube|two sigma|renaissance|d\.? ?e\.? shaw|millennium|balyasny|squarepoint|cubist|point72|marshall wace|arrowstreet|aqr|nuveen|tiaa|principal financial|sixth street|belvedere|wolverine|group one trading|peak6|charitable|donor advised|wealth|advis[oe]r|advisory|retirement|trust co|family office|private client|financial group|financial services|financial planning|insurance|mutual|pension|endowment|foundation|securities|brokerage|bank|banque|swedbank|bancorp|bmo|pensions?|tjanstepension|financial corp)\b/i;
 // wealth managers, insurers and trading firms hold client or hedging books, not convictions: they are left out too (17 Nov 2026, after the first run)
 
 const LOG = []; { const cl = console.log; console.log = (...a) => { LOG.push(a.join(' ')); cl(...a); }; }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const sec = (url, as) => fetch(url, { headers: { 'User-Agent': UA, 'Accept-Encoding': 'gzip, deflate' }, signal: AbortSignal.timeout(600000) }).then(r => { if (!r.ok) throw new Error(`${r.status} ${url}`); return as === 'buf' ? r.arrayBuffer() : r.text(); });
+// the SEC answers 429 when asked too fast: wait and ask again (up to 6 times, 5 s then longer)
+async function sec(url, as) {
+  for (let k = 0; ; k++) {
+    const r = await fetch(url, { headers: { 'User-Agent': UA, 'Accept-Encoding': 'gzip, deflate' }, signal: AbortSignal.timeout(600000) }).catch(e => ({ ok: false, status: 'net ' + e.message }));
+    if (r.ok) return as === 'buf' ? r.arrayBuffer() : r.text();
+    if ((r.status === 429 || r.status === 503 || String(r.status).startsWith('net')) && k < 6) { await sleep(5000 * (k + 1)); continue; }
+    throw new Error(`${r.status} ${url}`);
+  }
+}
 
 // the data set files, newest first ("01sep2026-30nov2026_form13f.zip" or the older "2024q1_form13f.zip")
 const MON = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
@@ -119,9 +127,10 @@ async function liveQuarter(base, ciks) {
     if (++done % 250 === 0) console.log(`  ${done} / ${last.size} filings read`);
   };
   const list = [...last.entries()]; let i = 0;
-  await Promise.all(Array.from({ length: 4 }, async () => { while (i < list.length) { const x = list[i++]; await one(x); await sleep(450); } }));   // about 8 requests a second (the SEC limit is 10)
+  await Promise.all(Array.from({ length: 2 }, async () => { while (i < list.length) { const x = list[i++]; await one(x); await sleep(600); } }));   // about 4 requests a second: the SEC blocked 8 a second (17 Nov 2026)
   console.log(`  ${pos.size} information tables read, ${bad} failed`);
-  return pos.size ? { period: np, name, pos } : null;
+  if (pos.size < last.size * 0.8) { console.log('  too many filings could not be read: the data set is used'); return null; }   // better a full older quarter than half of the new one
+  return { period: np, name, pos };
 }
 
 async function universe() {
