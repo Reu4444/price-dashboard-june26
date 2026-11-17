@@ -1,0 +1,38 @@
+name: 13F funds
+
+# Every Sunday (the SEC adds a new 13F data set every 3 months), or by hand: Actions > 13F funds > Run workflow
+on:
+  schedule:
+    - cron: '23 6 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: f13
+  cancel-in-progress: false
+
+jobs:
+  f13:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Active funds in each US stock (SEC 13F)
+        env:
+          SEC_UA: ${{ secrets.SEC_UA }}
+          OPENFIGI_KEY: ${{ secrets.OPENFIGI_KEY }}
+        run: node --max-old-space-size=6000 f13/build13f.mjs
+      - name: Save f13.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
+          git add f13.json f13/cusip_map.json
+          git diff --cached --quiet && echo "no change" && exit 0
+          git commit -m "13F update $(date -u +%Y-%m-%d)"
+          git pull --rebase
+          git push
