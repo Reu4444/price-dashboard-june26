@@ -10,7 +10,7 @@ import { execSync } from 'node:child_process';
 const UA = process.env.SEC_UA || 'MarketWire 13F study github.com/Reu4444/price-dashboard-june26';
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxqVzEtKgrjf8GXQS1jePSsagDeIMHPOH-DsQycdtCL7Go1eZiCQ8GsCweo9xw-sss/exec';
 const TMP = '/tmp/f13', MAPF = 'f13/cusip_map.json', OUT = 'f13.json';
-const MIN_FUND = 5e8;      // listed funds with a 13F portfolio of $500 million or more (some hedge funds are small)
+const MIN_FUND = 1e8;      // listed funds with a 13F portfolio of $100 million or more (Pabrai, Semper Augustus and some hedge funds are small)
 const MIN_POS = 1e6;       // positions of $1 million or more
 const MIN_MAP = 50e6;      // CUSIPs held for $50 million or more by active funds are mapped to a ticker
 // not active managers: index funds, banks and brokers holding client accounts, market makers, quant funds, central banks
@@ -27,6 +27,9 @@ const FOCUS = new RegExp('\\b(' + [
   'valiant capital', 'suvretta', 'woodline', 'atreides', 'senvest', 'corvex', 'sachem head', 'mantle ridge', 'engaged capital', 'cevian', 'bridgewater', 'alkeon', 'stockbridge', 'gotham asset', 'greenoaks', 'thrive capital',
   'general atlantic', 'fpr partners', 'giverny', 'brave warrior', 'aquamarine', 'polar capital', 'marcho', 'two creeks', 'select equity', 'jericho capital', 'samlyn', 'conatus', 'deerfield', 'baker bros', 'perceptive advisors',
   // family offices of well-known investors
+  // directional funds only: no quant or market-neutral books (Renaissance, DE Shaw, Jane Street, Point72 left out, 17 Nov 2026)
+  'situational awareness', 'dalal street', 'pabrai', 'oaktree', 'markel', 'fairfax financial', 'valley forge', 'semper augustus',
+  'horizon kinetics', 'robotti', 'gates foundation', 'alphabet inc', 'nvidia corp', 'tudor',
   'tudor investment', 'msd capital', 'msd partners', 'cascade investment', 'tiger management', 'kingdon', 'omega advisors', 'hillhouse', 'hhlr', 'stanley druckenmiller',
   'ra capital', 'avoro', 'farallon', 'davidson kempner', 'anchorage capital', 'eagle capital', 'gardner russo', 'tweedy', 'southeastern asset', 'first eagle', 'yacktman', 'pzena', 'davis selected', 'oakmark', 'harris associates',
   // large stock pickers: their 13F is their own active choices (Fidelity, AllianceBernstein, American Century and Franklin are left out: their 13F also holds their index funds and ETFs)
