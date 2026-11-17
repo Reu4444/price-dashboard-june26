@@ -17,6 +17,7 @@ const MIN_MAP = 50e6;      // CUSIPs held for $50 million or more by active fund
 const NOT_ACTIVE = /\b(vanguard|blackrock|state street|geode|northern trust|schwab|dimensional|invesco|norges|legal & general|ubs|morgan stanley|jpmorgan|j\.?p\.? morgan|bank of america|bofa|merrill|wells fargo|goldman sachs|royal bank of canada|rbc|bank of new york|bny|mellon|deutsche bank|dws|barclays|citigroup|citadel|susquehanna|jane street|hudson river|virtu|optiver|imc|flow traders|ameriprise|lpl financial|raymond james|edward jones|stifel|envestnet|commonwealth equity|swiss national bank|toronto[- ]dominion|bnp|hsbc|natixis|amundi|nomura|mizuho|mitsubishi ufj|sumitomo|ssga|qube|two sigma|renaissance|d\.? ?e\.? shaw|millennium|balyasny|squarepoint|cubist|point72|marshall wace|arrowstreet|aqr|nuveen|tiaa|principal financial|sixth street|belvedere|wolverine|group one trading|peak6|charitable|donor advised|wealth|advis[oe]r|advisory|retirement|trust co|family office|private client|financial group|financial services|financial planning|insurance|mutual|pension|endowment|foundation|securities|brokerage)\b/i;
 // wealth managers, insurers and trading firms hold client or hedging books, not convictions: they are left out too (17 Nov 2026, after the first run)
 
+const LOG = []; { const cl = console.log; console.log = (...a) => { LOG.push(a.join(' ')); cl(...a); }; }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const sec = (url, as) => fetch(url, { headers: { 'User-Agent': UA, 'Accept-Encoding': 'gzip, deflate' }, signal: AbortSignal.timeout(600000) }).then(r => { if (!r.ok) throw new Error(`${r.status} ${url}`); return as === 'buf' ? r.arrayBuffer() : r.text(); });
 
@@ -94,14 +95,14 @@ async function liveQuarter(base, ciks) {
   const np = nextPeriod(base.period); if (!np) return null;
   const [, mon, yr] = np.split('-'), fy = mon === 'DEC' ? +yr + 1 : +yr, fq = { MAR: 2, JUN: 3, SEP: 4, DEC: 1 }[mon];   // filings come in the quarter after the period
   let idx; try { idx = await sec(`https://www.sec.gov/Archives/edgar/full-index/${fy}/QTR${fq}/form.idx`); } catch (e) { console.log('EDGAR index: ' + e.message); return null; }
-  const last = new Map();
-  for (const line of idx.split('\n')) { const m = line.match(/^13F-HR\s+(.+?)\s{2,}(\d+)\s+(\d{4}-\d{2}-\d{2})\s+(edgar\/data\/\S+)\s*$/); if (!m) continue;
-    const cik = String(+m[2]); if (!ciks.has(cik)) continue; const o = last.get(cik); if (!o || m[3] > o.filed) last.set(cik, { nm: m[1].trim(), filed: m[3], file: m[4] }); }
-  console.log(`EDGAR ${fy} Q${fq}: ${last.size} of ${ciks.size} active funds have filed their 13F for ${np}`);
+  const last = new Map(), norm = new Map([...ciks].map(c => [String(+c), c])); let n13 = 0;
+  for (const line of idx.split('\n')) { const m = line.match(/^13F-HR\s+(.+?)\s{2,}(\d+)\s+(\d{4}-\d{2}-\d{2})\s+(edgar\/data\/\S+)\s*$/); if (!m) continue; n13++;
+    const cik = norm.get(String(+m[2])); if (!cik) continue; const o = last.get(cik); if (!o || m[3] > o.filed) last.set(cik, { nm: m[1].trim(), filed: m[3], file: m[4] }); }
+  console.log(`EDGAR ${fy} Q${fq}: ${n13} 13F-HR in the index, ${last.size} of ${ciks.size} active funds have filed their 13F for ${np}`);
   if (last.size < ciks.size * 0.6) { console.log('  too few filings yet: the data set is used'); return null; }
   const name = new Map(), pos = new Map(); let done = 0, bad = 0;
   const one = async ([cik, f]) => {
-    const acc = f.file.split('/').pop().replace('.txt', ''), dir = `https://www.sec.gov/Archives/edgar/data/${cik}/${acc.replace(/-/g, '')}`;
+    const acc = f.file.split('/').pop().replace('.txt', ''), dir = `https://www.sec.gov/Archives/edgar/data/${+cik}/${acc.replace(/-/g, '')}`;
     try {
       const j = JSON.parse(await sec(`${dir}/index.json`)), items = (j.directory && j.directory.item) || [];
       const xml = items.map(x => x.name).filter(n => /\.xml$/i.test(n) && !/primary_doc/i.test(n));
@@ -114,7 +115,7 @@ async function liveQuarter(base, ciks) {
         const cu = g('cusip').toUpperCase(); if (cu.length < 8) continue;
         const val = parseFloat(g('value')) || 0, sh = parseFloat(g('sshPrnamt')) || 0, o = m.get(cu) || [0, 0]; o[0] += val; o[1] += sh; m.set(cu, o); }
       if (m.size) { pos.set(cik, m); name.set(cik, f.nm); } else bad++;
-    } catch (e) { bad++; }
+    } catch (e) { bad++; if (bad <= 3) console.log('  ' + e.message); }
     if (++done % 250 === 0) console.log(`  ${done} / ${last.size} filings read`);
   };
   const list = [...last.entries()]; let i = 0;
@@ -167,7 +168,7 @@ async function universe() {
     out[tk] = { n: a.length, big, conv };
   }
   const fmt = p => { const m = String(p).match(/^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/); return m ? new Date(Date.UTC(+m[3], MON[m[2].toLowerCase()], +m[1])).toISOString().slice(0, 10) : p; };   // 30-SEP-2026 -> 2026-09-30
-  writeFileSync(OUT, JSON.stringify({ at: new Date().toISOString().slice(0, 10), asOf: fmt(now.period), prev: prev ? fmt(prev.period) : null, funds: funds.size, cols: ['fund', 'valueM', 'weightPct', 'chgSharesPct'], rows: out }));
+  writeFileSync(OUT, JSON.stringify({ at: new Date().toISOString().slice(0, 10), asOf: fmt(now.period), prev: prev ? fmt(prev.period) : null, funds: funds.size, cols: ['fund', 'valueM', 'weightPct', 'chgSharesPct'], log: LOG.slice(0, 40), rows: out }));
   console.log(`f13.json: ${Object.keys(out).length} stocks, as of ${now.period}, in ${Math.round((Date.now() - t0) / 60000)} min`);
   for (const tk of ['AAPL', 'MSFT', 'MSCI', 'NVDA']) if (out[tk]) console.log(`  ${tk}: ${out[tk].big.slice(0, 3).map(x => `${x[0]} $${x[1]}M ${x[2]}% ${x[3]}`).join(' | ')}`);
 })().catch(e => { console.log('Failed: ' + e.message); process.exit(1); });
