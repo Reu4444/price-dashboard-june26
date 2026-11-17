@@ -14,7 +14,8 @@ const MIN_FUND = 1e9;      // active funds with a 13F portfolio of $1 billion or
 const MIN_POS = 1e6;       // positions of $1 million or more
 const MIN_MAP = 50e6;      // CUSIPs held for $50 million or more by active funds are mapped to a ticker
 // not active managers: index funds, banks and brokers holding client accounts, market makers, quant funds, central banks
-const NOT_ACTIVE = /\b(vanguard|blackrock|state street|geode|northern trust|schwab|dimensional|invesco|norges|legal & general|ubs|morgan stanley|jpmorgan|j\.?p\.? morgan|bank of america|bofa|merrill|wells fargo|goldman sachs|royal bank of canada|rbc|bank of new york|bny|mellon|deutsche bank|dws|barclays|citigroup|citadel|susquehanna|jane street|hudson river|virtu|optiver|imc|flow traders|ameriprise|lpl financial|raymond james|edward jones|stifel|envestnet|commonwealth equity|swiss national bank|toronto[- ]dominion|bnp|hsbc|natixis|amundi|nomura|mizuho|mitsubishi ufj|sumitomo|ssga|qube|two sigma|renaissance|d\.? ?e\.? shaw|millennium|balyasny|squarepoint|cubist|point72|marshall wace|arrowstreet|aqr)\b/i;
+const NOT_ACTIVE = /\b(vanguard|blackrock|state street|geode|northern trust|schwab|dimensional|invesco|norges|legal & general|ubs|morgan stanley|jpmorgan|j\.?p\.? morgan|bank of america|bofa|merrill|wells fargo|goldman sachs|royal bank of canada|rbc|bank of new york|bny|mellon|deutsche bank|dws|barclays|citigroup|citadel|susquehanna|jane street|hudson river|virtu|optiver|imc|flow traders|ameriprise|lpl financial|raymond james|edward jones|stifel|envestnet|commonwealth equity|swiss national bank|toronto[- ]dominion|bnp|hsbc|natixis|amundi|nomura|mizuho|mitsubishi ufj|sumitomo|ssga|qube|two sigma|renaissance|d\.? ?e\.? shaw|millennium|balyasny|squarepoint|cubist|point72|marshall wace|arrowstreet|aqr|nuveen|tiaa|principal financial|sixth street|belvedere|wolverine|group one trading|peak6|charitable|donor advised|wealth|advis[oe]r|advisory|retirement|trust co|family office|private client|financial group|financial services|financial planning|insurance|mutual|pension|endowment|foundation|securities|brokerage)\b/i;
+// wealth managers, insurers and trading firms hold client or hedging books, not convictions: they are left out too (17 Nov 2026, after the first run)
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const sec = (url, as) => fetch(url, { headers: { 'User-Agent': UA, 'Accept-Encoding': 'gzip, deflate' }, signal: AbortSignal.timeout(600000) }).then(r => { if (!r.ok) throw new Error(`${r.status} ${url}`); return as === 'buf' ? r.arrayBuffer() : r.text(); });
@@ -86,6 +87,42 @@ async function mapCusips(cusips, map) {
   return map;
 }
 
+// the next quarter, before the SEC data set: each fund's 13F-HR filed on EDGAR after the period (form.idx, then its information table)
+const NEXTQ = { MAR: ['JUN', 30, 0], JUN: ['SEP', 30, 0], SEP: ['DEC', 31, 0], DEC: ['MAR', 31, 1] };
+function nextPeriod(p) { const m = String(p).match(/^(\d{1,2})-([A-Z]{3})-(\d{4})$/i); if (!m) return null; const n = NEXTQ[m[2].toUpperCase()]; return n ? `${n[1]}-${n[0]}-${+m[3] + n[2]}` : null; }
+async function liveQuarter(base, ciks) {
+  const np = nextPeriod(base.period); if (!np) return null;
+  const [, mon, yr] = np.split('-'), fy = mon === 'DEC' ? +yr + 1 : +yr, fq = { MAR: 2, JUN: 3, SEP: 4, DEC: 1 }[mon];   // filings come in the quarter after the period
+  let idx; try { idx = await sec(`https://www.sec.gov/Archives/edgar/full-index/${fy}/QTR${fq}/form.idx`); } catch (e) { console.log('EDGAR index: ' + e.message); return null; }
+  const last = new Map();
+  for (const line of idx.split('\n')) { const m = line.match(/^13F-HR\s+(.+?)\s{2,}(\d+)\s+(\d{4}-\d{2}-\d{2})\s+(edgar\/data\/\S+)\s*$/); if (!m) continue;
+    const cik = String(+m[2]); if (!ciks.has(cik)) continue; const o = last.get(cik); if (!o || m[3] > o.filed) last.set(cik, { nm: m[1].trim(), filed: m[3], file: m[4] }); }
+  console.log(`EDGAR ${fy} Q${fq}: ${last.size} of ${ciks.size} active funds have filed their 13F for ${np}`);
+  if (last.size < ciks.size * 0.6) { console.log('  too few filings yet: the data set is used'); return null; }
+  const name = new Map(), pos = new Map(); let done = 0, bad = 0;
+  const one = async ([cik, f]) => {
+    const acc = f.file.split('/').pop().replace('.txt', ''), dir = `https://www.sec.gov/Archives/edgar/data/${cik}/${acc.replace(/-/g, '')}`;
+    try {
+      const j = JSON.parse(await sec(`${dir}/index.json`)), items = (j.directory && j.directory.item) || [];
+      const xml = items.map(x => x.name).filter(n => /\.xml$/i.test(n) && !/primary_doc/i.test(n));
+      if (!xml.length) { bad++; return; }
+      const t = await sec(`${dir}/${xml[0]}`), m = new Map();
+      if (/<(?:\w+:)?periodOfReport>/i.test(t)) { /* information tables do not carry it: nothing to check */ }
+      for (const b of t.matchAll(/<(?:\w+:)?infoTable>([\s\S]*?)<\/(?:\w+:)?infoTable>/gi)) {
+        const g = k => { const x = b[1].match(new RegExp(`<(?:\\w+:)?${k}>([^<]*)<`, 'i')); return x ? x[1].trim() : ''; };
+        if (g('putCall') || (g('sshPrnamtType') || 'SH').toUpperCase() !== 'SH') continue;
+        const cu = g('cusip').toUpperCase(); if (cu.length < 8) continue;
+        const val = parseFloat(g('value')) || 0, sh = parseFloat(g('sshPrnamt')) || 0, o = m.get(cu) || [0, 0]; o[0] += val; o[1] += sh; m.set(cu, o); }
+      if (m.size) { pos.set(cik, m); name.set(cik, f.nm); } else bad++;
+    } catch (e) { bad++; }
+    if (++done % 250 === 0) console.log(`  ${done} / ${last.size} filings read`);
+  };
+  const list = [...last.entries()]; let i = 0;
+  await Promise.all(Array.from({ length: 4 }, async () => { while (i < list.length) { const x = list[i++]; await one(x); await sleep(450); } }));   // about 8 requests a second (the SEC limit is 10)
+  console.log(`  ${pos.size} information tables read, ${bad} failed`);
+  return pos.size ? { period: np, name, pos } : null;
+}
+
 async function universe() {
   for (let k = 0; k < 3; k++) { try { const r = await fetch(`${APPS_SCRIPT_URL}?action=info&t=${Date.now()}`, { signal: AbortSignal.timeout(240000), redirect: 'follow' }); const j = await r.json();
     if (j && j.data && j.data.length > 1) return new Set(j.data.slice(1).map(x => String(x[0] || '').trim().toUpperCase()).filter(Boolean)); } catch (e) { console.log('  universe: ' + e.message); } await sleep(5000); }
@@ -96,7 +133,12 @@ async function universe() {
   const t0 = Date.now();
   const sets = await dataSets(); if (sets.length < 2) { console.log('No 13F data sets found: stop.'); process.exit(1); }
   const tickers = await universe(); if (!tickers) { console.log('No stock list: stop.'); process.exit(1); }
-  const now = await load(sets[0], 'now');
+  const base = await load(sets[0], 'base');
+  // the funds that may count: active, $0.8B+ in the last data set; their newer 13F is read on EDGAR when most have filed it
+  const cand = new Set(); for (const [cik, m] of base.pos) { const nm = base.name.get(cik) || ''; if (!nm || NOT_ACTIVE.test(nm)) continue; let tot = 0; for (const [, o] of m) tot += o[0]; if (tot >= MIN_FUND * 0.8) cand.add(cik); }
+  let now = base, prevSet = sets[1], prevBase = null;
+  const live = await liveQuarter(base, cand).catch(e => { console.log('EDGAR: ' + e.message); return null; });
+  if (live) { for (const cik of live.pos.keys()) if (base.name.has(cik)) live.name.set(cik, base.name.get(cik)); now = live; prevBase = base; }   // the names as in the data set
   // the active funds and their total 13F portfolio (long shares)
   const funds = new Map();
   for (const [cik, m] of now.pos) { const nm = now.name.get(cik) || ''; if (!nm || NOT_ACTIVE.test(nm)) continue;
@@ -110,7 +152,7 @@ async function universe() {
   const cuOf = new Map(); for (const cu of want) { const tk = map[cu]; if (tk && tickers.has(tk)) cuOf.set(cu, tk); }
   console.log(`${cuOf.size} CUSIPs match a stock of the dashboard (${tickers.size} US stocks)`);
   // the previous quarter: shares of the same funds in the same CUSIPs
-  let prev = null; try { prev = await load(sets[1], 'prev', new Set(cuOf.keys())); } catch (e) { console.log('Previous quarter: ' + e.message); }
+  let prev = prevBase; if (!prev) try { prev = await load(prevSet, 'prev', new Set(cuOf.keys())); } catch (e) { console.log('Previous quarter: ' + e.message); }
   const rows = {};
   for (const [cik, f] of funds) for (const [cu, o] of now.pos.get(cik)) {
     const tk = cuOf.get(cu); if (!tk || o[0] < MIN_POS) continue;
@@ -118,10 +160,10 @@ async function universe() {
     const chg = !prev || !pm ? null : !po || !po[1] ? 'new' : Math.round((o[1] / po[1] - 1) * 100);
     (rows[tk] = rows[tk] || []).push([f.nm, Math.round(o[0] / 1e6), +(o[0] / f.tot * 100).toFixed(2), chg]);
   }
-  // per stock: the 10 largest active holders, and the 5 with the highest weight (the convictions, $50M+)
+  // per stock: the 10 largest active holders, and the 5 with the highest weight (the convictions, $100M+ positions)
   const out = {};
   for (const [tk, a] of Object.entries(rows)) {
-    const big = a.slice().sort((x, y) => y[1] - x[1]).slice(0, 10), conv = a.filter(x => x[1] >= 50).sort((x, y) => y[2] - x[2]).slice(0, 5);
+    const big = a.slice().sort((x, y) => y[1] - x[1]).slice(0, 10), conv = a.filter(x => x[1] >= 100).sort((x, y) => y[2] - x[2]).slice(0, 5);
     out[tk] = { n: a.length, big, conv };
   }
   const fmt = p => { const m = String(p).match(/^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/); return m ? new Date(Date.UTC(+m[3], MON[m[2].toLowerCase()], +m[1])).toISOString().slice(0, 10) : p; };   // 30-SEP-2026 -> 2026-09-30
