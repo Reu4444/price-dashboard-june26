@@ -18,7 +18,7 @@ const NOT_ACTIVE = /\b(vanguard|blackrock|state street|geode|northern trust|schw
 // wealth managers, insurers and trading firms hold client or hedging books, not convictions: they are left out too (17 Nov 2026, after the first run)
 
 const LOG = []; { const cl = console.log; console.log = (...a) => { LOG.push(a.join(' ')); cl(...a); }; }
-// only well-known hedge funds and large active managers (Reuven, 17 Nov 2026: "focus on hedge funds and big US funds, no banks")
+// only well-known hedge funds and large active managers (Reuven, 17 Nov 2026: "focus on hedge funds and big US funds, no banks"); the list alone decides (Duquesne files as a 'family office')
 const FOCUS = new RegExp('\\b(' + [
   // hedge funds and activists
   'berkshire hathaway', 'pershing square', 'third point', 'viking global', 'lone pine', 'tiger global', 'coatue', 'maverick capital', 'd1 capital', 'durable capital', 'altimeter', 'light street', 'whale rock',
@@ -26,6 +26,8 @@ const FOCUS = new RegExp('\\b(' + [
   'duquesne', 'soros fund', 'scion asset', 'himalaya capital', 'dragoneer', 'tybourne', 'steadfast', 'eminence', 'pointstate', 'holocene', 'kora management', 'srs investment', 'discerene', 'abdiel', 'cantillon', 'arrowpoint',
   'valiant capital', 'suvretta', 'woodline', 'atreides', 'senvest', 'corvex', 'sachem head', 'mantle ridge', 'engaged capital', 'cevian', 'bridgewater', 'alkeon', 'stockbridge', 'gotham asset', 'greenoaks', 'thrive capital',
   'general atlantic', 'fpr partners', 'giverny', 'brave warrior', 'aquamarine', 'polar capital', 'marcho', 'two creeks', 'select equity', 'jericho capital', 'samlyn', 'conatus', 'deerfield', 'baker bros', 'perceptive advisors',
+  // family offices of well-known investors
+  'tudor investment', 'msd capital', 'msd partners', 'cascade investment', 'tiger management', 'kingdon', 'omega advisors', 'hillhouse', 'hhlr', 'stanley druckenmiller',
   'ra capital', 'avoro', 'farallon', 'davidson kempner', 'anchorage capital', 'eagle capital', 'gardner russo', 'tweedy', 'southeastern asset', 'first eagle', 'yacktman', 'pzena', 'davis selected', 'oakmark', 'harris associates',
   // large stock pickers: their 13F is their own active choices (Fidelity, AllianceBernstein, American Century and Franklin are left out: their 13F also holds their index funds and ETFs)
   'capital research', 'capital world investors', 'capital international investors', 'price t rowe', 't\\. rowe', 'wellington management', 'jennison', 'massachusetts financial',
@@ -160,13 +162,13 @@ async function universe() {
   const tickers = await universe(); if (!tickers) { console.log('No stock list: stop.'); process.exit(1); }
   const base = await load(sets[0], 'base');
   // the funds that may count: active, $0.8B+ in the last data set; their newer 13F is read on EDGAR when most have filed it
-  const cand = new Set(); for (const [cik, m] of base.pos) { const nm = base.name.get(cik) || ''; if (!nm || NOT_ACTIVE.test(nm) || !FOCUS.test(nm)) continue; let tot = 0; for (const [, o] of m) tot += o[0]; if (tot >= MIN_FUND * 0.8) cand.add(cik); }
+  const cand = new Set(); for (const [cik, m] of base.pos) { const nm = base.name.get(cik) || ''; if (!nm || !FOCUS.test(nm)) continue; let tot = 0; for (const [, o] of m) tot += o[0]; if (tot >= MIN_FUND * 0.8) cand.add(cik); }
   let now = base, prevSet = sets[1], prevBase = null;
   const live = await liveQuarter(base, cand).catch(e => { console.log('EDGAR: ' + e.message); return null; });
   if (live) { for (const cik of live.pos.keys()) if (base.name.has(cik)) live.name.set(cik, base.name.get(cik)); now = live; prevBase = base; }   // the names as in the data set
   // the active funds and their total 13F portfolio (long shares)
   const funds = new Map();
-  for (const [cik, m] of now.pos) { const nm = now.name.get(cik) || ''; if (!nm || NOT_ACTIVE.test(nm) || !FOCUS.test(nm)) continue;
+  for (const [cik, m] of now.pos) { const nm = now.name.get(cik) || ''; if (!nm || !FOCUS.test(nm)) continue;
     let tot = 0; for (const [, o] of m) tot += o[0]; if (tot >= MIN_FUND) funds.set(cik, { nm, tot }); }
   // CUSIPs held for $50M+ by active funds
   const held = new Map(); for (const [cik] of funds) for (const [cu, o] of now.pos.get(cik)) held.set(cu, (held.get(cu) || 0) + o[0]);
