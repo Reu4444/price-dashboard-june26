@@ -3,7 +3,7 @@
 //   node dna/build.mjs            -> all stocks
 //   node dna/build.mjs --limit 20 -> a quick test on 20 stocks per universe
 import { writeFileSync } from 'node:fs';
-import { resist, episodes } from './resist.mjs';
+import { resist, episodes, groupsTest, holyGrail } from './resist.mjs';
 
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxqVzEtKgrjf8GXQS1jePSsagDeIMHPOH-DsQycdtCL7Go1eZiCQ8GsCweo9xw-sss/exec';
 const OUT = process.env.DNA_OUT || 'dna.json';
@@ -134,7 +134,8 @@ async function pool(items, n, fn) { let i = 0; const run = async () => { while (
   const [us, row] = await Promise.all([sheet('info'), sheet('info_row')]);
   if (!us && !row) { console.log('No stock list from the Apps Script: stop (dna.json kept as it was).'); process.exit(1); }
   const list = [], num = v => { const x = parseFloat(String(v ?? '').replace(/,/g, '')); return isFinite(x) && x > 0 ? x : null; };   // market cap: $ billions (US), € billions (ROW)
-  for (const r of (us || []).slice(1)) { const tk = String(r[0] || '').trim().toUpperCase(); if (tk) list.push({ tk, uni: 'us', sector: String(r[3] || ''), cap: num(r[2]), y: yahooOf(tk, '', true) }); }
+  const usHead = ((us || [])[0] || []).map(x => String(x || '')), gi = usHead.findIndex(h => /industry|group|theme/i.test(h)), grpOf = new Map();   // the group column of the sheet, when there is one; else the sector
+  for (const r of (us || []).slice(1)) { const tk = String(r[0] || '').trim().toUpperCase(); if (tk) grpOf.set(tk, String(r[gi >= 0 ? gi : 3] || '').trim()); if (tk) list.push({ tk, uni: 'us', sector: String(r[3] || ''), cap: num(r[2]), y: yahooOf(tk, '', true) }); }
   for (const r of (row || []).slice(1)) { const tk = String(r[0] || '').trim().toUpperCase(); if (tk) list.push({ tk, uni: 'row', country: String(r[2] || ''), sector: String(r[6] || ''), cap: num(r[5]) != null ? num(r[5]) / 1e9 : null, y: yahooOf(tk, r[2], false) }); }
   const todo = LIMIT ? [...list.filter(x => x.uni === 'us').slice(0, LIMIT), ...list.filter(x => x.uni === 'row').slice(0, LIMIT)] : list;
   console.log(`${list.length} stocks in the sheets (US ${list.filter(x => x.uni === 'us').length}, ROW ${list.filter(x => x.uni === 'row').length}); measuring ${todo.length}`);
@@ -165,7 +166,7 @@ async function pool(items, n, fn) { let i = 0; const run = async () => { while (
       ys.forEach((y, i) => { sxy += (i - xm) * (y - ym); sxx += (i - xm) ** 2; syy += (y - ym) ** 2; }); return syy > 0 ? r2(sxy * sxy / (sxx * syy)) : null; })();
     const o = { bench: bk, r2q, ...rk, sharpeB: rkB ? rkB.sharpe : null, ...m, sec, pN: pl.n, p20: pl.at[20], p50: pl.at[50], p100: pl.at[100], p200: pl.at[200], p325: pl.at[325], from: new Date(rows[0].t).toISOString().slice(0, 10), cap: x.cap != null ? Math.round(x.cap * 10) / 10 : null };
     out[x.tk] = COLS.map(c => o[c] ?? null); objs.push({ ...o, uni: x.uni }); ok++;
-    if (x.uni === 'us') usRows.set(x.tk, rows.map(r => ({ t: r.t, a: r.a })));   // for the 'resists the market' test
+    if (x.uni === 'us') usRows.set(x.tk, rows.map(r => ({ t: r.t, a: r.a, h: r.h, l: r.l, c: r.c })));   // for the 'resists the market' test
     if ((k + 1) % 200 === 0) console.log(`  ${k + 1} / ${todo.length}`);
   });
   console.log(`measured ${ok}, no Yahoo symbol ${noSym}, no data or under 2 years ${noData}, ${Math.round((Date.now() - t0) / 1000)} s`);
@@ -189,7 +190,7 @@ async function pool(items, n, fn) { let i = 0; const run = async () => { while (
   writeFileSync(OUT.replace(/dna\.json$/, 'dna_avg.json'), JSON.stringify(AVG));
   console.log(`average stock: all ${AVG.all.n}, $10B+ ${AVG.cap10.n}, $50B+ ${AVG.cap50.n}`);
   // stocks that resist the market: the 10-year test and today's list (US stocks vs the S&P 500), in dna_resist.json
-  try { if (idx.SPY && usRows.size > 100) { const R = resist(idx.SPY, usRows); try { R.episodes = episodes(idx.SPY, usRows); } catch (e) { console.log('falls test failed: ' + e.message); } writeFileSync(OUT.replace(/dna\.json$/, 'dna_resist.json'), JSON.stringify(R));
+  try { if (idx.SPY && usRows.size > 100) { const R = resist(idx.SPY, usRows); try { R.episodes = episodes(idx.SPY, usRows); } catch (e) { console.log('falls test failed: ' + e.message); } try { R.groupsTest = { head: usHead, col: gi >= 0 ? usHead[gi] : 'sector (no group column)', ...groupsTest(idx.SPY, usRows, grpOf) }; console.log('Groups test: ' + JSON.stringify(R.groupsTest)); } catch (e) { console.log('groups test failed: ' + e.message); } try { R.holyGrail = holyGrail(idx.SPY, usRows); console.log('Holy Grail test: ' + JSON.stringify(R.holyGrail.res)); } catch (e) { console.log('holy grail test failed: ' + e.message); } writeFileSync(OUT.replace(/dna\.json$/, 'dna_resist.json'), JSON.stringify(R));
       const T = R.test, c = x => `${x.mean}% / med ${x.median}% / beat ${x.beat}% (n ${x.n})`;
       console.log(`resist test, dates: ${JSON.stringify(T.nDates)}; vs the average stock, 3 months | 6 months:`);
       for (const reg of Object.keys(T.nDates)) { console.log(' ' + reg); for (const g of Object.keys(T.all)) console.log(`   ${g}: ${c(T[reg][g])} | ${c(T.m6[reg][g])}`); }
